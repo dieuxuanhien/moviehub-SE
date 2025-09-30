@@ -1,4 +1,3 @@
-import { Toaster } from 'sonner';
 import './global.css';
 
 export const metadata = {
@@ -13,11 +12,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <Toaster />
-        {children}
-
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
