@@ -40,9 +40,9 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug cinema-service with Nx",
+      "name": "Debug movie-service with Nx",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["nx", "serve", "cinema-service"],
+      "runtimeArgs": ["nx", "serve", "movie-service"],
       "env": {
         "NODE_OPTIONS": "--inspect=9233"
       },
@@ -51,7 +51,7 @@
       "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true,
       "outFiles": [
-        "${workspaceFolder}/apps/cinema-service/dist/**/*.(m|c|)js",
+        "${workspaceFolder}/apps/movie-service/dist/**/*.(m|c|)js",
         "!**/node_modules/**"
       ]
     }
