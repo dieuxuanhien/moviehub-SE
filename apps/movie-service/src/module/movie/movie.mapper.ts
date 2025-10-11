@@ -1,55 +1,47 @@
 import {
   AgeRatingEnum,
+  CreateMovieRequest,
+  GenreEnum,
   LanguageOptionEnum,
-  MovieDetailResponse,
-} from '@movie-hub/shared-types';
-
+  MovieResponse,
+} from '@movie-hub/libs';
 import { Injectable } from '@nestjs/common';
-import { Genre, Movie, MovieGenre } from '../../../generated/prisma';
+import { Movie } from '../../../generated/prisma';
 
 @Injectable()
 export class MovieMapper {
-  static toMovie(request) {
-    const { genreIds, releaseDate, ...movieData } = request;
-    const movieGenres = genreIds
-      ? {
-          create: genreIds.map((id: string) => ({
-            genreId: id,
-          })),
-        }
-      : undefined;
-
+  toMovieEntity(request: CreateMovieRequest): Movie {
     return {
-      ...movieData,
-      releaseDate: releaseDate ? new Date(releaseDate) : undefined,
-      movieGenres,
+      ...request,
+      releaseDate: new Date(request.releaseDate),
+      endDate: new Date(request.endDate),
+      type: request.type,
+      createdAt: undefined,
+      updatedAt: undefined,
+      id: undefined,
     };
   }
 
-  static toResponse(
-    movie: Movie & { movieGenres: (MovieGenre & { genre: Genre })[] }
-  ): MovieDetailResponse {
+  toMovieResponse(entity: Movie): MovieResponse {
     return {
-      id: movie.id,
-      title: movie.title,
-      originalTitle: movie.originalTitle,
-      overview: movie.overview,
-      posterUrl: movie.posterUrl,
-      trailerUrl: movie.trailerUrl,
-      backdropUrl: movie.backdropUrl,
-      runtime: movie.runtime,
-      releaseDate: movie.releaseDate,
-      ageRating: movie.ageRating as AgeRatingEnum,
-      originalLanguage: movie.originalLanguage,
-      spokenLanguages: movie.spokenLanguages,
-      languageType: movie.languageType as LanguageOptionEnum,
-      productionCountry: movie.productionCountry,
-      director: movie.director,
-      cast: movie.cast,
-      genre: movie.movieGenres.map((mg) => ({
-        id: mg.genre.id,
-        name: mg.genre.name,
-      })),
+      ...entity,
+      // id: entity.id,
+      // title: entity.title,
+      // description: entity.description,
+      // posterUrl: entity.posterUrl,
+      // trailerUrl: entity.trailerUrl,
+      // duration: entity.duration,
+      // releaseDate: entity.releaseDate,
+      // endDate: entity.endDate,
+      // country: entity.country,
+      // language: entity.language,
+      ageRating: entity.ageRating as AgeRatingEnum,
+      type: entity.type as LanguageOptionEnum,
+      genres: entity.genres  as GenreEnum[],
+      // director: entity.director,
+      // cast: entity.cast,
+      // createdAt: entity.createdAt,
+      // updatedAt: entity.updatedAt,
     };
   }
 }

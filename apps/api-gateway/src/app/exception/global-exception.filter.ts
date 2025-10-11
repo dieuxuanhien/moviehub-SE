@@ -1,4 +1,4 @@
-import { ApiErrorResponse } from '@movie-hub/shared-types/common';
+import { ApiErrorResponse } from '@movie-hub/libs/common';
 import {
   ArgumentsHost,
   Catch,

@@ -1,12 +1,12 @@
 import {
   AgeRatingEnum,
   CreateMovieRequest,
+  GenreEnum,
   LanguageOptionEnum,
-  MovieDetailResponse,
-  MovieSummary,
+  MovieResponse,
   ResourceNotFoundException,
   UpdateMovieRequest,
-} from '@movie-hub/shared-types';
+} from '@movie-hub/libs';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MovieMapper } from './movie.mapper';
@@ -15,104 +15,78 @@ import { MovieMapper } from './movie.mapper';
 export class MovieService {
   logger = new Logger(MovieService.name);
 
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly movieMapper: MovieMapper
+  ) {}
 
-  async getMovies(): Promise<MovieSummary[]> {
-    return (
-      await this.prismaService.movie.findMany({
-        select: {
-          id: true,
-          title: true,
-          posterUrl: true,
-          backdropUrl: true,
-          runtime: true,
-          ageRating: true,
-          productionCountry: true,
-          languageType: true,
-        },
+  // for admin
+  // async createMovie(
+  //   createMovieRequest: CreateMovieRequest
+  // ): Promise<MovieResponse> {
+  //   const movie = await this.prismaService.movie.create({
+  //     data: this.movieMapper.toMovieEntity(createMovieRequest),
+  //   });
+
+  //   return this.movieMapper.toMovieResponse(movie);
+  // }
+
+  async getMovies(): Promise<MovieResponse[]> {
+    return (await this.prismaService.movie.findMany()).map(
+      (movie) => ({
+        ...movie,
+        ageRating: movie.ageRating as AgeRatingEnum,
+        type: movie.type as LanguageOptionEnum,
+        genres: movie.genres as GenreEnum[],
       })
-    ).map((movie) => ({
-      ...movie,
-      ageRating: movie.ageRating as AgeRatingEnum,
-      languageType: movie.languageType as LanguageOptionEnum,
-    }));
-  }
-
-  async getMovieDetail(id: string): Promise<MovieDetailResponse> {
-    const movie = await this.prismaService.movie.findUnique({
-      where: { id },
-      include: {
-        movieGenres: {
-          include: {
-            genre: true,
-          },
-        },
-      },
-    });
-
-    return MovieMapper.toResponse(movie);
+      // this.movieMapper.toMovieResponse(m)
+    );
   }
 
   async createMovie(
     createMovieRequest: CreateMovieRequest
-  ): Promise<MovieDetailResponse> {
-    const movie = await this.prismaService.$transaction(async (db) => {
-      return await db.movie.create({
-        data: MovieMapper.toMovie(createMovieRequest),
-        include: {
-          movieGenres: {
-            include: {
-              genre: true,
-            },
-          },
-        },
-      });
+  ): Promise<MovieResponse> {
+    const movie = await this.prismaService.movie.create({
+      // data: this.movieMapper.toMovieEntity(createMovieRequest),
+      data: {
+        ...createMovieRequest,
+        releaseDate: new Date(createMovieRequest.releaseDate),
+        endDate: new Date(createMovieRequest.endDate),
+        // type: createMovieRequest.type,
+        // createdAt: undefined,
+        // updatedAt: undefined,
+        // id: undefined,
+      },
     });
-
-    return MovieMapper.toResponse(movie);
+    return {
+      ...movie,
+      ageRating: movie.ageRating as AgeRatingEnum,
+      type: movie.type as LanguageOptionEnum,
+      genres: movie.genres as GenreEnum[],
+    };
   }
 
   async updateMovie(
     id: string,
     updateMovieRequest: UpdateMovieRequest
-  ): Promise<MovieDetailResponse> {
+  ): Promise<MovieResponse> {
     const existingMovie = await this.prismaService.movie.findUnique({
-      where: { id },
+      where: {
+        id,
+      },
     });
 
     if (!existingMovie) {
       throw new ResourceNotFoundException('Movie', 'id', id);
     }
 
-    const updatedMovie = await this.prismaService.$transaction(async (db) => {
-      if (updateMovieRequest.genreIds) {
-        await db.movieGenre.deleteMany({
-          where: {
-            movieId: id,
-          },
-        });
-      }
-
-      return await db.movie.update({
-        data: MovieMapper.toMovie(updateMovieRequest),
-        where: {
-          id: id,
-        },
-        include: {
-          movieGenres: {
-            include: {
-              genre: true,
-            },
-          },
-        },
-      });
+    const updateMovie = await this.prismaService.movie.update({
+      data: { ...updateMovieRequest, updatedAt: new Date() },
+      where: {
+        id: id,
+      },
     });
-    return MovieMapper.toResponse(updatedMovie);
-  }
 
-  async deleteMovie(id: string): Promise<void> {
-    await this.prismaService.movie.delete({
-      where: { id },
-    });
+    return this.movieMapper.toMovieResponse(updateMovie);
   }
 }

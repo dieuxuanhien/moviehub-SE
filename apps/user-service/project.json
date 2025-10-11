@@ -61,16 +61,6 @@
         }
       }
     },
-
-    "prisma:generate": {
-      "cache": false,
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "prisma generate",
-        "cwd": "apps/user-service"
-      }
-    },
-
     "test": {
       "options": {
         "passWithNoTests": true
