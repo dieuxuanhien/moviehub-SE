@@ -1,11 +1,18 @@
 import {
   CreateMovieRequest,
-  MovieResponse,
+  MovieQuery,
   UpdateMovieRequest,
-} from '@movie-hub/libs';
-import { ApiSuccessResponse } from '@movie-hub/libs/common';
-import { Body, Controller, Get, Param, Post, Put, Req } from '@nestjs/common';
-import { Request } from 'express'; // Để lấy thông tin `path` từ request
+} from '@movie-hub/shared-types';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { MovieService } from '../service/movie.service';
 
 @Controller({
@@ -16,41 +23,31 @@ export class MovieController {
   constructor(private readonly movieService: MovieService) {}
 
   @Get()
-  async getMovies(
-    @Req() req: Request
-  ): Promise<ApiSuccessResponse<MovieResponse>> {
-    return {
-      success: true,
-      data: await this.movieService.getMovies(),
-      timestamp: new Date().toISOString(),
-      path: req.path,
-    };
+  async getMovies(@Query() query: MovieQuery) {
+    return this.movieService.getMovies(query);
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return await this.movieService.getMovieDetail(id);
   }
 
   @Post()
-  async createMovie(
-    @Body() request: CreateMovieRequest,
-    @Req() req: Request
-  ): Promise<ApiSuccessResponse<MovieResponse>> {
-    return {
-      success: true,
-      data: await this.movieService.createMovie(request),
-      timestamp: new Date().toISOString(),
-      path: req.path,
-    };
+  async createMovie(@Body() request: CreateMovieRequest) {
+    return this.movieService.createMovie(request);
   }
 
   @Put(':id')
   async updateMovie(
     @Param('id') id: string,
-    @Body() request: UpdateMovieRequest,
-    @Req() req: Request
-  ): Promise<ApiSuccessResponse<MovieResponse>> {
-    return {
-      success: true,
-      data: await this.movieService.updateMovie(id, request),
-      timestamp: new Date().toISOString(),
-      path: req.path,
-    };
+    @Body() request: UpdateMovieRequest
+  ) {
+    return this.movieService.updateMovie(id, request);
+  }
+
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
+    await this.movieService.deleteMovie(id);
+    return null;
   }
 }
