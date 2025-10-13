@@ -1,4 +1,5 @@
 import { GenreRequest } from '@movie-hub/shared-types';
+import { ApiSuccessResponse } from '@movie-hub/shared-types/common';
 import {
   Body,
   Controller,
@@ -9,14 +10,14 @@ import {
   Put,
   UseInterceptors,
 } from '@nestjs/common';
-import { TransformInterceptor } from '../../../common/interceptor/transform.interceptor';
+import { ResponseInterceptor } from '../../../common/interceptor/response.interceptor';
 import { GenreService } from '../service/genre.service';
 
 @Controller({
   version: '1',
   path: 'genres',
 })
-@UseInterceptors(new TransformInterceptor())
+@UseInterceptors(new ResponseInterceptor())
 export class GenreController {
   constructor(private readonly genreService: GenreService) {}
 
@@ -32,16 +33,17 @@ export class GenreController {
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return this.genreService.findOne(id);
+    return await this.genreService.findOne(id);
   }
 
   @Put(':id')
   async update(@Param('id') id: string, @Body() request: GenreRequest) {
-    return this.genreService.update(id, request);
+    return await this.genreService.update(id, request);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.genreService.remove(id);
+  async remove(@Param('id') id: string): Promise<ApiSuccessResponse<string>> {
+    await this.genreService.remove(id);
+    return null;
   }
 }

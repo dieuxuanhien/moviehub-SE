@@ -1,6 +1,5 @@
 import {
   CreateMovieRequest,
-  MovieQuery,
   UpdateMovieRequest,
 } from '@movie-hub/shared-types';
 import {
@@ -11,7 +10,6 @@ import {
   Param,
   Post,
   Put,
-  Query,
 } from '@nestjs/common';
 import { MovieService } from '../service/movie.service';
 
@@ -19,12 +17,13 @@ import { MovieService } from '../service/movie.service';
   version: '1',
   path: 'movies',
 })
+// @UseInterceptors(RpcErrorInterceptor)
 export class MovieController {
   constructor(private readonly movieService: MovieService) {}
 
   @Get()
-  async getMovies(@Query() query: MovieQuery) {
-    return this.movieService.getMovies(query);
+  async getMovies() {
+    return this.movieService.getMovies();
   }
 
   @Get(':id')

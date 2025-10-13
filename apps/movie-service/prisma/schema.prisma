@@ -36,8 +36,6 @@ enum AgeRating {
   C
 }
 
-
-
 model Movie {
   id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title             String         @map("title")
@@ -47,7 +45,7 @@ model Movie {
   trailerUrl        String         @map("trailer_url")
   backdropUrl       String         @map("backdrop_url")
   runtime           Int            @map("runtime")
-  releaseDate       DateTime       @map("release_date") @db.Date
+  releaseDate       DateTime       @map("release_date")
   ageRating         AgeRating      @map("age_rating")
   originalLanguage  String         @map("original_language")
   spokenLanguages   String[]       @map("spoken_languages")
@@ -58,28 +56,15 @@ model Movie {
   createdAt         DateTime       @default(now()) @map("created_at")
   updatedAt         DateTime       @updatedAt @map("updated_at")
 
-  movieGenres   MovieGenre[]   @relation("MovieToGenre")
-  movieReleases MovieRelease[] @relation("MovieToRelease")
+  movieGenres MovieGenre[] @relation("MovieGenre")
 
   @@map("movies")
 }
 
-model MovieRelease {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  movieId     String   @map("movie_id") @db.Uuid
-  startDate DateTime @map("start_date") @db.Date
-  endDate     DateTime? @map("end_date") @db.Date
-  note        String?
-
-  movie Movie @relation("MovieToRelease", fields: [movieId], references: [id])
-
-  @@map("movie_releases")
-}
-
 model Genre {
-  id          String       @id @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @unique
   name        String
-  movieGenres MovieGenre[] @relation("MovieToGenre")
+  movieGenres MovieGenre[] @relation("Genre")
 
   @@map("genres")
 }
@@ -88,8 +73,8 @@ model MovieGenre {
   movieId String @map("movie_id") @db.Uuid
   genreId String @map("genre_id") @db.Uuid
 
-  movie Movie @relation("MovieToGenre", fields: [movieId], references: [id], onDelete: Cascade)
-  genre Genre @relation("MovieToGenre", fields: [genreId], references: [id], onDelete: Cascade)
+  movie Movie @relation("MovieGenre", fields: [movieId], references: [id], onDelete: Cascade)
+  genre Genre @relation("Genre", fields: [genreId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -97,6 +82,5 @@ model MovieGenre {
   @@id([movieId, genreId])
   @@index([movieId])
   @@index([genreId])
-
   @@map("movie_genres")
 }

@@ -11,7 +11,6 @@ export interface ApiSuccessResponse<T> extends BaseResponse {
   success: true;
   data: T;
   meta?: PaginationMeta;
-  message?: string;
 }
 
 export interface ApiErrorResponse extends BaseResponse {

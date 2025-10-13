@@ -11,7 +11,6 @@ export default [
           ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}'],
         },
       ],
-      "@nx/enforce-module-boundaries": off
     },
     languageOptions: {
       parser: await import('jsonc-eslint-parser'),
