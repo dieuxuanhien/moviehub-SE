@@ -7,19 +7,29 @@ import {
   ParseIntPipe,
   BadRequestException,
   DefaultValuePipe,
+  Req,
 } from '@nestjs/common';
 import { CinemaService } from '../service/cinema.service';
+import { ApiSuccessResponse } from '@movie-hub/libs/common';
+import { Request } from 'express';
+import {
+  GetShowtimesQuery,
+  ShowtimeSummaryResponse,
+} from '@movie-hub/libs/cinema';
 
-@Controller('cinemas')
+@Controller({
+  version: '1',
+  path: 'cinemas',
+})
 export class CinemaController {
   constructor(private readonly cinemaService: CinemaService) {}
-  
+
   @Get()
   getCinemas() {
     return this.cinemaService.getCinemas();
   }
 
-  /** 
+  /**
    * Get cinemas nearby user location
    */
   @Get('nearby')
@@ -87,10 +97,10 @@ export class CinemaController {
     if (city) filter.city = city;
     if (district) filter.district = district;
     if (amenities) {
-      filter.amenities = amenities.split(',').map(a => a.trim());
+      filter.amenities = amenities.split(',').map((a) => a.trim());
     }
     if (hallTypes) {
-      filter.hallTypes = hallTypes.split(',').map(h => h.trim());
+      filter.hallTypes = hallTypes.split(',').map((h) => h.trim());
     }
     if (minRating) filter.minRating = parseFloat(minRating);
 
@@ -136,5 +146,26 @@ export class CinemaController {
     const userLon = longitude ? parseFloat(longitude) : undefined;
 
     return this.cinemaService.getCinemaDetail(id, userLat, userLon);
+  }
+
+  @Get(':cinemaId/movies/:movieId/showtimes')
+  async getMovieShowtimesAtCinema(
+    @Param('cinemaId') cinemaId: string,
+    @Param('movieId') movieId: string,
+    @Query() date: GetShowtimesQuery,
+    @Req() req: Request
+  ): Promise<ApiSuccessResponse<ShowtimeSummaryResponse[]>> {
+    console.log(cinemaId, movieId, date);
+    const showtimes = await this.cinemaService.getMovieShowtimesAtCinema(
+      cinemaId,
+      movieId,
+      date
+    );
+    return {
+      success: true,
+      data: showtimes,
+      timestamp: new Date().toISOString(),
+      path: req.path,
+    };
   }
 }
