@@ -1,13 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
+  AgeRatingEnum,
   CreateMovieRequest,
-  MovieDetailResponse,
-  MovieQuery,
-  MovieSummary,
+  GenreEnum,
+  LanguageOptionEnum,
+  MovieResponse,
   ResourceNotFoundException,
   UpdateMovieRequest,
-} from '@movie-hub/shared-types';
-import { ServiceResult } from '@movie-hub/shared-types/common';
+} from '@movie-hub/libs';
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MovieMapper } from './movie.mapper';
@@ -16,158 +15,78 @@ import { MovieMapper } from './movie.mapper';
 export class MovieService {
   logger = new Logger(MovieService.name);
 
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly movieMapper: MovieMapper
+  ) {}
 
-  async getMovies(query: MovieQuery): Promise<ServiceResult<MovieSummary[]>> {
-    const page = query && query.page ? Number(query.page) : 1;
-    const limit = query && query.limit ? Number(query.limit) : undefined;
-    const skip = limit ? (page - 1) * limit : 0;
-    const today = new Date();
+  // for admin
+  // async createMovie(
+  //   createMovieRequest: CreateMovieRequest
+  // ): Promise<MovieResponse> {
+  //   const movie = await this.prismaService.movie.create({
+  //     data: this.movieMapper.toMovieEntity(createMovieRequest),
+  //   });
 
-    const where: any = {};
+  //   return this.movieMapper.toMovieResponse(movie);
+  // }
 
-    if (query.status === 'now_show') {
-      where.movieReleases = {
-        some: {
-          startDate: { lte: today },
-          OR: [{ endDate: { gte: today } }, { endDate: null }],
-        },
-      };
-    } else if (query.status === 'upcoming') {
-      where.movieReleases = {
-        some: {
-          startDate: { gt: today },
-        },
-      };
-    }
-
-    const movies = await this.prismaService.movie.findMany({
-      where,
-      select: {
-        id: true,
-        title: true,
-        posterUrl: true,
-        backdropUrl: true,
-        runtime: true,
-        ageRating: true,
-        productionCountry: true,
-        languageType: true,
-      },
-      orderBy: {
-        [query.sortBy]: query.sortOrder,
-      },
-      skip,
-      take: limit,
-    });
-
-    let meta = null;
-    if (query && limit) {
-      const totalRecords = await this.prismaService.movie.count({ where });
-      meta = {
-        page,
-        limit,
-        totalRecords,
-        totalPages: Math.ceil(totalRecords / limit),
-        hasPrev: page > 1,
-        hasNext: page * limit < totalRecords,
-      };
-    }
-
-    return {
-      data: movies as MovieSummary[],
-      meta,
-    };
-  }
-
-  async getMovieDetail(
-    id: string
-  ): Promise<ServiceResult<MovieDetailResponse>> {
-    const movie = await this.prismaService.movie.findUnique({
-      where: { id },
-      include: {
-        movieGenres: {
-          include: {
-            genre: true,
-          },
-        },
-      },
-    });
-
-    return {
-      data: MovieMapper.toResponse(movie),
-    };
+  async getMovies(): Promise<MovieResponse[]> {
+    return (await this.prismaService.movie.findMany()).map(
+      (movie) => ({
+        ...movie,
+        ageRating: movie.ageRating as AgeRatingEnum,
+        type: movie.type as LanguageOptionEnum,
+        genres: movie.genres as GenreEnum[],
+      })
+      // this.movieMapper.toMovieResponse(m)
+    );
   }
 
   async createMovie(
     createMovieRequest: CreateMovieRequest
-  ): Promise<ServiceResult<MovieDetailResponse>> {
-    const movie = await this.prismaService.$transaction(async (db) => {
-      return await db.movie.create({
-        data: MovieMapper.toMovie(createMovieRequest),
-        include: {
-          movieGenres: {
-            include: {
-              genre: true,
-            },
-          },
-        },
-      });
+  ): Promise<MovieResponse> {
+    const movie = await this.prismaService.movie.create({
+      // data: this.movieMapper.toMovieEntity(createMovieRequest),
+      data: {
+        ...createMovieRequest,
+        releaseDate: new Date(createMovieRequest.releaseDate),
+        endDate: new Date(createMovieRequest.endDate),
+        // type: createMovieRequest.type,
+        // createdAt: undefined,
+        // updatedAt: undefined,
+        // id: undefined,
+      },
     });
-
     return {
-      data: MovieMapper.toResponse(movie),
-      message: 'Create movie successfully!',
+      ...movie,
+      ageRating: movie.ageRating as AgeRatingEnum,
+      type: movie.type as LanguageOptionEnum,
+      genres: movie.genres as GenreEnum[],
     };
   }
 
   async updateMovie(
     id: string,
     updateMovieRequest: UpdateMovieRequest
-  ): Promise<ServiceResult<MovieDetailResponse>> {
+  ): Promise<MovieResponse> {
     const existingMovie = await this.prismaService.movie.findUnique({
-      where: { id },
+      where: {
+        id,
+      },
     });
 
     if (!existingMovie) {
       throw new ResourceNotFoundException('Movie', 'id', id);
     }
 
-    const updatedMovie = await this.prismaService.$transaction(async (db) => {
-      if (updateMovieRequest.genreIds) {
-        await db.movieGenre.deleteMany({
-          where: {
-            movieId: id,
-          },
-        });
-      }
-
-      return await db.movie.update({
-        data: MovieMapper.toMovie(updateMovieRequest),
-        where: {
-          id: id,
-        },
-        include: {
-          movieGenres: {
-            include: {
-              genre: true,
-            },
-          },
-        },
-      });
+    const updateMovie = await this.prismaService.movie.update({
+      data: { ...updateMovieRequest, updatedAt: new Date() },
+      where: {
+        id: id,
+      },
     });
 
-    return {
-      data: MovieMapper.toResponse(updatedMovie),
-      message: 'Update movie successfully!',
-    };
-  }
-
-  async deleteMovie(id: string) {
-    await this.prismaService.movie.delete({
-      where: { id },
-    });
-    return {
-      message: 'Delete movie successfully!',
-    };
+    return this.movieMapper.toMovieResponse(updateMovie);
   }
 }
