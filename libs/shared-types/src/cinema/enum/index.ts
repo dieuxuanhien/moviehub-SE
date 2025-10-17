@@ -1,3 +1,2 @@
-export * from './showtime';
-export * from './seat';
-export * from './ticket';
+export * from './showtime-format.enum';
+export * from './showtime-status.enum';
