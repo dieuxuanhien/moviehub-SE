@@ -47,12 +47,6 @@ Thumbs.db
 .next
 out
 
-# Environment files (keep examples)
 .env
-.env.dev
-.env.test
-.env.prod
-.env.local
-.env.*.local
 .env/*
 !.env.example
