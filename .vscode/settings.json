@@ -1,7 +1,3 @@
 {
-  "nxConsole.generateAiAgentRules": true,
-  "cSpell.words": [
-    "Moviehub",
-    "shacdn"
-  ]
+  "nxConsole.generateAiAgentRules": true
 }
