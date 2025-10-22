@@ -49,7 +49,7 @@ docker-compose*.yml
 # Documentation
 README.md
 *.md
-# docs - COMMENTED OUT: api-gateway needs doc/openapi.yml at runtime
+docs
 
 # CI/CD
 .github
