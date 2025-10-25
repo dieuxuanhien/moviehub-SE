@@ -27,7 +27,6 @@ COPY package*.json ./
 COPY nx.json ./
 COPY tsconfig.base.json ./
 COPY libs ./libs
-COPY eslint.config.mjs ./
 COPY apps/user-service ./apps/user-service
 
 # Generate Prisma Client for user-service
@@ -62,7 +61,8 @@ RUN npm ci --omit=dev --legacy-peer-deps && \
 # Copy ONLY the built application and Prisma files
 COPY --chown=nestjs:nodejs --from=builder /app/dist/apps/user-service ./
 COPY --chown=nestjs:nodejs --from=builder /app/apps/user-service/generated ./generated
-COPY --chown=nestjs:nodejs --from=builder /app/apps/user-service/prisma ./prisma
+COPY --chown=nestjs:nodejs --from=builder /app/apps/user-service/prisma/schema.prisma ./prisma/schema.prisma
+COPY --chown=nestjs:nodejs --from=builder /app/apps/user-service/prisma/migrations ./prisma/migrations
 
 USER nestjs
 

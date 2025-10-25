@@ -1,7 +1,4 @@
 {
   "nxConsole.generateAiAgentRules": true,
-  "cSpell.words": [
-    "Moviehub",
-    "shacdn"
-  ]
+  "liveServer.settings.port": 5501
 }
