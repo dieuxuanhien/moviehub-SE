@@ -6,7 +6,6 @@ import { ShowtimeMapper } from './showtime.mapper';
 import { ShowtimeSeatMapper } from './showtime-seat.mapper';
 
 @Module({
-  imports: [],
   controllers: [ShowtimeController],
   providers: [
     ShowtimeService,

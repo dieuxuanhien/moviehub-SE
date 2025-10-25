@@ -57,6 +57,9 @@ RUN npm ci --omit=dev --legacy-peer-deps && \
 # Copy ONLY the built application
 COPY --chown=nestjs:nodejs --from=builder /app/dist/apps/api-gateway ./
 
+# Copy the OpenAPI documentation (required at runtime)
+COPY --chown=nestjs:nodejs --from=builder /app/apps/api-gateway/doc ./apps/api-gateway/doc
+
 USER nestjs
 
 # Health check (checks if the API is responding)

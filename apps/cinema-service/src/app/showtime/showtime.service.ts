@@ -7,7 +7,7 @@ import {
   ReservationStatusEnum,
 } from '@movie-hub/shared-types';
 import { PrismaService } from '../prisma.service';
-import { RealtimeService } from '../realtime/realtime.service';
+import { RedisService } from '../realtime/redis.service';
 import { ShowtimeSeatMapper } from './showtime-seat.mapper';
 
 @Injectable()
@@ -16,7 +16,7 @@ export class ShowtimeService {
     private readonly prisma: PrismaService,
     private readonly mapper: ShowtimeMapper,
     private readonly showtimeSeatMapper: ShowtimeSeatMapper,
-    private readonly realtimeService: RealtimeService
+    private readonly redisService: RedisService
   ) {}
 
   /**
@@ -29,7 +29,7 @@ export class ShowtimeService {
   ): Promise<ShowtimeSummaryResponse[]> {
     const cacheKey = `showtime:list:${cinemaId}:${movieId}:${query.date}`;
 
-    return this.realtimeService.getOrSetCache(cacheKey, 3600, async () => {
+    return this.redisService.getOrSetCache(cacheKey, 3600, async () => {
       const showtimes = await this.prisma.showtimes.findMany({
         where: {
           cinema_id: cinemaId,
@@ -57,7 +57,7 @@ export class ShowtimeService {
 
     // ✅ Cache thông tin suất chiếu + hall
     const showtimeCacheKey = `showtime:detail:${showtimeId}`;
-    const showtime = await this.realtimeService.getOrSetCache(
+    const showtime = await this.redisService.getOrSetCache(
       showtimeCacheKey,
       3600 * 6,
       async () => {
@@ -72,7 +72,7 @@ export class ShowtimeService {
 
     // ✅ Cache danh sách ghế vật lý trong rạp
     const seatsCacheKey = `hall:${showtime.hall_id}:seats`;
-    const seats = await this.realtimeService.getOrSetCache(
+    const seats = await this.redisService.getOrSetCache(
       seatsCacheKey,
       3600 * 12,
       async () => {
@@ -85,7 +85,7 @@ export class ShowtimeService {
 
     // ✅ Cache ticket pricing
     const ticketPricingCacheKey = `ticketPricing:${showtime.hall_id}:${showtime.day_type}:${showtime.time_slot}`;
-    const ticketPricings = await this.realtimeService.getOrSetCache(
+    const ticketPricings = await this.redisService.getOrSetCache(
       ticketPricingCacheKey,
       3600 * 6,
       async () => {
@@ -105,9 +105,9 @@ export class ShowtimeService {
         where: { showtime_id: showtimeId, status: 'CONFIRMED' },
         select: { seat_id: true },
       }),
-      this.realtimeService.getAllHeldSeats(showtimeId),
+      this.redisService.getAllHeldSeats(showtimeId),
       clientKey
-        ? this.realtimeService.getUserHeldSeats(showtimeId, clientKey)
+        ? this.redisService.getUserHeldSeats(showtimeId, clientKey)
         : [],
     ]);
 
@@ -139,11 +139,9 @@ export class ShowtimeService {
    */
   async clearShowtimeCache(cinemaId?: string, hallId?: string) {
     if (cinemaId)
-      await this.realtimeService.deleteCacheByPrefix(
-        `showtime:list:${cinemaId}`
-      );
+      await this.redisService.deleteCacheByPrefix(`showtime:list:${cinemaId}`);
     if (hallId)
-      await this.realtimeService.deleteCacheByPrefix(`hall:${hallId}:seats`);
-    await this.realtimeService.deleteCacheByPrefix('ticketPricing');
+      await this.redisService.deleteCacheByPrefix(`hall:${hallId}:seats`);
+    await this.redisService.deleteCacheByPrefix('ticketPricing');
   }
 }
