@@ -1,2 +1,1 @@
 export * from './get-showtimes.query';
-export * from './seat-action.request';

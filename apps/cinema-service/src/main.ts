@@ -26,7 +26,6 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter());
 
   await app.startAllMicroservices();
-  await app.init();
 
   Logger.log(`🚀 Cinema service run successfully`);
 }
