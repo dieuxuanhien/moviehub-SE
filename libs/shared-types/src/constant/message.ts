@@ -23,17 +23,7 @@ export const MovieServiceMessage = {
 export const CinemaMessage = {
   GET_CINEMAS: 'cinema.getAll',
   CINEMA: {
-    CREATE: 'cinema.create',
-    UPDATE: 'cinema.update',
-    DELETE: 'cinema.delete',
     GET_SHOWTIME: 'cinema.showtime',
-  },
-  HALL: {
-    GET_DETAIL: 'hall.get_detail',
-    GET_BY_CINEMA: 'hall.get_by_cinema',
-    CREATE: 'hall.create',
-    UPDATE: 'hall.update',
-    DELETE: 'hall.delete',
   },
   SHOWTIME: {
     GET_SHOWTIME_SEATS: 'showtime.get_showtime_seats',

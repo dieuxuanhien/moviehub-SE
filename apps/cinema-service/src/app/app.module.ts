@@ -4,7 +4,6 @@ import { CinemaModule } from './cinema/cinema.module';
 import { ShowtimeModule } from './showtime/showtime.module';
 import { CinemaLocationModule } from './cinema-location/cinema-location.module';
 import { RealtimeModule } from './realtime/realtime.module';
-import { HallModule } from './hall/hall.module';
 import Joi from 'joi';
 
 @Module({
@@ -21,7 +20,6 @@ import Joi from 'joi';
     ShowtimeModule,
     CinemaLocationModule,
     RealtimeModule,
-    HallModule,
   ],
   controllers: [],
   providers: [],
