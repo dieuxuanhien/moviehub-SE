@@ -9,7 +9,6 @@ import {
 import { PrismaService } from '../prisma.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { ShowtimeSeatMapper } from './showtime-seat.mapper';
-import { LayoutType } from '../../../generated/prisma';
 
 @Injectable()
 export class ShowtimeService {
@@ -125,19 +124,9 @@ export class ShowtimeService {
       }
     });
 
-    const cinemaName = await this.prisma.cinemas
-      .findUnique({ where: { id: showtime.cinema_id } })
-      .then((c) => c?.name || '');
-
-    const layoutType = await this.prisma.halls
-      .findUnique({ where: { id: showtime.hall_id } })
-      .then((h) => h?.layout_type || LayoutType.STANDARD);
-
     // 🧠 Mapping response cuối cùng
     return this.showtimeSeatMapper.toShowtimeSeatResponse({
       showtime,
-      cinemaName,
-      layoutType,
       seats,
       reservedMap,
       ticketPricings,
@@ -146,10 +135,7 @@ export class ShowtimeService {
   }
 
   // 🔒 Lấy danh sách ghế đang giữ của user
-  async getSeatsHeldByUser(
-    showtimeId: string,
-    userId: string
-  ): Promise<string[]> {
+  async getSeatsHeldByUser(showtimeId: string, userId: string): Promise<string[]> {
     return this.realtimeService.getUserHeldSeats(showtimeId, userId);
   }
 
@@ -164,10 +150,5 @@ export class ShowtimeService {
     if (hallId)
       await this.realtimeService.deleteCacheByPrefix(`hall:${hallId}:seats`);
     await this.realtimeService.deleteCacheByPrefix('ticketPricing');
-  }
-
-  async getSessionTTL(userId: string): Promise<{ ttl: number }> {
-    const ttl = await this.realtimeService.getSessionTTL(userId);
-    return { ttl };
   }
 }
