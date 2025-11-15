@@ -22,10 +22,9 @@ export class ShowtimeService {
     );
   }
 
-  async getSessionTTL(showtimeId: string, userId: string) {
+  async getSessionTTL(userId: string) {
     return lastValueFrom(
       this.cinemaClient.send(CinemaMessage.SHOWTIME.GET_SESSION_TTL, {
-        showtimeId,
         userId,
       })
     );

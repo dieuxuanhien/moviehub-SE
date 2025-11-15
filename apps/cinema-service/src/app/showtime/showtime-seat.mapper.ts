@@ -11,6 +11,8 @@ import {
   ShowtimeSeatResponse,
   ShowtimeStatusEnum,
   TicketPricingDto,
+  TicketTypeEnum,
+  TimeSlotEnum,
 } from '@movie-hub/shared-types';
 import { Injectable } from '@nestjs/common';
 import {
@@ -47,6 +49,13 @@ export class ShowtimeSeatMapper {
     HOLIDAY: DayTypeEnum.HOLIDAY,
   };
 
+  private readonly PrismaToTimeSlot: Record<$Enums.TimeSlot, TimeSlotEnum> = {
+    AFTERNOON: TimeSlotEnum.AFTERNOON,
+    MORNING: TimeSlotEnum.MORNING,
+    EVENING: TimeSlotEnum.EVENING,
+    LATE_NIGHT: TimeSlotEnum.LATE_NIGHT,
+  };
+
   private readonly PrismaToSeatStatus: Record<
     $Enums.SeatStatus,
     SeatStatusEnum
@@ -64,13 +73,23 @@ export class ShowtimeSeatMapper {
     WHEELCHAIR: SeatTypeEnum.WHEELCHAIR,
   };
 
+  private readonly PrismaToTicketType: Record<
+    $Enums.TicketType,
+    TicketTypeEnum
+  > = {
+    ADULT: TicketTypeEnum.ADULT,
+    CHILD: TicketTypeEnum.CHILD,
+    COUPLE: TicketTypeEnum.COUPLE,
+    STUDENT: TicketTypeEnum.STUDENT,
+  };
+
   toShowtimeInfoDto(entity: Showtimes): ShowtimeInfoDto {
     return {
       id: entity.id,
-      movieId: entity.movie_id,
       start_time: entity.start_time,
       end_time: entity.end_time,
       dateType: this.PrismaToDayType[entity.day_type],
+      timeSlot: this.PrismaToTimeSlot[entity.time_slot],
       format: this.PrismaToFormat[entity.format],
       language: entity.language,
       subtitles: entity.subtitles,
@@ -96,6 +115,7 @@ export class ShowtimeSeatMapper {
     return {
       price: Number(entity.price),
       seatType: this.PrismaToSeatType[entity.seat_type],
+      ticketType: this.PrismaToTicketType[entity.ticket_type],
     };
   }
 
@@ -108,7 +128,6 @@ export class ShowtimeSeatMapper {
   toShowtimeSeatResponse(params: {
     showtime: Showtimes;
     cinemaName: string;
-    hallName: string;
     layoutType: LayoutType;
     seats: Seats[];
     reservedMap: Map<string, ReservationStatusEnum>;
@@ -122,6 +141,8 @@ export class ShowtimeSeatMapper {
       ticketPricings,
       userHeldSeatIds = [],
     } = params;
+
+    const ticketTypes = Object.values(TicketTypeEnum);
 
     const userHeldSet = new Set(userHeldSeatIds);
     const seatMapObj: Record<string, SeatItemDto[]> = {};
@@ -149,12 +170,10 @@ export class ShowtimeSeatMapper {
 
     return {
       showtime: this.toShowtimeInfoDto(showtime),
-      cinemaId: showtime.cinema_id,
       cinemaName: params.cinemaName,
-      hallId: showtime.hall_id,
-      hallName: params.hallName,
       layoutType: params.layoutType as LayoutTypeEnum,
       seat_map,
+      ticketTypes,
       ticketPrices: this.toListTicketPricing(ticketPricings),
       rules: {
         max_selectable: 8,
