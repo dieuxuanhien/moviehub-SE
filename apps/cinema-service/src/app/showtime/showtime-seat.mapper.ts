@@ -1,7 +1,6 @@
 import {
   DayTypeEnum,
   FormatEnum,
-  LayoutTypeEnum,
   ReservationStatusEnum,
   SeatItemDto,
   SeatRowDto,
@@ -17,7 +16,6 @@ import {
 import { Injectable } from '@nestjs/common';
 import {
   $Enums,
-  LayoutType,
   Seats,
   Showtimes,
   TicketPricing,
@@ -127,8 +125,6 @@ export class ShowtimeSeatMapper {
 
   toShowtimeSeatResponse(params: {
     showtime: Showtimes;
-    cinemaName: string;
-    layoutType: LayoutType;
     seats: Seats[];
     reservedMap: Map<string, ReservationStatusEnum>;
     ticketPricings: TicketPricing[];
@@ -170,8 +166,6 @@ export class ShowtimeSeatMapper {
 
     return {
       showtime: this.toShowtimeInfoDto(showtime),
-      cinemaName: params.cinemaName,
-      layoutType: params.layoutType as LayoutTypeEnum,
       seat_map,
       ticketTypes,
       ticketPrices: this.toListTicketPricing(ticketPricings),
