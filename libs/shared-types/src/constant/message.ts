@@ -10,13 +10,6 @@ export const MovieServiceMessage = {
     UPDATED: 'movie.updated',
     GET_DETAIL: 'movie.detail',
     DELETED: 'movie.deleted',
-    GET_LIST_RELEASE: 'movie.release.list',
-    GET_LIST_BY_ID: 'movie.list.by-id',
-  },
-  MOVIE_RELEASE: {
-    CREATED: 'movie.release.created',
-    UPDATED: 'movie.release.updated',
-    DELETED: 'movie.release.deleted',
   },
   GENRE: {
     GET_LIST: 'genre.list',

@@ -1,9 +1,7 @@
 import {
-  CreateMovieReleaseRequest,
   CreateMovieRequest,
   MovieQuery,
   MovieServiceMessage,
-  UpdateMovieReleaseRequest,
   UpdateMovieRequest,
 } from '@movie-hub/shared-types';
 import {
@@ -57,40 +55,5 @@ export class MovieController {
   @MessagePattern(MovieServiceMessage.MOVIE.DELETED)
   async deleteMovie(@Payload() id: string) {
     return this.movieService.deleteMovie(id);
-  }
-
-  // CRUD Movie Release Date
-  @MessagePattern(MovieServiceMessage.MOVIE.GET_LIST_RELEASE)
-  async getMovieRelease(@Payload() movieId: string) {
-    return this.movieService.getMovieRelease(movieId);
-  }
-
-  @MessagePattern(MovieServiceMessage.MOVIE_RELEASE.CREATED)
-  async createMovieRelease(@Payload() request: CreateMovieReleaseRequest) {
-    return this.movieService.createMovieRelease(request);
-  }
-  @MessagePattern(MovieServiceMessage.MOVIE_RELEASE.UPDATED)
-  async updateMovieRelease(
-    @Payload()
-    {
-      id,
-      updateMovieReleaseRequest,
-    }: {
-      id: string;
-      updateMovieReleaseRequest: UpdateMovieReleaseRequest;
-    }
-  ) {
-    return this.movieService.updateMovieRelease(id, updateMovieReleaseRequest);
-  }
-
-  @MessagePattern(MovieServiceMessage.MOVIE_RELEASE.DELETED)
-  async deleteMovieRelease(@Payload() id: string) {
-    return this.movieService.deleteMovieRelease(id);
-  }
-
-  // Function for internal microservice
-  @MessagePattern(MovieServiceMessage.MOVIE.GET_LIST_BY_ID)
-  async getMovieByListId(@Payload() movieIds: string[]) {
-    return this.movieService.getMovieByListId(movieIds);
   }
 }
