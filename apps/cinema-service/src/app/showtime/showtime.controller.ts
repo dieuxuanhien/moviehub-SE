@@ -97,4 +97,14 @@ export class ShowtimeController {
   deleteShowtime(@Payload() payload: { showtimeId: string }) {
     return this.showtimeCommandService.cancelShowtime(payload.showtimeId);
   }
+
+  @MessagePattern(CinemaMessage.SHOWTIME.GET_SEATS_HELD_BY_USER)
+  getSeatsHeldByUser(
+    @Payload() payload: { showtimeId: string; userId: string }
+  ): Promise<string[]> {
+    return this.showtimeService.getSeatsHeldByUser(
+      payload.showtimeId,
+      payload.userId
+    );
+  }
 }
