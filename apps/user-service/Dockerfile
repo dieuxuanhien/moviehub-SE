@@ -1,7 +1,7 @@
 # ===========================================
 # DEPENDENCIES STAGE - Install all deps
 # ===========================================
-FROM node:22-alpine AS deps
+FROM node:18-alpine AS deps
 
 WORKDIR /app
 
@@ -9,11 +9,13 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install ALL dependencies (needed for build)
-RUN npm ci 
+RUN npm ci --legacy-peer-deps && \
+    npm cache clean --force
+
 # ===========================================
 # BUILD STAGE - Build the application
 # ===========================================
-FROM node:22-alpine AS builder
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
@@ -39,7 +41,7 @@ RUN npx nx build user-service --prod
 # ===========================================
 # PRODUCTION STAGE - Minimal runtime image
 # ===========================================
-FROM node:22-alpine AS production
+FROM node:18-alpine AS production
 
 # Install openssl for Prisma
 RUN apk add --no-cache openssl
