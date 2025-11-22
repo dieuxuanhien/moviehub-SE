@@ -52,8 +52,8 @@ export class HallMapper {
       capacity: hall.capacity,
       rows: hall.rows,
       status: hall.status as HallStatusEnum,
-      screenType: hall.screen_type,
-      soundSystem: hall.sound_system,
+      screen_type: hall.screen_type,
+      sound_system: hall.sound_system,
     };
   }
 
@@ -74,19 +74,19 @@ export class HallMapper {
   ): HallDetailResponse {
     return {
       id: hall.id,
-      cinemaId: hall.cinema_id,
+      cinema_id: hall.cinema_id,
       name: hall.name,
       type: hall.type,
       capacity: hall.capacity,
       rows: hall.rows,
-      screenType: hall.screen_type,
-      soundSystem: hall.sound_system,
+      screen_type: hall.screen_type,
+      sound_system: hall.sound_system,
       features: hall.features,
       status: hall.status as HallStatusEnum,
       layoutType: hall.layout_type as LayoutTypeEnum,
       seatMap: this.mapSeatRow(hall.seats?.map(this.toSeatResponse) || []),
-      createdAt: hall.created_at,
-      updatedAt: hall.updated_at,
+      created_at: hall.created_at,
+      updated_at: hall.updated_at,
     };
   }
 

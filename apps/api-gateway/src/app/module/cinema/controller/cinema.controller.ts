@@ -16,7 +16,6 @@ import {
 } from '@nestjs/common';
 import { CinemaService } from '../service/cinema.service';
 import {
-  AdminGetShowtimesQuery,
   CreateCinemaRequest,
   GetShowtimesQuery,
   UpdateCinemaRequest,
@@ -24,7 +23,6 @@ import {
 import { TransformInterceptor } from '../../../common/interceptor/transform.interceptor';
 import { ClerkAuthGuard } from '../../../common/guard/clerk-auth.guard';
 import { Permission } from '../../../common/decorator/permission.decorator';
-import { PaginationQuery } from '@movie-hub/shared-types/common';
 
 @Controller({
   version: '1',
@@ -198,31 +196,5 @@ export class CinemaController {
       movieId,
       date
     );
-  }
-
-  @Get(':cinemaId/movies/:movieId/showtimes/admin')
-  async adminGetMovieShowtimes(
-    @Param('cinemaId') cinemaId: string,
-    @Param('movieId') movieId: string,
-    @Query() query: AdminGetShowtimesQuery
-  ) {
-    return await this.cinemaService.adminGetMovieShowtimes(
-      cinemaId,
-      movieId,
-      query
-    );
-  }
-
-  @Get('/cinema/:cinemaId/movies')
-  async getMovieAtCinemas(
-    @Param('cinemaId') cinemaId: string,
-    @Query() query: PaginationQuery
-  ) {
-    return this.cinemaService.getMovieAtCinemas(cinemaId, query);
-  }
-
-  @Get('/movies/showtimes')
-  async getAllMoviesAtCinemas() {
-    return this.cinemaService.getAllMoviesWithShowtimes();
   }
 }

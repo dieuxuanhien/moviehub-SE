@@ -9,7 +9,7 @@ export interface CinemaSummaryResponse {
   phone?: string;
   email?: string;
   rating?: number;
-  totalReviews: number;
+  total_reviews: number;
   images?: string[];
   status: CinemaStatusEnum;
 }

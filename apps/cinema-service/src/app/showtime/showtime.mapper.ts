@@ -1,26 +1,38 @@
 import {
-  FormatEnum,
   ShowtimeStatusEnum,
   ShowtimeSummaryResponse,
 } from '@movie-hub/shared-types';
+import { Injectable } from '@nestjs/common';
 import { $Enums, Showtimes } from '../../../generated/prisma/client';
 
+@Injectable()
 export class ShowtimeMapper {
-  static toShowtimeSummaryResponse(entity: Showtimes): ShowtimeSummaryResponse {
+  private readonly PrismaToStatus: Record<
+    $Enums.ShowtimeStatus,
+    ShowtimeStatusEnum
+  > = {
+    SCHEDULED: ShowtimeStatusEnum.SCHEDULED,
+    SELLING: ShowtimeStatusEnum.SELLING,
+    SOLD_OUT: ShowtimeStatusEnum.SOLD_OUT,
+    CANCELLED: ShowtimeStatusEnum.CANCELLED,
+    COMPLETED: ShowtimeStatusEnum.COMPLETED,
+  };
+
+  toShowtimeSummaryResponse(entity: Showtimes): ShowtimeSummaryResponse {
     return {
       id: entity.id,
       hallId: entity.hall_id,
       startTime: entity.start_time,
       endTime: entity.end_time,
-      format: entity.format as FormatEnum,
+      // format: this.PrismaToFormat[entity.format],
       // language: entity.language,
       // subtitles: entity.subtitles ?? [],
       // basePrice: this.parseDecimal(entity.base_price),
-      status: entity.status as ShowtimeStatusEnum,
+      status: this.PrismaToStatus[entity.status],
     };
   }
 
-  static toShowtimeSummaryList(
+  toShowtimeSummaryList(
     entities: (Showtimes & { cinema?: any; hall?: any })[]
   ): ShowtimeSummaryResponse[] {
     return entities.map((entity) => this.toShowtimeSummaryResponse(entity));

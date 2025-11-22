@@ -7,6 +7,6 @@ export interface HallSummaryResponse {
   capacity: number;
   rows: number;
   status: HallStatusEnum;
-  screenType?: string;
-  soundSystem?: string;
+  screen_type?: string;
+  sound_system?: string;
 }

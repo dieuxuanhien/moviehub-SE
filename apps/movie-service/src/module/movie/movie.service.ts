@@ -259,25 +259,4 @@ export class MovieService {
       message: 'Delete movie release successfully!',
     };
   }
-
-  // Function for internal microservice
-  async getMovieByListId(movieIs: string[]) {
-    const movies = await this.prismaService.movie.findMany({
-      where: {
-        id: {
-          in: movieIs,
-        },
-      },
-      include: {
-        movieGenres: {
-          include: {
-            genre: true,
-          },
-        },
-        movieReleases: true,
-      },
-    });
-
-    return movies.map((movie) => MovieMapper.toResponse(movie));
-  }
 }
