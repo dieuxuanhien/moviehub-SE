@@ -11,6 +11,7 @@ export const MovieServiceMessage = {
     GET_DETAIL: 'movie.detail',
     DELETED: 'movie.deleted',
     GET_LIST_RELEASE: 'movie.release.list',
+    GET_LIST_BY_ID: 'movie.list.by-id',
   },
   MOVIE_RELEASE: {
     CREATED: 'movie.release.created',
@@ -30,12 +31,14 @@ export const CinemaMessage = {
   GET_CINEMAS: 'cinema.getAll',
   MOVIE: {
     GET_MOVIES_BY_CINEMA: 'cinema.movies_by_cinema',
+    GET_ALL_MOVIES_AT_CINEMAS: 'cinema.all_movies_at_cinemas',
   },
   CINEMA: {
     CREATE: 'cinema.create',
     UPDATE: 'cinema.update',
     DELETE: 'cinema.delete',
     GET_SHOWTIME: 'cinema.showtime',
+    ADMIN_GET_SHOWTIME: 'cinema.admin_showtime',
   },
   HALL: {
     GET_DETAIL: 'hall.get_detail',
