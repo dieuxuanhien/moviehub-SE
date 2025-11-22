@@ -11,6 +11,7 @@ export const MovieServiceMessage = {
     GET_DETAIL: 'movie.detail',
     DELETED: 'movie.deleted',
     GET_LIST_RELEASE: 'movie.release.list',
+    GET_LIST_BY_ID: 'movie.list.by-id',
   },
   MOVIE_RELEASE: {
     CREATED: 'movie.release.created',
@@ -28,11 +29,16 @@ export const MovieServiceMessage = {
 
 export const CinemaMessage = {
   GET_CINEMAS: 'cinema.getAll',
+  MOVIE: {
+    GET_MOVIES_BY_CINEMA: 'cinema.movies_by_cinema',
+    GET_ALL_MOVIES_AT_CINEMAS: 'cinema.all_movies_at_cinemas',
+  },
   CINEMA: {
     CREATE: 'cinema.create',
     UPDATE: 'cinema.update',
     DELETE: 'cinema.delete',
     GET_SHOWTIME: 'cinema.showtime',
+    ADMIN_GET_SHOWTIME: 'cinema.admin_showtime',
   },
   HALL: {
     GET_DETAIL: 'hall.get_detail',
@@ -43,8 +49,11 @@ export const CinemaMessage = {
     UPDATE_SEAT_STATUS: 'cinema.update_seat_status',
   },
   SHOWTIME: {
+    CREATE_SHOWTIME: 'showtime.create_showtime',
+    BATCH_CREATE_SHOWTIMES: 'showtime.batch_create_showtimes',
+    UPDATE_SHOWTIME: 'showtime.update_showtime',
+    DELETE_SHOWTIME: 'showtime.delete_showtime',
     GET_SHOWTIME_SEATS: 'showtime.get_showtime_seats',
-    GET_SEATS_HELD_BY_USER: 'showtime.get_seats_held_by_user',
     GET_SESSION_TTL: 'showtime.get_session_ttl',
   },
   TICKET_PRICING: {
@@ -57,32 +66,4 @@ export const CinemaMessage = {
   SEARCH_CINEMAS: 'CINEMA.SEARCH_CINEMAS',
   GET_AVAILABLE_CITIES: 'CINEMA.GET_AVAILABLE_CITIES',
   GET_AVAILABLE_DISTRICTS: 'CINEMA.GET_AVAILABLE_DISTRICTS',
-};
-
-export const BookingMessage = {
-  CREATE: 'booking.create',
-  FIND_ALL: 'booking.findAll',
-  FIND_ONE: 'booking.findOne',
-  CANCEL: 'booking.cancel',
-  GET_SUMMARY: 'booking.getSummary',
-};
-
-export const ConcessionMessage = {
-  FIND_ALL: 'concession.findAll',
-  FIND_ONE: 'concession.findOne',
-  CREATE: 'concession.create',
-  UPDATE: 'concession.update',
-  DELETE: 'concession.delete',
-  UPDATE_INVENTORY: 'concession.updateInventory',
-};
-
-export const PromotionMessage = {
-  FIND_ALL: 'promotion.findAll',
-  FIND_ONE: 'promotion.findOne',
-  FIND_BY_CODE: 'promotion.findByCode',
-  VALIDATE: 'promotion.validate',
-  CREATE: 'promotion.create',
-  UPDATE: 'promotion.update',
-  DELETE: 'promotion.delete',
-  TOGGLE_ACTIVE: 'promotion.toggleActive',
 };
