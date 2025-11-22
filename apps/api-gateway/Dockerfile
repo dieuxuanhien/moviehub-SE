@@ -9,7 +9,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install ALL dependencies (needed for build)
-RUN npm ci 
+RUN npm ci --legacy-peer-deps && \
+    npm cache clean --force
 
 # ===========================================
 # BUILD STAGE - Build the application
