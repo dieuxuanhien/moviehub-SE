@@ -20,13 +20,12 @@ export class ShowtimeService {
   }
 
   async getShowtimeSeats(showtimeId: string, userId: string) {
-    const result = await lastValueFrom(
+    return lastValueFrom(
       this.cinemaClient.send(CinemaMessage.SHOWTIME.GET_SHOWTIME_SEATS, {
         showtimeId,
         userId,
       })
     );
-    return { data: result };
   }
 
   async getSessionTTL(showtimeId: string, userId: string) {
