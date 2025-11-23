@@ -253,8 +253,7 @@ export class ShowtimeService {
     const pricingBySeatType = new Map<SeatType, number>();
     for (const tp of ticketPricings) {
       // nếu có nhiều bản ghi cùng seat_type, bạn có thể decide lấy first/lowest/highest
-      // Convert Prisma Decimal to number to avoid precision issues
-      pricingBySeatType.set(tp.seat_type, Number(tp.price));
+      pricingBySeatType.set(tp.seat_type, tp.price);
     }
 
     // 6) Build response
