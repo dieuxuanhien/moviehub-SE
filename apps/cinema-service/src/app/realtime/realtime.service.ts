@@ -6,8 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { RedisPubSubService } from '@movie-hub/shared-redis';
-import { SeatBookingEvent, SeatEvent } from '@movie-hub/shared-types';
-import { ResolveBookingService } from './resolve-booking.service';
+import { SeatEvent } from '@movie-hub/shared-types';
 
 @Injectable()
 export class RealtimeService implements OnModuleInit, OnModuleDestroy {
@@ -16,8 +15,7 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
   private readonly HOLD_TTL = 600; // 10 phút
 
   constructor(
-    @Inject('REDIS_CINEMA') private readonly redis: RedisPubSubService,
-    private readonly resolveBookingService: ResolveBookingService
+    @Inject('REDIS_CINEMA') private readonly redis: RedisPubSubService
   ) {}
 
   async onModuleInit() {
@@ -32,26 +30,13 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
     await this.redis.subscribe('gateway.release_seat', (msg) =>
       this.handleGatewayMessage('gateway.release_seat', msg)
     );
-    await this.redis.subscribe('booking.seat_booked', (msg) =>
-      this.handleGatewayMessage('booking.seat_booked', msg)
-    );
   }
 
   private async handleGatewayMessage(channel: string, message: string) {
-    switch (channel) {
-      case 'gateway.hold_seat': {
-        const data = JSON.parse(message) as SeatEvent;
-        return this.handleHoldSeat(data);
-      }
-      case 'gateway.release_seat': {
-        const data = JSON.parse(message) as SeatEvent;
-        return this.handleReleaseSeat(data);
-      }
-      case 'booking.seat_booked': {
-        const data = JSON.parse(message) as SeatBookingEvent;
-        return this.handleSeatBooked(data);
-      }
-    }
+    const data = JSON.parse(message) as SeatEvent;
+    if (channel === 'gateway.hold_seat') await this.handleHoldSeat(data);
+    else if (channel === 'gateway.release_seat')
+      await this.handleReleaseSeat(data);
   }
 
   // ---------------------------------------
@@ -168,8 +153,11 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
   // ---------------------------------------
   // 🎟️ GHẾ ĐÃ ĐƯỢC ĐẶT (BOOKED)
   // ---------------------------------------
-  async handleSeatBooked(event: SeatBookingEvent) {
-    const { showtimeId, userId, bookingId, seatIds } = event;
+  async handleSeatBooked(
+    showtimeId: string,
+    userId: string,
+    seatIds: string[]
+  ) {
     for (const seatId of seatIds) {
       const seatKey = `hold:showtime:${showtimeId}:${seatId}`;
       const userKey = `hold:user:${userId}:showtime:${showtimeId}`;
@@ -187,9 +175,10 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
       await this.redis.del(userKey);
     }
 
-    await this.resolveBookingService.createSeatReservations(event);
-
-    await this.redis.publish('cinema.seat_booked', JSON.stringify(event));
+    await this.redis.publish(
+      'cinema.seat_booked',
+      JSON.stringify({ showtimeId, seatIds, userId })
+    );
   }
 
   // ---------------------------------------
