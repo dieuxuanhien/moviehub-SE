@@ -5,8 +5,6 @@ import {
   CreateCinemaRequest,
   MovieDetailResponse,
   MovieServiceMessage,
-  MovieWithCinemaAndShowtimeResponse,
-  MovieWithShowtimeResponse,
   ResourceNotFoundException,
   UpdateCinemaRequest,
 } from '@movie-hub/shared-types';
@@ -24,9 +22,7 @@ export class CinemaService {
     @Inject('MOVIE_SERVICE') private readonly movieClient: ClientProxy
   ) {}
 
-  async createCinema(
-    createCinemaDto: CreateCinemaRequest
-  ): Promise<ServiceResult<CinemaDetailResponse>> {
+  async createCinema(createCinemaDto: CreateCinemaRequest) {
     const cinema = await this.prisma.$transaction(async (db) => {
       return await db.cinemas.create({
         data: CinemaMapper.toCinema(createCinemaDto),
@@ -66,20 +62,16 @@ export class CinemaService {
     };
   }
 
-  async deleteCinema(id: string): Promise<ServiceResult<void>> {
+  async deleteCinema(id: string) {
     await this.prisma.cinemas.delete({
       where: { id },
     });
     return {
-      data: undefined,
       message: 'Delete cinema successfully!',
     };
   }
 
-  async getMoviesByCinema(
-    cinemaId: string,
-    query: PaginationQuery
-  ): Promise<ServiceResult<MovieWithShowtimeResponse[]>> {
+  async getMoviesByCinema(cinemaId: string, query: PaginationQuery) {
     const { page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
@@ -178,13 +170,10 @@ export class CinemaService {
         hasNext: page < totalPages,
       },
       data: response,
-      message: 'Get movies successfully!',
     };
   }
 
-  async getAllMoviesWithShowtimes(): Promise<
-    ServiceResult<MovieWithCinemaAndShowtimeResponse[]>
-  > {
+  async getAllMoviesWithShowtimes() {
     // 1. Lấy tất cả showtime đang SELLING
     const showtimes = await this.prisma.showtimes.findMany({
       where: {
@@ -204,8 +193,7 @@ export class CinemaService {
       },
     });
 
-    if (!showtimes.length)
-      return { data: [], message: 'Get movies successfully!' };
+    if (!showtimes.length) return [];
 
     // 2. Gom nhóm theo movieId
     const mapByMovie = new Map<string, typeof showtimes>();
@@ -275,9 +263,6 @@ export class CinemaService {
       };
     });
 
-    return {
-      data: result,
-      message: 'Get movies successfully!',
-    };
+    return result;
   }
 }

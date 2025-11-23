@@ -44,9 +44,7 @@ export class HallService {
     };
   }
 
-  async createHall(
-    createHallDto: CreateHallRequest
-  ): Promise<ServiceResult<HallDetailResponse>> {
+  async createHall(createHallDto: CreateHallRequest) {
     const hall = await this.prisma.$transaction(async (db) => {
       const newHall = await db.halls.create({
         data: HallMapper.toHallCreate(createHallDto),
@@ -100,12 +98,11 @@ export class HallService {
     };
   }
 
-  async deleteHall(id: string): Promise<ServiceResult<void>> {
+  async deleteHall(id: string) {
     await this.prisma.halls.delete({
       where: { id },
     });
     return {
-      data: undefined,
       message: 'Delete hall successfully!',
     };
   }
@@ -113,7 +110,7 @@ export class HallService {
   async updateSeatStatus(
     seatId: string,
     updateSeatStatusRequest: UpdateSeatStatusRequest
-  ): Promise<ServiceResult<void>> {
+  ) {
     const seat = await this.prisma.seats.findUnique({
       where: { id: seatId },
     });
@@ -122,7 +119,7 @@ export class HallService {
       throw new NotFoundException('Seat not found');
     }
 
-    await this.prisma.seats.update({
+    const updated = await this.prisma.seats.update({
       where: { id: seatId },
       data: {
         status: updateSeatStatusRequest.status as SeatStatus,
@@ -131,7 +128,7 @@ export class HallService {
 
     return {
       message: 'Seat updated successfully',
-      data: undefined,
+      data: updated,
     };
   }
 }

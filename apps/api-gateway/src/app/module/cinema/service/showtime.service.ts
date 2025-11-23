@@ -3,7 +3,7 @@ import {
   CinemaMessage,
   CreateShowtimeRequest,
   SERVICE_NAME,
-  UpdateShowtimeRequest,
+  UpdateSeatStatusRequest,
 } from '@movie-hub/shared-types';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
@@ -53,7 +53,10 @@ export class ShowtimeService {
     );
   }
 
-  async updateShowtime(showtimeId: string, updateData: UpdateShowtimeRequest) {
+  async updateShowtime(
+    showtimeId: string,
+    updateData: UpdateSeatStatusRequest
+  ) {
     return lastValueFrom(
       this.cinemaClient.send(CinemaMessage.SHOWTIME.UPDATE_SHOWTIME, {
         showtimeId,

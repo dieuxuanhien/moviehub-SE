@@ -8,18 +8,13 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { PrismaService } from '../prisma.service';
 import {
-  BatchCreateShowtimeResponse,
   BatchCreateShowtimesInput,
   CreateShowtimeRequest,
   MovieServiceMessage,
-  ShowtimeDetailResponse,
-  ShowtimeInfoDto,
   UpdateShowtimeRequest,
 } from '@movie-hub/shared-types';
 import { DayType, Format, ShowtimeStatus } from '../../../generated/prisma';
 import { ClientProxy } from '@nestjs/microservices';
-import { ServiceResult } from '@movie-hub/shared-types/common';
-import { ShowtimeMapper } from './showtime.mapper';
 
 @Injectable()
 export class ShowtimeCommandService {
@@ -31,9 +26,7 @@ export class ShowtimeCommandService {
   // ===========================
   // CREATE SINGLE SHOWTIME
   // ===========================
-  async createShowtime(
-    dto: CreateShowtimeRequest
-  ): Promise<ServiceResult<ShowtimeDetailResponse>> {
+  async createShowtime(dto: CreateShowtimeRequest) {
     const {
       movieId,
       movieReleaseId,
@@ -58,7 +51,7 @@ export class ShowtimeCommandService {
     const totalSeats = await this.getTotalSeats(hallId);
     const dayType = this.getDayType(start);
 
-    const showtime = await this.prisma.showtimes.create({
+    return this.prisma.showtimes.create({
       data: {
         movie_id: movie.id,
         movie_release_id: release?.id ?? null,
@@ -74,18 +67,12 @@ export class ShowtimeCommandService {
         day_type: dayType,
       },
     });
-    return {
-      data: ShowtimeMapper.toShowtimDetailResponse(showtime),
-      message: 'Showtime created successfully',
-    };
   }
 
   // ===========================
   // BATCH CREATE SHOWTIME
   // ===========================
-  async batchCreateShowtimes(
-    input: BatchCreateShowtimesInput
-  ): Promise<ServiceResult<BatchCreateShowtimeResponse>> {
+  async batchCreateShowtimes(input: BatchCreateShowtimesInput) {
     const {
       movieId,
       movieReleaseId,
@@ -187,13 +174,10 @@ export class ShowtimeCommandService {
     }
 
     return {
-      data: {
-        createdCount: created.length,
-        skippedCount: skipped.length,
-        created: ShowtimeMapper.toShowtimeDetailList(created),
-        skipped,
-      },
-      message: 'Batch create showtimes completed',
+      createdCount: created.length,
+      skippedCount: skipped.length,
+      created,
+      skipped,
     };
   }
 
@@ -201,10 +185,7 @@ export class ShowtimeCommandService {
   // UPDATE & CANCEL SHOWTIME
   // ===========================
 
-  async updateShowtime(
-    id: string,
-    dto: UpdateShowtimeRequest
-  ): Promise<ServiceResult<ShowtimeDetailResponse>> {
+  async updateShowtime(id: string, dto: UpdateShowtimeRequest) {
     const showtime = await this.prisma.showtimes.findUnique({ where: { id } });
     if (!showtime) throw new NotFoundException('Showtime not found');
 
@@ -245,7 +226,7 @@ export class ShowtimeCommandService {
         throw new BadRequestException(`Conflict with showtime ${conflict.id}`);
     }
 
-    const updatedShowtime = await this.prisma.showtimes.update({
+    return this.prisma.showtimes.update({
       where: { id },
       data: {
         movie_id: dto.movieId ?? showtime.movie_id,
@@ -258,14 +239,9 @@ export class ShowtimeCommandService {
         updated_at: new Date(),
       },
     });
-
-    return {
-      data: ShowtimeMapper.toShowtimDetailResponse(updatedShowtime),
-      message: 'Showtime updated successfully',
-    };
   }
 
-  async cancelShowtime(id: string): Promise<ServiceResult<void>> {
+  async cancelShowtime(id: string) {
     const showtime = await this.prisma.showtimes.findUnique({
       where: { id },
     });
@@ -277,7 +253,7 @@ export class ShowtimeCommandService {
 
     // Nếu có người đặt → chuyển trạng thái
     if (hasReservation > 0) {
-      await this.prisma.showtimes.update({
+      return this.prisma.showtimes.update({
         where: { id },
         data: {
           status: ShowtimeStatus.CANCELLED,
@@ -287,13 +263,9 @@ export class ShowtimeCommandService {
     }
 
     // Nếu không ai đặt → xoá cứng hoặc soft delete
-    await this.prisma.showtimes.delete({
+    return this.prisma.showtimes.delete({
       where: { id },
     });
-    return {
-      data: undefined,
-      message: 'Showtime cancelled successfully',
-    };
   }
 
   // ===========================

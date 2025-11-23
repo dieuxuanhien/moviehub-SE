@@ -15,7 +15,6 @@ import { Inject, Logger } from '@nestjs/common';
 import {
   LimitReachedEvent,
   SeatActionDto,
-  SeatBookingEvent,
   SeatEvent,
   SeatExpiredEvent,
 } from '@movie-hub/shared-types';
@@ -125,12 +124,11 @@ export class RealtimeGateway
     this.server.to(data.showtimeId).emit('seat_expired', data);
   }
 
-  // Mới thêm
+  // tạm chưa có
   private onSeatBooked(msg: string) {
-    const data = JSON.parse(msg) as SeatBookingEvent;
+    const data = JSON.parse(msg);
     this.server.to(data.showtimeId).emit('seat_booked', data);
   }
-
   private onLimitReached(msg: string) {
     const data = JSON.parse(msg) as LimitReachedEvent;
     this.server.to(data.showtimeId).emit('limit_reached', data);

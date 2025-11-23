@@ -2,8 +2,6 @@ import { Global, Module } from '@nestjs/common';
 import { RedisModule } from '@movie-hub/shared-redis';
 import { RealtimeService } from './realtime.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ResolveBookingService } from './resolve-booking.service';
-import { PrismaService } from '../prisma.service';
 
 @Global()
 @Module({
@@ -22,7 +20,7 @@ import { PrismaService } from '../prisma.service';
       }),
     }),
   ],
-  providers: [RealtimeService, ResolveBookingService, PrismaService],
+  providers: [RealtimeService],
   exports: [RealtimeService],
 })
 export class RealtimeModule {}
