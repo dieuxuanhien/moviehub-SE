@@ -6,6 +6,9 @@ import {
   ShowtimeSeatResponse,
   ReservationStatusEnum,
   AdminGetShowtimesQuery,
+  SeatPricingDto,
+  SeatPricingWithTtlDto,
+  SeatTypeEnum,
 } from '@movie-hub/shared-types';
 import { PrismaService } from '../prisma.service';
 import { RealtimeService } from '../realtime/realtime.service';
@@ -14,6 +17,7 @@ import {
   Format,
   LayoutType,
   Prisma,
+  SeatType,
   ShowtimeStatus,
 } from '../../../generated/prisma';
 
@@ -198,12 +202,82 @@ export class ShowtimeService {
     });
   }
 
-  // 🔒 Lấy danh sách ghế đang giữ của user
+  // 🔒 Lấy danh sách ghế đang giữ của user + TTL
   async getSeatsHeldByUser(
     showtimeId: string,
     userId: string
-  ): Promise<string[]> {
-    return this.realtimeService.getUserHeldSeats(showtimeId, userId);
+  ): Promise<SeatPricingWithTtlDto> {
+    const showtime = await this.prisma.showtimes.findUnique({
+      where: { id: showtimeId },
+      select: { id: true, hall_id: true, day_type: true },
+    });
+    if (!showtime) throw new NotFoundException('Showtime not found');
+
+    // 1) seatIds từ realtime
+    const seatIds = await this.realtimeService.getUserHeldSeats(
+      showtimeId,
+      userId
+    );
+    
+    // 2) Get TTL for the user's lock session
+    const lockTtl = await this.realtimeService.getUserTTL(showtimeId, userId);
+    
+    if (!seatIds || seatIds.length === 0) {
+      return { seats: [], lockTtl };
+    }
+
+    // 3) Lấy seats (chỉ cần id và type)
+    const seats = await this.prisma.seats.findMany({
+      where: { id: { in: seatIds } },
+      select: {
+        id: true,
+        type: true,
+        hall_id: true,
+        row_letter: true,
+        seat_number: true,
+      },
+    });
+
+    // 4) Nếu không có seat types thì trả giá 0
+    const seatTypes = Array.from(
+      new Set(seats.map((s) => s.type).filter(Boolean))
+    ) as SeatType[];
+    let ticketPricings = [];
+    if (seatTypes.length > 0) {
+      // 5) Lấy tất cả pricings cho hall + day + các seat types cần thiết
+      ticketPricings = await this.prisma.ticketPricing.findMany({
+        where: {
+          hall_id: showtime.hall_id,
+          day_type: showtime.day_type,
+          seat_type: { in: seatTypes },
+        },
+        // chọn trường cần thiết
+        select: { seat_type: true, price: true },
+      });
+    }
+
+    // 6) Map seat_type -> pricing (để tra nhanh O(1))
+    const pricingBySeatType = new Map<SeatType, number>();
+    for (const tp of ticketPricings) {
+      // nếu có nhiều bản ghi cùng seat_type, bạn có thể decide lấy first/lowest/highest
+      // Convert Prisma Decimal to number to avoid precision issues
+      pricingBySeatType.set(tp.seat_type, Number(tp.price));
+    }
+
+    // 7) Build response with seats and TTL
+    const seatPricing: SeatPricingDto[] = seats.map((seat) => {
+      const price = seat.type ? pricingBySeatType.get(seat.type) ?? 0 : 0;
+      return {
+        id: seat.id,
+        hallId: seat.hall_id,
+        rowLetter: seat.row_letter,
+        seatNumber: seat.seat_number,
+        type: seat.type as SeatTypeEnum,
+        price,
+      };
+    });
+
+    return { seats: seatPricing, lockTtl };
   }
 
   /**
