@@ -6,7 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { RedisPubSubService } from '@movie-hub/shared-redis';
-import { SeatEvent, BookingConfirmedEvent } from '@movie-hub/shared-types';
+import { SeatEvent } from '@movie-hub/shared-types';
 
 @Injectable()
 export class RealtimeService implements OnModuleInit, OnModuleDestroy {
@@ -21,7 +21,6 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
     this.logger.log('✅ RealtimeService initialized');
     await this.subscribeToGatewayChannels();
-    await this.subscribeToBookingEvents();
   }
 
   private async subscribeToGatewayChannels() {
@@ -31,27 +30,6 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
     await this.redis.subscribe('gateway.release_seat', (msg) =>
       this.handleGatewayMessage('gateway.release_seat', msg)
     );
-  }
-
-  private async subscribeToBookingEvents() {
-    await this.redis.subscribe('booking.confirmed', (msg) =>
-      this.handleBookingConfirmed(msg)
-    );
-  }
-
-  private async handleBookingConfirmed(message: string) {
-    try {
-      const event = JSON.parse(message) as BookingConfirmedEvent;
-      this.logger.log(
-        `Received booking.confirmed event for booking ${event.bookingId}`
-      );
-      await this.handleSeatBooked(event.showtimeId, event.userId, event.seatIds);
-    } catch (error) {
-      this.logger.error(
-        `Failed to handle booking.confirmed event: ${error.message}`,
-        error.stack
-      );
-    }
   }
 
   private async handleGatewayMessage(channel: string, message: string) {
@@ -169,37 +147,6 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
 
     this.logger.warn(
       `User ${userId} switched showtime from ${oldShowtimeId} → ${newShowtimeId}. Old seats cleared.`
-    );
-  }
-
-  // ---------------------------------------
-  // 🎟️ GHẾ ĐÃ ĐƯỢC ĐẶT (BOOKED)
-  // ---------------------------------------
-  async handleSeatBooked(
-    showtimeId: string,
-    userId: string,
-    seatIds: string[]
-  ) {
-    for (const seatId of seatIds) {
-      const seatKey = `hold:showtime:${showtimeId}:${seatId}`;
-      const userKey = `hold:user:${userId}:showtime:${showtimeId}`;
-
-      await Promise.all([
-        this.redis.del(seatKey),
-        this.redis.srem(userKey, seatId),
-      ]);
-    }
-
-    const userKey = `hold:user:${userId}:showtime:${showtimeId}`;
-    const remaining = await this.redis.scard(userKey);
-
-    if (remaining === 0) {
-      await this.redis.del(userKey);
-    }
-
-    await this.redis.publish(
-      'cinema.seat_booked',
-      JSON.stringify({ showtimeId, seatIds, userId })
     );
   }
 

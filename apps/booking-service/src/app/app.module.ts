@@ -10,7 +10,6 @@ import { ConcessionModule } from './concession/concession.module';
 import { PromotionModule } from './promotion/promotion.module';
 import { LoyaltyModule } from './loyalty/loyalty.module';
 import { TicketModule } from './ticket/ticket.module';
-import { BookingRedisModule } from './redis/redis.module';
 import Joi from 'joi';
 
 @Module({
@@ -31,7 +30,6 @@ import Joi from 'joi';
     CacheModule.register({
       isGlobal: true,
     }),
-    BookingRedisModule,
     BookingModule,
     PaymentModule,
     ConcessionModule,
