@@ -3,6 +3,8 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { PaymentService } from './payment.service';
 import {
   CreatePaymentDto,
+  PaymentDetailDto,
+  PaymentStatus,
   AdminFindAllPaymentsDto,
   FindPaymentsByStatusDto,
   FindPaymentsByDateRangeDto,
@@ -16,67 +18,81 @@ export class PaymentController {
   @MessagePattern('payment.create')
   async create(
     @Payload()
-    payload: {
+    data: {
       bookingId: string;
       dto: CreatePaymentDto;
       ipAddr: string;
     }
-  ) {
+  ): Promise<PaymentDetailDto> {
     return this.paymentService.createPayment(
-      payload.bookingId,
-      payload.dto,
-      payload.ipAddr
+      data.bookingId,
+      data.dto,
+      data.ipAddr
     );
   }
 
   @MessagePattern('payment.findOne')
-  async findOne(@Payload() payload: { id: string }) {
-    return this.paymentService.findOne(payload.id);
+  async findOne(@Payload() data: { id: string }): Promise<PaymentDetailDto> {
+    return this.paymentService.findOne(data.id);
   }
 
   @MessagePattern('payment.findByBooking')
-  async findByBooking(@Payload() payload: { bookingId: string }) {
-    return this.paymentService.findByBooking(payload.bookingId);
+  async findByBooking(
+    @Payload() data: { bookingId: string }
+  ): Promise<PaymentDetailDto[]> {
+    return this.paymentService.findByBooking(data.bookingId);
   }
 
   @MessagePattern('payment.vnpay.ipn')
-  async handleVNPayIPN(@Payload() payload: { params: Record<string, string> }) {
-    return this.paymentService.handleVNPayIPN(payload.params);
+  async handleVNPayIPN(
+    @Payload() data: { params: Record<string, string> }
+  ): Promise<{ RspCode: string; Message: string }> {
+    return this.paymentService.handleVNPayIPN(data.params);
   }
 
   @MessagePattern('payment.vnpay.return')
-  async handleVNPayReturn(@Payload() payload: { params: Record<string, string> }) {
-    return this.paymentService.handleVNPayReturn(payload.params);
+  async handleVNPayReturn(
+    @Payload() data: { params: Record<string, string> }
+  ): Promise<{ status: string; code: string }> {
+    return this.paymentService.handleVNPayReturn(data.params);
   }
 
   // ==================== ADMIN OPERATIONS ====================
 
   @MessagePattern('payment.admin.findAll')
-  async adminFindAll(@Payload() payload: { filters: AdminFindAllPaymentsDto }) {
-    return this.paymentService.adminFindAllPayments(payload.filters);
+  async adminFindAll(
+    @Payload() filters: AdminFindAllPaymentsDto
+  ): Promise<{ data: PaymentDetailDto[]; total: number }> {
+    return this.paymentService.adminFindAllPayments(filters);
   }
 
   @MessagePattern('payment.findByStatus')
-  async findByStatus(@Payload() payload: FindPaymentsByStatusDto) {
+  async findByStatus(
+    @Payload() data: FindPaymentsByStatusDto
+  ): Promise<{ data: PaymentDetailDto[]; total: number }> {
     return this.paymentService.findPaymentsByStatus(
-      payload.status,
-      payload.page,
-      payload.limit
+      data.status,
+      data.page,
+      data.limit
     );
   }
 
   @MessagePattern('payment.findByDateRange')
-  async findByDateRange(@Payload() payload: { filters: FindPaymentsByDateRangeDto }) {
-    return this.paymentService.findPaymentsByDateRange(payload.filters);
+  async findByDateRange(
+    @Payload() data: FindPaymentsByDateRangeDto
+  ): Promise<{ data: PaymentDetailDto[]; total: number }> {
+    return this.paymentService.findPaymentsByDateRange(data);
   }
 
   @MessagePattern('payment.cancel')
-  async cancel(@Payload() payload: { paymentId: string }) {
-    return this.paymentService.cancelPayment(payload.paymentId);
+  async cancel(
+    @Payload() data: { paymentId: string }
+  ): Promise<PaymentDetailDto> {
+    return this.paymentService.cancelPayment(data.paymentId);
   }
 
   @MessagePattern('payment.getStatistics')
-  async getStatistics(@Payload() payload: { filters: GetPaymentStatisticsDto }) {
-    return this.paymentService.getPaymentStatistics(payload.filters);
+  async getStatistics(@Payload() filters: GetPaymentStatisticsDto) {
+    return this.paymentService.getPaymentStatistics(filters);
   }
 }

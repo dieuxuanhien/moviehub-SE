@@ -4,7 +4,6 @@ import {
   CreateRefundDto,
   RefundDetailDto,
   RefundStatus,
-  ServiceResult,
 } from '@movie-hub/shared-types';
 import { Prisma } from '../../../generated/prisma';
 
@@ -15,7 +14,7 @@ export class RefundService {
   /**
    * Create a refund request
    */
-  async createRefund(dto: CreateRefundDto): Promise<ServiceResult<RefundDetailDto>> {
+  async createRefund(dto: CreateRefundDto): Promise<RefundDetailDto> {
     // Verify payment exists
     const payment = await this.prisma.payments.findUnique({
       where: { id: dto.paymentId },
@@ -67,10 +66,7 @@ export class RefundService {
       },
     });
 
-    return {
-      data: this.mapToDetailDto(refund),
-      message: 'Refund request created successfully',
-    };
+    return this.mapToDetailDto(refund);
   }
 
   /**
@@ -83,7 +79,7 @@ export class RefundService {
     endDate?: Date;
     page?: number;
     limit?: number;
-  }): Promise<ServiceResult<RefundDetailDto[]>> {
+  }): Promise<{ data: RefundDetailDto[]; total: number }> {
     const page = filters.page || 1;
     const limit = filters.limit || 10;
     const skip = (page - 1) * limit;
@@ -116,25 +112,16 @@ export class RefundService {
       this.prisma.refunds.count({ where }),
     ]);
 
-    const totalPages = Math.ceil(total / limit);
-
     return {
       data: refunds.map((r) => this.mapToDetailDto(r)),
-      meta: {
-        page,
-        limit,
-        totalRecords: total,
-        totalPages,
-        hasPrev: page > 1,
-        hasNext: page < totalPages,
-      },
+      total,
     };
   }
 
   /**
    * Find one refund by ID
    */
-  async findOne(id: string): Promise<ServiceResult<RefundDetailDto>> {
+  async findOne(id: string): Promise<RefundDetailDto> {
     const refund = await this.prisma.refunds.findUnique({
       where: { id },
       include: {
@@ -150,15 +137,13 @@ export class RefundService {
       throw new BadRequestException('Refund not found');
     }
 
-    return {
-      data: this.mapToDetailDto(refund),
-    };
+    return this.mapToDetailDto(refund);
   }
 
   /**
    * Find refunds by payment ID
    */
-  async findByPayment(paymentId: string): Promise<ServiceResult<RefundDetailDto[]>> {
+  async findByPayment(paymentId: string): Promise<RefundDetailDto[]> {
     const refunds = await this.prisma.refunds.findMany({
       where: { payment_id: paymentId },
       include: {
@@ -171,15 +156,13 @@ export class RefundService {
       orderBy: { created_at: 'desc' },
     });
 
-    return {
-      data: refunds.map((r) => this.mapToDetailDto(r)),
-    };
+    return refunds.map((r) => this.mapToDetailDto(r));
   }
 
   /**
    * Process a refund (mark as processing)
    */
-  async processRefund(refundId: string): Promise<ServiceResult<RefundDetailDto>> {
+  async processRefund(refundId: string): Promise<RefundDetailDto> {
     const refund = await this.prisma.refunds.findUnique({
       where: { id: refundId },
     });
@@ -204,16 +187,13 @@ export class RefundService {
       },
     });
 
-    return {
-      data: this.mapToDetailDto(updated),
-      message: 'Refund marked as processing',
-    };
+    return this.mapToDetailDto(updated);
   }
 
   /**
    * Approve and complete a refund
    */
-  async approveRefund(refundId: string): Promise<ServiceResult<RefundDetailDto>> {
+  async approveRefund(refundId: string): Promise<RefundDetailDto> {
     const refund = await this.prisma.refunds.findUnique({
       where: { id: refundId },
       include: {
@@ -268,16 +248,13 @@ export class RefundService {
       return updatedRefund;
     });
 
-    return {
-      data: this.mapToDetailDto(updated),
-      message: 'Refund approved and completed successfully',
-    };
+    return this.mapToDetailDto(updated);
   }
 
   /**
    * Reject a refund request
    */
-  async rejectRefund(refundId: string, reason: string): Promise<ServiceResult<RefundDetailDto>> {
+  async rejectRefund(refundId: string, reason: string): Promise<RefundDetailDto> {
     const refund = await this.prisma.refunds.findUnique({
       where: { id: refundId },
     });
@@ -305,10 +282,7 @@ export class RefundService {
       },
     });
 
-    return {
-      data: this.mapToDetailDto(updated),
-      message: 'Refund rejected',
-    };
+    return this.mapToDetailDto(updated);
   }
 
   private mapToDetailDto(refund: Prisma.RefundsGetPayload<{

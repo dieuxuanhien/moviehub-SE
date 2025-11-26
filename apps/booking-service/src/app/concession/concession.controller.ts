@@ -2,6 +2,7 @@ import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { ConcessionService } from './concession.service';
 import {
+  ConcessionDto,
   ConcessionCategory,
   CreateConcessionDto,
   UpdateConcessionDto,
@@ -14,41 +15,49 @@ export class ConcessionController {
   @MessagePattern('concession.findAll')
   async findAll(
     @Payload()
-    payload: {
+    data: {
       cinemaId?: string;
       category?: ConcessionCategory;
       available?: boolean;
     }
-  ) {
+  ): Promise<ConcessionDto[]> {
     return this.concessionService.findAll(
-      payload.cinemaId,
-      payload.category,
-      payload.available
+      data.cinemaId,
+      data.category,
+      data.available
     );
   }
 
   @MessagePattern('concession.findOne')
-  async findOne(@Payload() payload: { id: string }) {
-    return this.concessionService.findOne(payload.id);
+  async findOne(@Payload() data: { id: string }): Promise<ConcessionDto> {
+    return this.concessionService.findOne(data.id);
   }
 
   @MessagePattern('concession.create')
-  async create(@Payload() payload: { dto: CreateConcessionDto }) {
-    return this.concessionService.create(payload.dto);
+  async create(
+    @Payload() data: { dto: CreateConcessionDto }
+  ): Promise<ConcessionDto> {
+    return this.concessionService.create(data.dto);
   }
 
   @MessagePattern('concession.update')
-  async update(@Payload() payload: { id: string; dto: UpdateConcessionDto }) {
-    return this.concessionService.update(payload.id, payload.dto);
+  async update(
+    @Payload() data: { id: string; dto: UpdateConcessionDto }
+  ): Promise<ConcessionDto> {
+    return this.concessionService.update(data.id, data.dto);
   }
 
   @MessagePattern('concession.delete')
-  async delete(@Payload() payload: { id: string }) {
-    return this.concessionService.delete(payload.id);
+  async delete(
+    @Payload() data: { id: string }
+  ): Promise<{ message: string }> {
+    return this.concessionService.delete(data.id);
   }
 
   @MessagePattern('concession.updateInventory')
-  async updateInventory(@Payload() payload: { id: string; quantity: number }) {
-    return this.concessionService.updateInventory(payload.id, payload.quantity);
+  async updateInventory(
+    @Payload() data: { id: string; quantity: number }
+  ): Promise<ConcessionDto> {
+    return this.concessionService.updateInventory(data.id, data.quantity);
   }
 }

@@ -5,14 +5,13 @@ import {
   LoyaltyTransactionDto,
   LoyaltyTier,
   LoyaltyTransactionType,
-  ServiceResult,
 } from '@movie-hub/shared-types';
 
 @Injectable()
 export class LoyaltyService {
   constructor(private prisma: PrismaService) {}
 
-  async getBalance(userId: string): Promise<ServiceResult<LoyaltyBalanceDto>> {
+  async getBalance(userId: string): Promise<LoyaltyBalanceDto> {
     let account = await this.prisma.loyaltyAccounts.findUnique({
       where: { user_id: userId },
     });
@@ -35,41 +34,25 @@ export class LoyaltyService {
     );
 
     return {
-      data: {
-        currentPoints: account.current_points,
-        tier: account.tier as LoyaltyTier,
-        totalSpent: Number(account.total_spent),
-        pointsToNextTier,
-      },
+      currentPoints: account.current_points,
+      tier: account.tier as LoyaltyTier,
+      totalSpent: Number(account.total_spent),
+      pointsToNextTier,
     };
   }
 
   async getTransactions(
     userId: string,
-    query: {
-      type?: LoyaltyTransactionType;
-      page?: number;
-      limit?: number;
-    }
-  ): Promise<ServiceResult<LoyaltyTransactionDto[]>> {
-    const { type, page = 1, limit = 20 } = query;
-    
+    type?: LoyaltyTransactionType,
+    page = 1,
+    limit = 20
+  ): Promise<{ data: LoyaltyTransactionDto[]; total: number }> {
     const account = await this.prisma.loyaltyAccounts.findUnique({
       where: { user_id: userId },
     });
 
     if (!account) {
-      return {
-        data: [],
-        meta: {
-          page,
-          limit,
-          totalRecords: 0,
-          totalPages: 0,
-          hasPrev: false,
-          hasNext: false,
-        },
-      };
+      return { data: [], total: 0 };
     }
 
     const where: any = { loyalty_account_id: account.id };
@@ -87,18 +70,9 @@ export class LoyaltyService {
       this.prisma.loyaltyTransactions.count({ where }),
     ]);
 
-    const totalPages = Math.ceil(total / limit);
-
     return {
       data: transactions.map((t) => this.mapToDto(t, userId)),
-      meta: {
-        page,
-        limit,
-        totalRecords: total,
-        totalPages,
-        hasPrev: page > 1,
-        hasNext: page < totalPages,
-      },
+      total,
     };
   }
 
@@ -107,7 +81,7 @@ export class LoyaltyService {
     points: number,
     transactionId?: string,
     description?: string
-  ): Promise<ServiceResult<void>> {
+  ): Promise<void> {
     const account = await this.getOrCreateAccount(userId);
 
     await this.prisma.$transaction([
@@ -128,8 +102,6 @@ export class LoyaltyService {
         },
       }),
     ]);
-    
-    return { data: undefined };
   }
 
   async redeemPoints(
@@ -137,7 +109,7 @@ export class LoyaltyService {
     points: number,
     transactionId?: string,
     description?: string
-  ): Promise<ServiceResult<void>> {
+  ): Promise<void> {
     const account = await this.getOrCreateAccount(userId);
 
     if (account.current_points < points) {
@@ -161,8 +133,6 @@ export class LoyaltyService {
         },
       }),
     ]);
-    
-    return { data: undefined };
   }
 
   async updateTotalSpent(userId: string, amount: number): Promise<void> {

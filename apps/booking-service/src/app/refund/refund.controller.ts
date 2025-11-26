@@ -3,6 +3,7 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { RefundService } from './refund.service';
 import {
   CreateRefundDto,
+  RefundDetailDto,
   FindAllRefundsDto,
 } from '@movie-hub/shared-types';
 
@@ -11,37 +12,47 @@ export class RefundController {
   constructor(private readonly refundService: RefundService) {}
 
   @MessagePattern('refund.create')
-  async create(@Payload() payload: { dto: CreateRefundDto }) {
-    return this.refundService.createRefund(payload.dto);
+  async create(@Payload() dto: CreateRefundDto): Promise<RefundDetailDto> {
+    return this.refundService.createRefund(dto);
   }
 
   @MessagePattern('refund.findAll')
-  async findAll(@Payload() payload: { filters: FindAllRefundsDto }) {
-    return this.refundService.findAllRefunds(payload.filters);
+  async findAll(
+    @Payload() filters: FindAllRefundsDto
+  ): Promise<{ data: RefundDetailDto[]; total: number }> {
+    return this.refundService.findAllRefunds(filters);
   }
 
   @MessagePattern('refund.findOne')
-  async findOne(@Payload() payload: { id: string }) {
-    return this.refundService.findOne(payload.id);
+  async findOne(@Payload() data: { id: string }): Promise<RefundDetailDto> {
+    return this.refundService.findOne(data.id);
   }
 
   @MessagePattern('refund.findByPayment')
-  async findByPayment(@Payload() payload: { paymentId: string }) {
-    return this.refundService.findByPayment(payload.paymentId);
+  async findByPayment(
+    @Payload() data: { paymentId: string }
+  ): Promise<RefundDetailDto[]> {
+    return this.refundService.findByPayment(data.paymentId);
   }
 
   @MessagePattern('refund.process')
-  async process(@Payload() payload: { refundId: string }) {
-    return this.refundService.processRefund(payload.refundId);
+  async process(
+    @Payload() data: { refundId: string }
+  ): Promise<RefundDetailDto> {
+    return this.refundService.processRefund(data.refundId);
   }
 
   @MessagePattern('refund.approve')
-  async approve(@Payload() payload: { refundId: string }) {
-    return this.refundService.approveRefund(payload.refundId);
+  async approve(
+    @Payload() data: { refundId: string }
+  ): Promise<RefundDetailDto> {
+    return this.refundService.approveRefund(data.refundId);
   }
 
   @MessagePattern('refund.reject')
-  async reject(@Payload() payload: { refundId: string; reason: string }) {
-    return this.refundService.rejectRefund(payload.refundId, payload.reason);
+  async reject(
+    @Payload() data: { refundId: string; reason: string }
+  ): Promise<RefundDetailDto> {
+    return this.refundService.rejectRefund(data.refundId, data.reason);
   }
 }

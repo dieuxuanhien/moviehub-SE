@@ -13,11 +13,6 @@ export interface ConcessionItemDto {
   quantity: number;
 }
 
-/**
- * Customer Information DTO
- * OPTIONAL - Only used as fallback if User Service is unavailable
- * Normally, customer details are fetched from User Service automatically
- */
 export interface CustomerInfoDto {
   name?: string;
   email?: string;
@@ -36,10 +31,6 @@ export interface CustomerInfoDto {
  * 3. Booking service reads Redis to get held seats (A1, A2, A3)
  * 4. If 'seats' provided, match ticket types to held seats
  * 5. If 'seats' not provided, default all to ADULT ticket type
- * 
- * Customer Info:
- * - Automatically fetched from User Service using authenticated userId
- * - customerInfo is optional fallback if User Service is unavailable
  */
 export interface CreateBookingDto {
   showtimeId: string;
@@ -47,5 +38,5 @@ export interface CreateBookingDto {
   concessions?: ConcessionItemDto[];
   promotionCode?: string;
   usePoints?: number;
-  customerInfo?: CustomerInfoDto; // OPTIONAL FALLBACK: Only used if User Service unavailable
+  customerInfo?: CustomerInfoDto;
 }

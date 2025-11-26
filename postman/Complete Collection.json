@@ -1,7 +1,7 @@
 {
 	"info": {
-		"_postman_id": "4b083b77-5905-49fa-9fb9-1ac4d7daa14b",
-		"name": "MovieHub API Gateway - Complete Collection Copy",
+		"_postman_id": "be7c87c7-6bfa-4e89-8413-d8d3e8db7788",
+		"name": "MovieHub API Gateway - Complete Collection",
 		"description": "Complete API collection for MovieHub cinema booking system\n\n**Base URL:** `http://localhost:3000`\n\n**Authentication:** Most endpoints require Clerk JWT token in Authorization header\n\n**Collections:**\n- Booking Service (Bookings, Payments, Tickets, Loyalty, Concessions, Promotions)\n- Cinema Service (Cinemas, Halls, Showtimes)\n- Movie Service (Movies, Genres, Releases)\n\n**Environment Variables:**\n- `baseUrl`: API Gateway URL (default: http://localhost:3000)\n- `authToken`: Clerk JWT token for authenticated requests\n- `userId`: Clerk user ID\n- `bookingId`: Created booking ID\n- `paymentId`: Created payment ID\n- `showtimeId`: Showtime ID for testing\n- `cinemaId`: Cinema ID for testing\n- `movieId`: Movie ID for testing",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "38695326"
@@ -49,7 +49,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"showtimeId\": \"{{showtimeId}}\"\n \n//   \"concessions\": [\n//     {\n//       \"concessionId\": \"94eb022d-16fc-4dc1-9c07-06c59b56765b\",\n//       \"quantity\": 2\n//     }\n//   ]\n  //,\n//   \"promotionCode\": \"DISCOUNT10\",\n//   \"usePoints\": 100,\n//   \"customerInfo\": {\n//     \"name\": \"John Doe\",\n//     \"email\": \"john@example.com\",\n//     \"phone\": \"0901234567\"\n//   }\n}"
+									"raw": "{\n  \"showtimeId\": \"{{showtimeId}}\",\n \n  \"concessions\": [\n    {\n      \"concessionId\": \"94eb022d-16fc-4dc1-9c07-06c59b56765b\",\n      \"quantity\": 2\n    }\n  ]\n  //,\n//   \"promotionCode\": \"DISCOUNT10\",\n//   \"usePoints\": 100,\n//   \"customerInfo\": {\n//     \"name\": \"John Doe\",\n//     \"email\": \"john@example.com\",\n//     \"phone\": \"0901234567\"\n//   }\n}"
 								},
 								"url": {
 									"raw": "{{baseUrl}}/v1/bookings",
@@ -61,7 +61,7 @@
 										"bookings"
 									]
 								},
-								"description": "Create a new booking with seats, concessions, and optional promotion.\n\n**Customer Information:**\n- Automatically fetched from User Service using authenticated userId\n- customerInfo is optional fallback (only needed if User Service is unavailable)\n- Response wrapped in ServiceResult<BookingCalculationDto>"
+								"description": "Create a new booking with seats, concessions, and optional promotion"
 							},
 							"response": []
 						},
@@ -89,11 +89,6 @@
 										{
 											"key": "status",
 											"value": "PENDING"
-										},
-										{
-											"key": "limit",
-											"value": "10",
-											"disabled": true
 										},
 										{
 											"key": "page",
@@ -228,160 +223,6 @@
 								"description": "Cancel a booking with optional reason"
 							},
 							"response": []
-						},
-						{
-							"name": "Update Booking",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Cookie",
-										"value": "__session={{authToken}}",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"concessions\": [\n    {\n      \"concessionId\": \"concession-id\",\n      \"quantity\": 3\n    }\n  ]\n}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/v1/bookings/{{bookingId}}",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"v1",
-										"bookings",
-										"{{bookingId}}"
-									]
-								},
-								"description": "Update booking concessions. Returns ServiceResult<BookingDetailDto>."
-							},
-							"response": []
-						},
-						{
-							"name": "Reschedule Booking",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Cookie",
-										"value": "__session={{authToken}}",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"newShowtimeId\": \"new-showtime-id\",\n  \"newSeatIds\": [\"seat-1\", \"seat-2\"]\n}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/v1/bookings/{{bookingId}}/reschedule",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"v1",
-										"bookings",
-										"{{bookingId}}",
-										"reschedule"
-									]
-								},
-								"description": "Reschedule a booking to a different showtime. Returns ServiceResult<BookingDetailDto>."
-							},
-							"response": []
-						},
-						{
-							"name": "Get Refund Calculation",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Cookie",
-										"value": "__session={{authToken}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "{{baseUrl}}/v1/bookings/{{bookingId}}/refund-calculation",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"v1",
-										"bookings",
-										"{{bookingId}}",
-										"refund-calculation"
-									]
-								},
-								"description": "Calculate refund amount for a booking. Returns ServiceResult<RefundCalculationDto>."
-							},
-							"response": []
-						},
-						{
-							"name": "Cancel Booking with Refund",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Cookie",
-										"value": "__session={{authToken}}",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"reason\": \"Emergency - cannot attend\",\n  \"refundMethod\": \"ORIGINAL_PAYMENT\"\n}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/v1/bookings/{{bookingId}}/cancel-with-refund",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"v1",
-										"bookings",
-										"{{bookingId}}",
-										"cancel-with-refund"
-									]
-								},
-								"description": "Cancel booking and request refund. Returns ServiceResult with booking and refund details."
-							},
-							"response": []
-						},
-						{
-							"name": "Get Cancellation Policy",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "{{baseUrl}}/v1/bookings/cancellation-policy",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"v1",
-										"bookings",
-										"cancellation-policy"
-									]
-								},
-								"description": "Get the cancellation policy details. Returns ServiceResult with policy information."
-							},
-							"response": []
 						}
 					]
 				},
@@ -400,7 +241,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/v1/bookings/admin/all?page=1&sortBy=created_at&sortOrder=desc",
+									"raw": "{{baseUrl}}/v1/bookings/admin/all?status=CONFIRMED&page=1&limit=20&sortBy=created_at&sortOrder=desc",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -413,8 +254,7 @@
 									"query": [
 										{
 											"key": "status",
-											"value": "CONFIRMED",
-											"disabled": true
+											"value": "CONFIRMED"
 										},
 										{
 											"key": "page",
@@ -422,8 +262,7 @@
 										},
 										{
 											"key": "limit",
-											"value": "20",
-											"disabled": true
+											"value": "20"
 										},
 										{
 											"key": "sortBy",
@@ -758,7 +597,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"paymentMethod\": \"VNPAY\"\n}"
+									"raw": "{\n  \"method\": \"VNPAY\"\n}"
 								},
 								"url": {
 									"raw": "{{baseUrl}}/v1/payments/bookings/{{bookingId}}",
@@ -927,7 +766,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/v1/payments/admin/all",
+									"raw": "{{baseUrl}}/v1/payments/admin/all?status=SUCCESS&page=1&limit=20",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -940,18 +779,15 @@
 									"query": [
 										{
 											"key": "status",
-											"value": "SUCCESS",
-											"disabled": true
+											"value": "SUCCESS"
 										},
 										{
 											"key": "page",
-											"value": "1",
-											"disabled": true
+											"value": "1"
 										},
 										{
 											"key": "limit",
-											"value": "20",
-											"disabled": true
+											"value": "20"
 										}
 									]
 								}
@@ -970,7 +806,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/v1/payments/admin/status/PENDING?page=1",
+									"raw": "{{baseUrl}}/v1/payments/admin/status/PENDING?page=1&limit=20",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -988,8 +824,7 @@
 										},
 										{
 											"key": "limit",
-											"value": "20",
-											"disabled": true
+											"value": "20"
 										}
 									]
 								}
@@ -1396,289 +1231,6 @@
 			]
 		},
 		{
-			"name": " Refunds",
-			"item": [
-				{
-					"name": "User Refunds",
-					"item": [
-						{
-							"name": "Create Refund",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"if (pm.response.code === 200 || pm.response.code === 201) {",
-											"    const response = pm.response.json();",
-											"    if (response.data && response.data.id) {",
-											"        pm.collectionVariables.set('refundId', response.data.id);",
-											"    }",
-											"}"
-										],
-										"type": "text/javascript",
-										"packages": {},
-										"requests": {}
-									}
-								}
-							],
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Cookie",
-										"value": "__session={{authToken}}",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"paymentId\": \"{{paymentId}}\",\n  \"amount\": 100000,\n  \"reason\": \"Changed plans, cannot attend\"\n}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/v1/refunds",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"v1",
-										"refunds"
-									]
-								},
-								"description": "Create a refund request for a payment. Returns ServiceResult<RefundDetailDto>."
-							},
-							"response": []
-						},
-						{
-							"name": "Get All Refunds",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Cookie",
-										"value": "__session={{authToken}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "{{baseUrl}}/v1/refunds?status=PENDING&page=1&limit=20",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"v1",
-										"refunds"
-									],
-									"query": [
-										{
-											"key": "status",
-											"value": "PENDING",
-											"description": "PENDING, APPROVED, REJECTED, COMPLETED"
-										},
-										{
-											"key": "page",
-											"value": "1"
-										},
-										{
-											"key": "limit",
-											"value": "20"
-										},
-										{
-											"key": "paymentId",
-											"value": "",
-											"disabled": true
-										},
-										{
-											"key": "startDate",
-											"value": "",
-											"disabled": true
-										},
-										{
-											"key": "endDate",
-											"value": "",
-											"disabled": true
-										}
-									]
-								},
-								"description": "Get all refunds with pagination. Returns ServiceResult<RefundDetailDto[]> with PaginationMeta."
-							},
-							"response": []
-						},
-						{
-							"name": "Get Refund Details",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Cookie",
-										"value": "__session={{authToken}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "{{baseUrl}}/v1/refunds/{{refundId}}",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"v1",
-										"refunds",
-										"{{refundId}}"
-									]
-								},
-								"description": "Get refund details by ID. Returns ServiceResult<RefundDetailDto>."
-							},
-							"response": []
-						},
-						{
-							"name": "Get Refunds by Payment",
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Cookie",
-										"value": "__session={{authToken}}",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "{{baseUrl}}/v1/refunds/payment/{{paymentId}}",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"v1",
-										"refunds",
-										"payment",
-										"{{paymentId}}"
-									]
-								},
-								"description": "Get all refunds for a specific payment. Returns ServiceResult<RefundDetailDto[]>."
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Admin Refunds",
-					"item": [
-						{
-							"name": "Process Refund (Admin)",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Cookie",
-										"value": "__session={{authToken}}",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"refundId\": \"{{refundId}}\"\n}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/v1/refunds/{{refundId}}/process",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"v1",
-										"refunds",
-										"{{refundId}}",
-										"process"
-									]
-								},
-								"description": "Process a refund request (admin). Returns ServiceResult<RefundDetailDto>."
-							},
-							"response": []
-						},
-						{
-							"name": "Approve Refund (Admin)",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Cookie",
-										"value": "__session={{authToken}}",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"refundId\": \"{{refundId}}\",\n  \"note\": \"Approved - valid reason\"\n}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/v1/refunds/{{refundId}}/approve",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"v1",
-										"refunds",
-										"{{refundId}}",
-										"approve"
-									]
-								},
-								"description": "Approve a refund request (admin). Returns ServiceResult<RefundDetailDto>."
-							},
-							"response": []
-						},
-						{
-							"name": "Reject Refund (Admin)",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Cookie",
-										"value": "__session={{authToken}}",
-										"type": "text"
-									},
-									{
-										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"refundId\": \"{{refundId}}\",\n  \"reason\": \"Outside refund window\"\n}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/v1/refunds/{{refundId}}/reject",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"v1",
-										"refunds",
-										"{{refundId}}",
-										"reject"
-									]
-								},
-								"description": "Reject a refund request (admin). Returns ServiceResult<RefundDetailDto>."
-							},
-							"response": []
-						}
-					]
-				}
-			]
-		},
-		{
 			"name": "Loyalty- Concession - Promotions",
 			"item": [
 				{
@@ -1832,7 +1384,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{baseUrl}}/v1/concessions?cinemaId={{cinemaId}}",
+									"raw": "{{baseUrl}}/v1/concessions?cinemaId={{cinemaId}}&category=FOOD&available=true",
 									"host": [
 										"{{baseUrl}}"
 									],
@@ -1849,14 +1401,12 @@
 										{
 											"key": "category",
 											"value": "FOOD",
-											"description": "FOOD, BEVERAGE, COMBO (optional)",
-											"disabled": true
+											"description": "FOOD, BEVERAGE, COMBO (optional)"
 										},
 										{
 											"key": "available",
 											"value": "true",
-											"description": "Filter by availability (optional)",
-											"disabled": true
+											"description": "Filter by availability (optional)"
 										}
 									]
 								},
@@ -1870,14 +1420,14 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{baseUrl}}/v1/concessions/4ff447e0-7d7d-4d30-888e-3af0ca2447fb",
+									"raw": "{{baseUrl}}/v1/concessions/concession-id",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
 										"v1",
 										"concessions",
-										"4ff447e0-7d7d-4d30-888e-3af0ca2447fb"
+										"concession-id"
 									]
 								},
 								"description": "Get concession details by ID (public endpoint)"
@@ -1935,17 +1485,17 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"name\": \"Popcorn Large (Updated)\",\n  \"price\": 55000,\n  \"available\": true\n}"
+									"raw": "{\n  \"name\": \"Popcorn Large (Updated)\",\n  \"price\": 55000,\n  \"available\": false\n}"
 								},
 								"url": {
-									"raw": "{{baseUrl}}/v1/concessions/4ff447e0-7d7d-4d30-888e-3af0ca2447fb",
+									"raw": "{{baseUrl}}/v1/concessions/concession-id",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
 										"v1",
 										"concessions",
-										"4ff447e0-7d7d-4d30-888e-3af0ca2447fb"
+										"concession-id"
 									]
 								}
 							},
@@ -1997,14 +1547,14 @@
 									"raw": "{\n  \"quantity\": 50\n}"
 								},
 								"url": {
-									"raw": "{{baseUrl}}/v1/concessions/{{consession_id}}/inventory",
+									"raw": "{{baseUrl}}/v1/concessions/concession-id/inventory",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
 										"v1",
 										"concessions",
-										"{{consession_id}}",
+										"concession-id",
 										"inventory"
 									]
 								}
@@ -2802,21 +2352,15 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{baseUrl}}/v1/showtimes/showtime/{{showtimeId}}?Cookie=__session={{authToken}}",
+									"raw": "{{baseUrl}}/v1/cinemas/showtime/{{showtimeId}}",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
 										"v1",
-										"showtimes",
+										"cinemas",
 										"showtime",
 										"{{showtimeId}}"
-									],
-									"query": [
-										{
-											"key": "Cookie",
-											"value": "__session={{authToken}}"
-										}
 									]
 								},
 								"description": "Get showtime information with movie, hall, and cinema details"
@@ -2827,21 +2371,16 @@
 							"name": "Get Available Seats for Showtime",
 							"request": {
 								"method": "GET",
-								"header": [
-									{
-										"key": "Cookie",
-										"value": "__session={{authToken}}",
-										"type": "text"
-									}
-								],
+								"header": [],
 								"url": {
-									"raw": "{{baseUrl}}/v1/showtimes/{{showtimeId}}/seats",
+									"raw": "{{baseUrl}}/v1/cinemas/showtime/{{showtimeId}}/seats",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
 										"v1",
-										"showtimes",
+										"cinemas",
+										"showtime",
 										"{{showtimeId}}",
 										"seats"
 									]
@@ -3998,11 +3537,6 @@
 		},
 		{
 			"key": "ticketId",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "refundId",
 			"value": "",
 			"type": "string"
 		},

@@ -26,21 +26,60 @@ import { Request } from 'express';
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
-  // ==================== PUBLIC ENDPOINTS (NO AUTH) ====================
-  // MUST be before :id route to avoid route conflicts
+  /**
+   * Create payment for a booking
+   * Authenticated endpoint - requires valid user session
+   */
+  @Post('bookings/:bookingId')
+  @UseGuards(ClerkAuthGuard)
+
+  async createPayment(
+    @CurrentUserId() userId: string,
+    @Param('bookingId') bookingId: string,
+    @Body() createPaymentDto: CreatePaymentDto,
+    @Req() request: Request
+  ) {
+    const ipAddr =
+      (request.headers['x-forwarded-for'] as string)?.split(',')[0] ||
+      request.ip ||
+      '127.0.0.1';
+
+    return this.paymentService.createPayment(bookingId, createPaymentDto, ipAddr);
+  }
+
+  /**
+   * Get payment details
+   * Authenticated endpoint
+   */
+  @Get(':id')
+  @UseGuards(ClerkAuthGuard)
+  
+  async getPayment(@CurrentUserId() userId: string, @Param('id') id: string) {
+    return this.paymentService.getPayment(id);
+  }
+
+  /**
+   * Get all payments for a booking
+   * Authenticated endpoint
+   */
+  @Get('booking/:bookingId')
+  @UseGuards(ClerkAuthGuard)
+  async getPaymentsByBooking(
+    @CurrentUserId() userId: string,
+    @Param('bookingId') bookingId: string
+  ) {
+    return this.paymentService.getPaymentByBooking(bookingId);
+  }
 
   /**
    * VNPay IPN (Instant Payment Notification) webhook
    * PUBLIC endpoint - VNPay server calls this to notify payment status
    * NO authentication required
-   * MUST return JSON: { RspCode: string, Message: string }
    */
   @Get('vnpay/ipn')
   @HttpCode(HttpStatus.OK)
   async vnpayIPN(@Query() query: Record<string, string>) {
-    const result = await this.paymentService.handleVNPayIPN(query);
-    // EXCEPTION: Extract data from ServiceResult for VNPay IPN - VNPay expects raw { RspCode, Message }
-    return result.data;
+    return this.paymentService.handleVNPayIPN(query);
   }
 
   /**
@@ -73,67 +112,19 @@ export class PaymentController {
 
   @Put('admin/:id/cancel')
   @UseGuards(ClerkAuthGuard)
-  async cancelPayment(@Param('id') paymentId: string) {
-    return this.paymentService.cancelPayment(paymentId);
+  async cancelPayment(
+    @Param('id') paymentId: string,
+    @Body('reason') reason?: string
+  ) {
+    return this.paymentService.cancelPayment(paymentId, reason);
   }
 
   @Get('admin/statistics')
   @UseGuards(ClerkAuthGuard)
   async getStatistics(
     @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-    @Query('paymentMethod') paymentMethod?: string
+    @Query('endDate') endDate?: string
   ) {
-    return this.paymentService.getStatistics({
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
-      paymentMethod,
-    });
-  }
-
-  // ==================== USER ENDPOINTS ====================
-
-  /**
-   * Create payment for a booking
-   * Authenticated endpoint - requires valid user session
-   */
-  @Post('bookings/:bookingId')
-  @UseGuards(ClerkAuthGuard)
-  async createPayment(
-    @CurrentUserId() userId: string,
-    @Param('bookingId') bookingId: string,
-    @Body() createPaymentDto: CreatePaymentDto,
-    @Req() request: Request
-  ) {
-    const ipAddr =
-      (request.headers['x-forwarded-for'] as string)?.split(',')[0] ||
-      request.ip ||
-      '127.0.0.1';
-
-    return this.paymentService.createPayment(bookingId, createPaymentDto, ipAddr);
-  }
-
-  /**
-   * Get all payments for a booking
-   * Authenticated endpoint
-   */
-  @Get('booking/:bookingId')
-  @UseGuards(ClerkAuthGuard)
-  async getPaymentsByBooking(
-    @CurrentUserId() userId: string,
-    @Param('bookingId') bookingId: string
-  ) {
-    return this.paymentService.getPaymentByBooking(bookingId);
-  }
-
-  /**
-   * Get payment details
-   * Authenticated endpoint
-   * MUST be LAST to avoid route conflicts with specific paths
-   */
-  @Get(':id')
-  @UseGuards(ClerkAuthGuard)
-  async getPayment(@CurrentUserId() userId: string, @Param('id') id: string) {
-    return this.paymentService.getPayment(id);
+    return this.paymentService.getStatistics(startDate, endDate);
   }
 }

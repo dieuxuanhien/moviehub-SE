@@ -1,13 +1,14 @@
 import {
   SERVICE_NAME,
+  ConcessionDto,
   ConcessionCategory,
   CreateConcessionDto,
   UpdateConcessionDto,
   ConcessionMessage,
 } from '@movie-hub/shared-types';
 import { Inject, Injectable } from '@nestjs/common';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class ConcessionService {
@@ -19,73 +20,49 @@ export class ConcessionService {
     cinemaId?: string,
     category?: ConcessionCategory,
     available?: boolean
-  ) {
-    try {
-      return await firstValueFrom(
-        this.bookingClient.send(ConcessionMessage.FIND_ALL, {
-          cinemaId,
-          category,
-          available,
-        })
-      );
-    } catch (error) {
-      throw new RpcException(error);
-    }
+  ): Promise<ConcessionDto[]> {
+    return lastValueFrom(
+      this.bookingClient.send(ConcessionMessage.FIND_ALL, {
+        cinemaId,
+        category,
+        available,
+      })
+    );
   }
 
-  async findOne(id: string) {
-    try {
-      return await firstValueFrom(
-        this.bookingClient.send(ConcessionMessage.FIND_ONE, { id })
-      );
-    } catch (error) {
-      throw new RpcException(error);
-    }
+  async findOne(id: string): Promise<ConcessionDto> {
+    return lastValueFrom(
+      this.bookingClient.send(ConcessionMessage.FIND_ONE, { id })
+    );
   }
 
-  async create(dto: CreateConcessionDto) {
-    try {
-      return await firstValueFrom(
-        this.bookingClient.send(ConcessionMessage.CREATE, { dto })
-      );
-    } catch (error) {
-      throw new RpcException(error);
-    }
+  async create(dto: CreateConcessionDto): Promise<ConcessionDto> {
+    return lastValueFrom(
+      this.bookingClient.send(ConcessionMessage.CREATE, { dto })
+    );
   }
 
-  async update(id: string, dto: UpdateConcessionDto) {
-    try {
-      return await firstValueFrom(
-        this.bookingClient.send(ConcessionMessage.UPDATE, { id, dto })
-      );
-    } catch (error) {
-      throw new RpcException(error);
-    }
+  async update(id: string, dto: UpdateConcessionDto): Promise<ConcessionDto> {
+    return lastValueFrom(
+      this.bookingClient.send(ConcessionMessage.UPDATE, { id, dto })
+    );
   }
 
-  async delete(id: string) {
-    try {
-      return await firstValueFrom(
-        this.bookingClient.send(ConcessionMessage.DELETE, { id })
-      );
-    } catch (error) {
-      throw new RpcException(error);
-    }
+  async delete(id: string): Promise<{ message: string }> {
+    return lastValueFrom(
+      this.bookingClient.send(ConcessionMessage.DELETE, { id })
+    );
   }
 
   async updateInventory(
     id: string,
     quantity: number
-  ) {
-    try {
-      return await firstValueFrom(
-        this.bookingClient.send(ConcessionMessage.UPDATE_INVENTORY, {
-          id,
-          quantity,
-        })
-      );
-    } catch (error) {
-      throw new RpcException(error);
-    }
+  ): Promise<ConcessionDto> {
+    return lastValueFrom(
+      this.bookingClient.send(ConcessionMessage.UPDATE_INVENTORY, {
+        id,
+        quantity,
+      })
+    );
   }
 }

@@ -1,5 +1,4 @@
 import { RefundStatus } from '../../enum';
-import { PaginationQuery } from '../../../common';
 
 /**
  * Create refund request
@@ -13,11 +12,13 @@ export interface CreateRefundDto {
 /**
  * Query parameters for finding all refunds
  */
-export interface FindAllRefundsDto extends PaginationQuery {
+export interface FindAllRefundsDto {
   paymentId?: string;
   status?: RefundStatus;
   startDate?: Date;
   endDate?: Date;
+  page?: number;
+  limit?: number;
 }
 
 /**

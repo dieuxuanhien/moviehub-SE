@@ -1,10 +1,9 @@
 import { BookingStatus, PaymentStatus } from '../../enum';
-import { PaginationQuery, SortQuery } from '../../../common';
 
 /**
  * Query parameters for admin to find all bookings
  */
-export interface AdminFindAllBookingsDto extends PaginationQuery, SortQuery {
+export interface AdminFindAllBookingsDto {
   userId?: string;
   showtimeId?: string;
   cinemaId?: string;
@@ -12,7 +11,10 @@ export interface AdminFindAllBookingsDto extends PaginationQuery, SortQuery {
   paymentStatus?: PaymentStatus;
   startDate?: Date;
   endDate?: Date;
+  page?: number;
+  limit?: number;
   sortBy?: 'created_at' | 'final_amount' | 'expires_at';
+  sortOrder?: 'asc' | 'desc';
 }
 
 /**
@@ -26,20 +28,24 @@ export interface FindBookingsByShowtimeDto {
 /**
  * Query parameters for finding bookings by cinema
  */
-export interface FindBookingsByCinemaDto extends PaginationQuery {
+export interface FindBookingsByCinemaDto {
   cinemaId: string;
   startDate?: Date;
   endDate?: Date;
   status?: BookingStatus;
+  page?: number;
+  limit?: number;
 }
 
 /**
  * Query parameters for finding bookings by date range
  */
-export interface FindBookingsByDateRangeDto extends PaginationQuery {
+export interface FindBookingsByDateRangeDto {
   startDate: Date;
   endDate: Date;
   status?: BookingStatus;
+  page?: number;
+  limit?: number;
 }
 
 /**

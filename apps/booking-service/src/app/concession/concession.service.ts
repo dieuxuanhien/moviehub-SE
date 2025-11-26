@@ -5,7 +5,6 @@ import {
   ConcessionCategory,
   CreateConcessionDto,
   UpdateConcessionDto,
-  ServiceResult,
 } from '@movie-hub/shared-types';
 
 @Injectable()
@@ -16,7 +15,7 @@ export class ConcessionService {
     cinemaId?: string,
     category?: ConcessionCategory,
     available = true
-  ): Promise<ServiceResult<ConcessionDto[]>> {
+  ): Promise<ConcessionDto[]> {
     const where: any = {};
     
     if (cinemaId) {
@@ -36,12 +35,10 @@ export class ConcessionService {
       orderBy: { name: 'asc' },
     });
 
-    return {
-      data: concessions.map((c) => this.mapToDto(c)),
-    };
+    return concessions.map((c) => this.mapToDto(c));
   }
 
-  async findOne(id: string): Promise<ServiceResult<ConcessionDto>> {
+  async findOne(id: string): Promise<ConcessionDto> {
     const concession = await this.prisma.concessions.findUnique({
       where: { id },
     });
@@ -50,12 +47,10 @@ export class ConcessionService {
       throw new NotFoundException('Concession not found');
     }
 
-    return {
-      data: this.mapToDto(concession),
-    };
+    return this.mapToDto(concession);
   }
 
-  async create(dto: CreateConcessionDto): Promise<ServiceResult<ConcessionDto>> {
+  async create(dto: CreateConcessionDto): Promise<ConcessionDto> {
     // Check if concession with same name exists in same cinema
     if (dto.cinemaId) {
       const existing = await this.prisma.concessions.findFirst({
@@ -88,13 +83,10 @@ export class ConcessionService {
       },
     });
 
-    return {
-      data: this.mapToDto(concession),
-      message: 'Concession created successfully',
-    };
+    return this.mapToDto(concession);
   }
 
-  async update(id: string, dto: UpdateConcessionDto): Promise<ServiceResult<ConcessionDto>> {
+  async update(id: string, dto: UpdateConcessionDto): Promise<ConcessionDto> {
     // Check if concession exists
     const existing = await this.prisma.concessions.findUnique({
       where: { id },
@@ -138,13 +130,10 @@ export class ConcessionService {
       },
     });
 
-    return {
-      data: this.mapToDto(concession),
-      message: 'Concession updated successfully',
-    };
+    return this.mapToDto(concession);
   }
 
-  async delete(id: string): Promise<ServiceResult<{ message: string }>> {
+  async delete(id: string): Promise<{ message: string }> {
     // Check if concession exists
     const concession = await this.prisma.concessions.findUnique({
       where: { id },
@@ -176,15 +165,13 @@ export class ConcessionService {
       where: { id },
     });
 
-    return {
-      data: { message: 'Concession deleted successfully' },
-    };
+    return { message: 'Concession deleted successfully' };
   }
 
   async updateInventory(
     id: string,
     quantity: number
-  ): Promise<ServiceResult<ConcessionDto>> {
+  ): Promise<ConcessionDto> {
     const concession = await this.prisma.concessions.findUnique({
       where: { id },
     });
@@ -203,10 +190,7 @@ export class ConcessionService {
       },
     });
 
-    return {
-      data: this.mapToDto(updated),
-      message: 'Inventory updated successfully',
-    };
+    return this.mapToDto(updated);
   }
 
   private mapToDto(concession: any): ConcessionDto {
