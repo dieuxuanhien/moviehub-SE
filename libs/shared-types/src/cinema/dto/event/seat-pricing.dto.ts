@@ -8,8 +8,3 @@ export interface SeatPricingDto {
   type: SeatTypeEnum;
   price: number;
 }
-
-export interface SeatPricingWithTtlDto {
-  seats: SeatPricingDto[];
-  lockTtl: number; // Remaining lock time in seconds
-}

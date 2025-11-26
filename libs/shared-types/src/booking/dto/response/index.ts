@@ -5,7 +5,3 @@ export * from './concession.dto';
 export * from './promotion.dto';
 export * from './loyalty.dto';
 export * from './refund.dto';
-export * from './statistics.dto';
-
-// Re-export request DTOs that are used as responses
-export * from '../request/booking-actions.dto';

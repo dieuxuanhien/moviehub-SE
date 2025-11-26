@@ -3,11 +3,9 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { BookingController } from './booking.controller';
 import { BookingService } from './booking.service';
 import { PrismaService } from '../prisma.service';
-import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
-    NotificationModule,
     ClientsModule.register([
       {
         name: 'CINEMA_SERVICE',
