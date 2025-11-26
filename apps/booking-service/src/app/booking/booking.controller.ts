@@ -3,10 +3,16 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { BookingService } from './booking.service';
 import {
   CreateBookingDto,
-  BookingDetailDto,
-  BookingSummaryDto,
-  BookingCalculationDto,
   BookingStatus,
+  AdminFindAllBookingsDto,
+  FindBookingsByShowtimeDto,
+  FindBookingsByDateRangeDto,
+  UpdateBookingStatusDto,
+  GetBookingStatisticsDto,
+  GetRevenueReportDto,
+  UpdateBookingDto,
+  RescheduleBookingDto,
+  CancelBookingWithRefundDto,
 } from '@movie-hub/shared-types';
 
 @Controller()
@@ -16,39 +22,39 @@ export class BookingController {
   @MessagePattern('booking.create')
   async create(
     @Payload() data: { userId: string; dto: CreateBookingDto }
-  ): Promise<BookingDetailDto> {
+  ) {
     return this.bookingService.createBooking(data.userId, data.dto);
   }
 
   @MessagePattern('booking.findAll')
   async findAll(
     @Payload()
-    data: {
+    payload: {
       userId: string;
-      status?: BookingStatus;
-      page?: number;
-      limit?: number;
+      query: {
+        status?: BookingStatus;
+        page?: number;
+        limit?: number;
+      };
     }
-  ): Promise<{ data: BookingSummaryDto[]; total: number }> {
+  ) {
     return this.bookingService.findAllByUser(
-      data.userId,
-      data.status,
-      data.page,
-      data.limit
+      payload.userId,
+      payload.query
     );
   }
 
   @MessagePattern('booking.findOne')
   async findOne(
     @Payload() data: { id: string; userId: string }
-  ): Promise<BookingDetailDto> {
+  ) {
     return this.bookingService.findOne(data.id, data.userId);
   }
 
   @MessagePattern('booking.cancel')
   async cancel(
     @Payload() data: { id: string; userId: string; reason?: string }
-  ): Promise<BookingDetailDto> {
+  ) {
     return this.bookingService.cancelBooking(
       data.id,
       data.userId,
@@ -59,7 +65,128 @@ export class BookingController {
   @MessagePattern('booking.getSummary')
   async getSummary(
     @Payload() data: { id: string; userId: string }
-  ): Promise<BookingCalculationDto> {
+  ) {
     return this.bookingService.getBookingSummary(data.id, data.userId);
+  }
+
+  // ==================== ADMIN OPERATIONS ====================
+
+  @MessagePattern('booking.admin.findAll')
+  async adminFindAll(
+    @Payload() payload: { filters: AdminFindAllBookingsDto }
+  ) {
+    return this.bookingService.adminFindAllBookings(payload.filters);
+  }
+
+  @MessagePattern('booking.findByShowtime')
+  async findByShowtime(
+    @Payload() payload: FindBookingsByShowtimeDto
+  ) {
+    return this.bookingService.findBookingsByShowtime(
+      payload.showtimeId,
+      payload.status
+    );
+  }
+
+  @MessagePattern('booking.findByDateRange')
+  async findByDateRange(
+    @Payload() payload: { filters: FindBookingsByDateRangeDto }
+  ) {
+    return this.bookingService.findBookingsByDateRange(payload.filters);
+  }
+
+  @MessagePattern('booking.updateStatus')
+  async updateStatus(
+    @Payload() data: UpdateBookingStatusDto
+  ) {
+    return this.bookingService.updateBookingStatus(
+      data.bookingId,
+      data.status,
+      data.reason
+    );
+  }
+
+  @MessagePattern('booking.confirm')
+  async confirm(
+    @Payload() data: { bookingId: string }
+  ) {
+    return this.bookingService.confirmBooking(data.bookingId);
+  }
+
+  @MessagePattern('booking.complete')
+  async complete(
+    @Payload() data: { bookingId: string }
+  ) {
+    return this.bookingService.completeBooking(data.bookingId);
+  }
+
+  @MessagePattern('booking.expire')
+  async expire(
+    @Payload() data: { bookingId: string }
+  ) {
+    return this.bookingService.expireBooking(data.bookingId);
+  }
+
+  // ==================== STATISTICS & REPORTS ====================
+
+  @MessagePattern('booking.getStatistics')
+  async getStatistics(@Payload() filters: GetBookingStatisticsDto) {
+    return this.bookingService.getBookingStatistics(filters);
+  }
+
+  @MessagePattern('booking.getRevenueReport')
+  async getRevenueReport(@Payload() filters: GetRevenueReportDto) {
+    return this.bookingService.getRevenueReport(filters);
+  }
+
+  // ==================== NEW FEATURES ====================
+
+  @MessagePattern('booking.calculateRefund')
+  async calculateRefund(
+    @Payload() data: { id: string; userId: string }
+  ) {
+    return this.bookingService.calculateRefund(data.id, data.userId);
+  }
+
+  @MessagePattern('booking.cancelWithRefund')
+  async cancelWithRefund(
+    @Payload() data: { id: string; userId: string; dto: CancelBookingWithRefundDto }
+  ) {
+    return this.bookingService.cancelBookingWithRefund(data.id, data.userId, data.dto);
+  }
+
+  @MessagePattern('booking.update')
+  async update(
+    @Payload() data: { id: string; userId: string; dto: UpdateBookingDto }
+  ) {
+    return this.bookingService.updateBooking(data.id, data.userId, data.dto);
+  }
+
+  @MessagePattern('booking.reschedule')
+  async reschedule(
+    @Payload() data: { id: string; userId: string; dto: RescheduleBookingDto }
+  ) {
+    return this.bookingService.rescheduleBooking(data.id, data.userId, data.dto);
+  }
+
+  @MessagePattern('booking.getCancellationPolicy')
+  async getCancellationPolicy() {
+    const result = await this.bookingService.getCancellationPolicy();
+    return { data: result };
+  }
+
+  @MessagePattern('booking.findUserBookingByShowtime')
+  async findUserBookingByShowtime(
+    @Payload() data: { 
+      showtimeId: string; 
+      userId: string; 
+      includeStatuses?: BookingStatus[];
+    }
+  ) {
+    return this.bookingService.findUserBookingByShowtime(
+      data.showtimeId,
+      data.userId,
+      data.includeStatuses
+    );
   }
 }

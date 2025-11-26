@@ -1,7 +1,13 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { SERVICE_NAME, CreatePaymentDto } from '@movie-hub/shared-types';
+import {
+  SERVICE_NAME,
+  CreatePaymentDto,
+  PaymentMessage,
+  AdminFindAllPaymentsDto,
+  PaymentStatus,
+} from '@movie-hub/shared-types';
 
 @Injectable()
 export class PaymentService {
@@ -14,26 +20,120 @@ export class PaymentService {
     dto: CreatePaymentDto,
     ipAddr: string
   ) {
-    return firstValueFrom(
-      this.bookingClient.send('payment.create', { bookingId, dto, ipAddr })
-    );
+    try {
+      return await firstValueFrom(
+        this.bookingClient.send(PaymentMessage.CREATE, { bookingId, dto, ipAddr })
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
   }
 
   async getPayment(id: string) {
-    return firstValueFrom(
-      this.bookingClient.send('payment.findOne', { id })
-    );
+    try {
+      return await firstValueFrom(
+        this.bookingClient.send(PaymentMessage.FIND_ONE, { id })
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
+  }
+
+  async getPaymentByBooking(bookingId: string) {
+    try {
+      return await firstValueFrom(
+        this.bookingClient.send(PaymentMessage.FIND_BY_BOOKING, { bookingId })
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
   }
 
   async handleVNPayIPN(params: Record<string, string>) {
-    return firstValueFrom(
-      this.bookingClient.send('payment.vnpay.ipn', { params })
-    );
+    try {
+      return await firstValueFrom(
+        this.bookingClient.send(PaymentMessage.VNPAY_IPN, { params })
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
   }
 
   async handleVNPayReturn(params: Record<string, string>) {
-    return firstValueFrom(
-      this.bookingClient.send('payment.vnpay.return', { params })
-    );
+    try {
+      return await firstValueFrom(
+        this.bookingClient.send(PaymentMessage.VNPAY_RETURN, { params })
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
+  }
+
+  // ==================== ADMIN OPERATIONS ====================
+
+  async adminFindAll(filters: AdminFindAllPaymentsDto) {
+    try {
+      return await firstValueFrom(
+        this.bookingClient.send(PaymentMessage.ADMIN_FIND_ALL, { filters })
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
+  }
+
+  async findByStatus(
+    status: PaymentStatus,
+    page?: number,
+    limit?: number
+  ) {
+    try {
+      return await firstValueFrom(
+        this.bookingClient.send(PaymentMessage.FIND_BY_STATUS, {
+          status,
+          page,
+          limit,
+        })
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
+  }
+
+  async findByDateRange(startDate: Date, endDate: Date, status?: PaymentStatus, page?: number, limit?: number) {
+    try {
+      return await firstValueFrom(
+        this.bookingClient.send(PaymentMessage.FIND_BY_DATE_RANGE, {
+          filters: { startDate, endDate, status, page, limit },
+        })
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
+  }
+
+  async cancelPayment(paymentId: string) {
+    try {
+      return await firstValueFrom(
+        this.bookingClient.send(PaymentMessage.CANCEL, { paymentId })
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
+  }
+
+  async getStatistics(filters: {
+    startDate?: Date;
+    endDate?: Date;
+    paymentMethod?: string;
+  }) {
+    try {
+      return await firstValueFrom(
+        this.bookingClient.send(PaymentMessage.GET_STATISTICS, {
+          filters,
+        })
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
   }
 }

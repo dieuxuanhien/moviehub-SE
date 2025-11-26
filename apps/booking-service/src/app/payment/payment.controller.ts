@@ -3,7 +3,10 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { PaymentService } from './payment.service';
 import {
   CreatePaymentDto,
-  PaymentDetailDto,
+  AdminFindAllPaymentsDto,
+  FindPaymentsByStatusDto,
+  FindPaymentsByDateRangeDto,
+  GetPaymentStatisticsDto,
 } from '@movie-hub/shared-types';
 
 @Controller()
@@ -13,35 +16,67 @@ export class PaymentController {
   @MessagePattern('payment.create')
   async create(
     @Payload()
-    data: {
+    payload: {
       bookingId: string;
       dto: CreatePaymentDto;
       ipAddr: string;
     }
-  ): Promise<PaymentDetailDto> {
+  ) {
     return this.paymentService.createPayment(
-      data.bookingId,
-      data.dto,
-      data.ipAddr
+      payload.bookingId,
+      payload.dto,
+      payload.ipAddr
     );
   }
 
   @MessagePattern('payment.findOne')
-  async findOne(@Payload() data: { id: string }): Promise<PaymentDetailDto> {
-    return this.paymentService.findOne(data.id);
+  async findOne(@Payload() payload: { id: string }) {
+    return this.paymentService.findOne(payload.id);
+  }
+
+  @MessagePattern('payment.findByBooking')
+  async findByBooking(@Payload() payload: { bookingId: string }) {
+    return this.paymentService.findByBooking(payload.bookingId);
   }
 
   @MessagePattern('payment.vnpay.ipn')
-  async handleVNPayIPN(
-    @Payload() data: { params: any }
-  ): Promise<{ RspCode: string; Message: string }> {
-    return this.paymentService.handleVNPayIPN(data.params);
+  async handleVNPayIPN(@Payload() payload: { params: Record<string, string> }) {
+    return this.paymentService.handleVNPayIPN(payload.params);
   }
 
   @MessagePattern('payment.vnpay.return')
-  async handleVNPayReturn(
-    @Payload() data: { params: any }
-  ): Promise<{ status: string; code: string }> {
-    return this.paymentService.handleVNPayReturn(data.params);
+  async handleVNPayReturn(@Payload() payload: { params: Record<string, string> }) {
+    return this.paymentService.handleVNPayReturn(payload.params);
+  }
+
+  // ==================== ADMIN OPERATIONS ====================
+
+  @MessagePattern('payment.admin.findAll')
+  async adminFindAll(@Payload() payload: { filters: AdminFindAllPaymentsDto }) {
+    return this.paymentService.adminFindAllPayments(payload.filters);
+  }
+
+  @MessagePattern('payment.findByStatus')
+  async findByStatus(@Payload() payload: FindPaymentsByStatusDto) {
+    return this.paymentService.findPaymentsByStatus(
+      payload.status,
+      payload.page,
+      payload.limit
+    );
+  }
+
+  @MessagePattern('payment.findByDateRange')
+  async findByDateRange(@Payload() payload: { filters: FindPaymentsByDateRangeDto }) {
+    return this.paymentService.findPaymentsByDateRange(payload.filters);
+  }
+
+  @MessagePattern('payment.cancel')
+  async cancel(@Payload() payload: { paymentId: string }) {
+    return this.paymentService.cancelPayment(payload.paymentId);
+  }
+
+  @MessagePattern('payment.getStatistics')
+  async getStatistics(@Payload() payload: { filters: GetPaymentStatisticsDto }) {
+    return this.paymentService.getPaymentStatistics(payload.filters);
   }
 }
