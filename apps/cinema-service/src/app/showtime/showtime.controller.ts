@@ -108,6 +108,4 @@ export class ShowtimeController {
   deleteShowtime(@Payload() payload: { showtimeId: string }) {
     return this.showtimeCommandService.cancelShowtime(payload.showtimeId);
   }
-
-
 }
