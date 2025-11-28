@@ -64,11 +64,10 @@ export class ShowtimeSeatMapper {
     WHEELCHAIR: SeatTypeEnum.WHEELCHAIR,
   };
 
-  toShowtimeInfoDto(entity: Showtimes, movieTitle: string): ShowtimeInfoDto {
+  toShowtimeInfoDto(entity: Showtimes): ShowtimeInfoDto {
     return {
       id: entity.id,
       movieId: entity.movie_id,
-      movieTitle,
       start_time: entity.start_time,
       end_time: entity.end_time,
       dateType: this.PrismaToDayType[entity.day_type],
@@ -108,7 +107,6 @@ export class ShowtimeSeatMapper {
 
   toShowtimeSeatResponse(params: {
     showtime: Showtimes;
-    movieTitle: string;
     cinemaName: string;
     hallName: string;
     layoutType: LayoutType;
@@ -119,10 +117,6 @@ export class ShowtimeSeatMapper {
   }): ShowtimeSeatResponse {
     const {
       showtime,
-      movieTitle,
-      cinemaName,
-      hallName,
-      layoutType,
       seats,
       reservedMap,
       ticketPricings,
@@ -154,12 +148,12 @@ export class ShowtimeSeatMapper {
     }));
 
     return {
-      showtime: this.toShowtimeInfoDto(showtime, movieTitle),
+      showtime: this.toShowtimeInfoDto(showtime),
       cinemaId: showtime.cinema_id,
-      cinemaName: cinemaName,
+      cinemaName: params.cinemaName,
       hallId: showtime.hall_id,
-      hallName: hallName,
-      layoutType: layoutType as LayoutTypeEnum,
+      hallName: params.hallName,
+      layoutType: params.layoutType as LayoutTypeEnum,
       seat_map,
       ticketPrices: this.toListTicketPricing(ticketPricings),
       rules: {

@@ -4,7 +4,6 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import {
   CinemaMessage,
   CreateCinemaRequest,
-  ShowtimesFilterDTO,
   UpdateCinemaRequest,
 } from '@movie-hub/shared-types';
 import {
@@ -53,7 +52,7 @@ export class CinemaController {
   }
 
   @MessagePattern(CinemaMessage.MOVIE.GET_ALL_MOVIES_AT_CINEMAS)
-  async getAllMoviesAtCinemas(@Payload() query: ShowtimesFilterDTO) {
-    return this.cinemaService.getAllMoviesWithShowtimes(query);
+  async getAllMoviesAtCinemas() {
+    return this.cinemaService.getAllMoviesWithShowtimes();
   }
 }
