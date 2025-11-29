@@ -19,6 +19,7 @@ import {
   AdminGetShowtimesQuery,
   CreateCinemaRequest,
   GetShowtimesQuery,
+  ShowtimesFilterDTO,
   UpdateCinemaRequest,
 } from '@movie-hub/shared-types';
 import { TransformInterceptor } from '../../../common/interceptor/transform.interceptor';
@@ -35,14 +36,6 @@ export class CinemaController {
   constructor(private readonly cinemaService: CinemaService) {}
 
   // CRUD Operations
-
-  /**
-   * Get all cinemas
-   */
-  @Get()
-  async getAllCinemas() {
-    return this.cinemaService.getCinemas();
-  }
 
   /**
    * Create a new cinema
@@ -230,7 +223,7 @@ export class CinemaController {
   }
 
   @Get('/movies/showtimes')
-  async getAllMoviesAtCinemas() {
-    return this.cinemaService.getAllMoviesWithShowtimes();
+  async getAllMoviesAtCinemas(@Query() query: ShowtimesFilterDTO) {
+    return this.cinemaService.getAllMoviesWithShowtimes(query);
   }
 }

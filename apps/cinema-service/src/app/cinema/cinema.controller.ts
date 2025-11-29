@@ -4,6 +4,7 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import {
   CinemaMessage,
   CreateCinemaRequest,
+  ShowtimesFilterDTO,
   UpdateCinemaRequest,
 } from '@movie-hub/shared-types';
 import {
@@ -41,11 +42,6 @@ export class CinemaController {
     return this.cinemaService.deleteCinema(cinemaId);
   }
 
-  @MessagePattern(CinemaMessage.GET_CINEMAS)
-  async getAllCinemas() {
-    return this.cinemaService.getAllCinemas();
-  }
-
   @MessagePattern(CinemaMessage.MOVIE.GET_MOVIES_BY_CINEMA)
   async getMoviesByCinema(
     @Payload() payload: { cinemaId: string; query: PaginationQuery }
@@ -57,7 +53,7 @@ export class CinemaController {
   }
 
   @MessagePattern(CinemaMessage.MOVIE.GET_ALL_MOVIES_AT_CINEMAS)
-  async getAllMoviesAtCinemas() {
-    return this.cinemaService.getAllMoviesWithShowtimes();
+  async getAllMoviesAtCinemas(@Payload() query: ShowtimesFilterDTO) {
+    return this.cinemaService.getAllMoviesWithShowtimes(query);
   }
 }
