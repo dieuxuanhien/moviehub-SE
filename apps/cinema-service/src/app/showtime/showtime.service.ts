@@ -10,7 +10,6 @@ import {
   SeatPricingWithTtlDto,
   SeatTypeEnum,
   MovieServiceMessage,
-  ServiceResult,
 } from '@movie-hub/shared-types';
 import { PrismaService } from '../prisma.service';
 import { RealtimeService } from '../realtime/realtime.service';
@@ -41,41 +40,32 @@ export class ShowtimeService {
     cinemaId: string,
     movieId: string,
     query: GetShowtimesQuery
-  ): Promise<ServiceResult<ShowtimeSummaryResponse[]>> {
+  ): Promise<ShowtimeSummaryResponse[]> {
     const cacheKey = `showtime:list:${cinemaId}:${movieId}:${query.date}`;
 
-    const data = await this.realtimeService.getOrSetCache(
-      cacheKey,
-      3600,
-      async () => {
-        const showtimes = await this.prisma.showtimes.findMany({
-          where: {
-            cinema_id: cinemaId,
-            movie_id: movieId,
-            start_time: {
-              gte: new Date(`${query.date}T00:00:00.000Z`),
-              lt: new Date(`${query.date}T23:59:59.999Z`),
-            },
-            status: ShowtimeStatus.SELLING,
+    return this.realtimeService.getOrSetCache(cacheKey, 3600, async () => {
+      const showtimes = await this.prisma.showtimes.findMany({
+        where: {
+          cinema_id: cinemaId,
+          movie_id: movieId,
+          start_time: {
+            gte: new Date(`${query.date}T00:00:00.000Z`),
+            lt: new Date(`${query.date}T23:59:59.999Z`),
           },
-          orderBy: { start_time: 'asc' },
-        });
+          status: ShowtimeStatus.SELLING,
+        },
+        orderBy: { start_time: 'asc' },
+      });
 
-        return ShowtimeMapper.toShowtimeSummaryList(showtimes);
-      }
-    );
-
-    return {
-      data,
-      message: 'Fetch showtimes successfully',
-    };
+      return ShowtimeMapper.toShowtimeSummaryList(showtimes);
+    });
   }
 
   async adminGetMovieShowtimes(
     cinemaId: string,
     movieId: string,
     query: AdminGetShowtimesQuery
-  ): Promise<ServiceResult<ShowtimeSummaryResponse[]>> {
+  ): Promise<ShowtimeSummaryResponse[]> {
     const { date, status, format, hallId, language } = query;
 
     // Tạo điều kiện where động cho Prisma
@@ -109,10 +99,7 @@ export class ShowtimeService {
       orderBy: { start_time: 'asc' },
     });
 
-    return {
-      data: ShowtimeMapper.toShowtimeSummaryList(showtimes),
-      message: 'Fetch showtimes successfully',
-    };
+    return ShowtimeMapper.toShowtimeSummaryList(showtimes);
   }
 
   /**
