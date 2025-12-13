@@ -38,14 +38,6 @@ export class CinemaController {
   // CRUD Operations
 
   /**
-   * Get all cinemas
-   */
-  @Get()
-  async getAllCinemas() {
-    return this.cinemaService.getCinemas();
-  }
-
-  /**
    * Create a new cinema
    */
   @Post('cinema')
