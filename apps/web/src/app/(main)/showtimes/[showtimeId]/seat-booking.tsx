@@ -1,19 +1,17 @@
 'use client';
 import { useAuth } from '@clerk/nextjs';
 import { Button } from '@movie-hub/shacdn-ui/button';
-import { LeaveConfirmDialog } from '@/components/leave-confirm-modal';
-import { RequireSignIn } from '@/components/require-sign-in';
+import { RequireSignIn } from 'apps/web/src/components/require-sign-in';
 import {
   useCheckUserBookingAtShowtime,
-  useCreateBooking
-} from '@/hooks/booking-hooks';
+  useCreateBooking,
+} from 'apps/web/src/hooks/booking-hooks';
 import {
   useGetSessionTTL,
   useGetShowtimeSeats,
-} from '@/hooks/showtime-hooks';
+} from 'apps/web/src/hooks/showtime-hooks';
 
-import { useBookingLeaveProtection } from '@/hooks/use-route-leave-confirm';
-import { useBookingStore } from '@/stores/booking-store';
+import { useBookingStore } from 'apps/web/src/stores/booking-store';
 import { Check } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { BookingCheckout } from './booking-checkout';
@@ -23,43 +21,38 @@ import { SeatMap } from './seat-map';
 const steps = ['Chọn ghế', 'Chọn đồ ăn', 'Thanh toán'];
 
 export const SeatBooking = ({ showtimeId }: { showtimeId: string }) => {
-  const { open, confirmLeave, cancelLeave } = useBookingLeaveProtection();
   const {
-      initBookingData,
-      updateHoldTimeSeconds,
-      connectSocket,
-      disconnectSocket,
-      selectedSeats,
-    
-    } = useBookingStore();
-    const {data: checking, isLoading} = useCheckUserBookingAtShowtime(showtimeId);
-    console.log('Checking booking at showtime:', checking);
-    const { mutateAsync: createBookingMutate } = useCreateBooking();
+    initBookingData,
+    updateHoldTimeSeconds,
+    connectSocket,
+    disconnectSocket,
+    selectedSeats,
+  } = useBookingStore();
+  const { data: checking, isLoading } =
+    useCheckUserBookingAtShowtime(showtimeId);
+  console.log('Checking booking at showtime:', checking);
+  const { mutateAsync: createBookingMutate } = useCreateBooking();
 
-    useEffect(() => {
-      
-      if (isLoading) return;
+  useEffect(() => {
+    if (isLoading) return;
 
-      if (checking?.data) {
-        console.log('User has existing booking at this showtime.');
-        return;
+    if (checking?.data) {
+      console.log('User has existing booking at this showtime.');
+      return;
+    }
+
+    const create = async () => {
+      try {
+        console.log('No existing booking. Creating new booking...');
+        await createBookingMutate({ showtimeId });
+        console.log('Booking created successfully.');
+      } catch (err) {
+        console.error('Error creating booking:', err);
       }
+    };
 
-
-      const create = async () => {
-        try {
-          console.log('No existing booking. Creating new booking...');
-          await createBookingMutate({ showtimeId });
-          console.log('Booking created successfully.');
-        } catch (err) {
-          console.error('Error creating booking:', err);
-        }
-      };
-
-      create();
-    }, [isLoading, checking, showtimeId, createBookingMutate]);
-
-
+    create();
+  }, [isLoading, checking, showtimeId, createBookingMutate]);
 
   const { userId } = useAuth();
 
@@ -105,11 +98,6 @@ export const SeatBooking = ({ showtimeId }: { showtimeId: string }) => {
   return (
     <RequireSignIn>
       <>
-        <LeaveConfirmDialog
-          open={open}
-          onConfirm={confirmLeave}
-          onCancel={cancelLeave}
-        />
         <div className="flex flex-col  w-full h-full justify-center items-center px-4 md:px-12">
           {/* Stepper */}
           <div className="flex justify-center items-center w-full mb-6 ">

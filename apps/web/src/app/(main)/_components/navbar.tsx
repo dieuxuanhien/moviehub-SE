@@ -10,7 +10,7 @@ import {
   useUser,
 } from '@clerk/nextjs';
 import { Button } from '@movie-hub/shacdn-ui/button';
-import { Logo } from '@/components/logo';
+import { Logo } from 'apps/web/src/components/logo';
 import { MenuIcon, TicketPlus, XIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useState } from 'react';
@@ -85,9 +85,9 @@ export const Navbar = ({ cinemas }: NavbarProps) => {
 
             {[
               { href: '/movies', label: 'Phim' },
+              { href: '/cinemas', label: 'Rạp' },
               { href: '/showtimes', label: 'Lịch chiếu' },
               { href: '/promotions', label: 'Ưu đãi' },
-              { href: '/services', label: 'Dịch vụ' },
             ].map((item) => (
               <Link
                 key={item.href}

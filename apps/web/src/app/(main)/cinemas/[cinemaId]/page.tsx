@@ -1,15 +1,15 @@
-import { CinemaLocationResponse } from '@/libs/types/cinema.type';
+import { CinemaLocationResponse } from 'apps/web/src/libs/types/cinema.type';
 import CinemaDetailCard from './_components/cinema-detail-card';
-import { getQueryClient } from '@/libs/get-query-client';
+import { getQueryClient } from 'apps/web/src/libs/get-query-client';
 import {
   getCinemaDetail,
   getMovieAtCinemas,
-} from '@/libs/actions/cinemas/cinema-action';
+} from 'apps/web/src/libs/actions/cinemas/cinema-action';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { MoviesAtCinema } from './_components/movies-list-cinema';
 import { init } from 'next/dist/compiled/webpack/webpack';
 import { ServiceResult } from '@movie-hub/shared-types';
-import { MovieWithShowtimeResponse } from '@/libs/types/movie.type';
+import { MovieWithShowtimeResponse } from 'apps/web/src/libs/types/movie.type';
 
 export default async function CinemaDetailPage({
   params,
@@ -43,7 +43,7 @@ export default async function CinemaDetailPage({
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <div className="w-full flex flex-col items-center justify-center gap-4">
-        <CinemaDetailCard cinema={cinema} />
+        <CinemaDetailCard cinema={cinema.data} />
         <MoviesAtCinema cinemaId={cinemaId} />
       </div>
     </HydrationBoundary>

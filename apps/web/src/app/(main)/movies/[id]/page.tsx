@@ -1,22 +1,21 @@
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
-import { getMovieDetail } from '@/libs/actions/movies/movie-action';
+import { getMovieDetail } from 'apps/web/src/libs/actions/movies/movie-action';
 import { DateSelect } from './_components/date-select';
 import { MovieCast } from './_components/movie-cast';
 import { MovieHeader } from './_components/movie-header';
-import { getQueryClient } from '@/libs/get-query-client';
-import { getAvailableCities, getCinemaDetail } from '@/libs/actions/cinemas/cinema-action';
-import { TrailerModal } from '@/components/modal/trailer-modal';
+import { getQueryClient } from 'apps/web/src/libs/get-query-client';
+import { getAvailableCities, getCinemaDetail } from 'apps/web/src/libs/actions/cinemas/cinema-action';
+import { TrailerModal } from 'apps/web/src/components/modal/trailer-modal';
 
 export default async function MovieDetailsPage({
   params,
   searchParams
 }: {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ cinemaId?: string }>;
+  searchParams?: { cinemaId?: string };
 }) {
   const { id } = await params; // ✅ await params trước
-  const resolvedSearchParams = await searchParams;
-  const cinemaId = resolvedSearchParams?.cinemaId;
+  const cinemaId = searchParams?.cinemaId;
   const queryClient = getQueryClient();
   await queryClient.prefetchQuery({
     queryKey: ['movie-detail', id],
@@ -43,7 +42,7 @@ export default async function MovieDetailsPage({
           <MovieCast movieId={id} />
         </section>
 
-        <DateSelect movieId={id} cinemaId={cinemaId}  availableCities={availableCities}/>
+        <DateSelect movieId={id} cinemaId={cinemaId}  availableCities={availableCities.data}/>
         <TrailerModal/>
       </div>
     </HydrationBoundary>

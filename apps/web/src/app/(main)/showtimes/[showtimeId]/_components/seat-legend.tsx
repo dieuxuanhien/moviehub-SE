@@ -2,7 +2,7 @@ import {
   ReservationStatusEnum,
   SeatStatusEnum,
   SeatTypeEnum,
-} from '@/libs/types/showtime.type';
+} from 'apps/web/src/libs/types/showtime.type';
 import { Accessibility } from 'lucide-react';
 
 const seatLegendItems = [

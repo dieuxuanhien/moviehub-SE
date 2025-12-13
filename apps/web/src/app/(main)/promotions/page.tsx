@@ -1,7 +1,8 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
-import { findAllPromotions } from "@/libs/actions/promotion/promotion-actions";
-import { getQueryClient } from "@/libs/get-query-client";
-import { PromotionType } from "@/libs/types/promotion.type";
+import { findAllPromotions } from "apps/web/src/libs/actions/promotion/promotion-actions";
+import { getQueryClient } from "apps/web/src/libs/get-query-client";
+import { PromotionType } from "apps/web/src/libs/types/promotion.type";
+import { a } from "node_modules/framer-motion/dist/types.d-BJcRxCew";
 import { PromotionList } from "./promotion-list";
 
 export default async function PromotionsPage() {
