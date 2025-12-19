@@ -11,13 +11,11 @@ import {
   GetCinemaDetailDto,
   CinemaListResponse,
   CinemaLocationResponse,
-} from '@movie-hub/shared-types';
-import { DistanceCalculator } from '../../utils/distance-calculator.util';
-import { DecimalUtil } from '../../utils/decimal.util';
+} from './dto/cinema-location.dto';
+import { DistanceCalculator } from './utils/distance-calculator';
 import { Prisma, HallType } from '../../../generated/prisma/client';
 import Decimal from 'decimal.js';
 import { ServiceResult } from '@movie-hub/shared-types/common';
-
 
 @Injectable()
 export class CinemaLocationService {
@@ -25,6 +23,22 @@ export class CinemaLocationService {
     private readonly prisma: PrismaService,
     private readonly mapper: CinemaLocationMapper
   ) {}
+
+  /**
+   * Convert number to Decimal for Prisma queries
+   */
+  private toDecimal(value: number): Decimal {
+    return new Decimal(value);
+  }
+
+  /**
+   * Convert Decimal to number
+   */
+  private toNumber(value: number | Decimal | null | undefined): number {
+    if (value === null || value === undefined) return 0;
+    if (typeof value === 'number') return value;
+    return value.toNumber();
+  }
 
   /**
    * Get cinemas nearby user location
@@ -38,24 +52,21 @@ export class CinemaLocationService {
       throw new BadRequestException('Latitude and longitude are required');
     }
 
-    // Calculate bounding box for efficient querying
-    const { minLat, maxLat, minLon, maxLon } = DistanceCalculator.getBoundingBox(
-      latitude,
-      longitude,
-      radiusKm
-    );
+    // Calculate bounding box
+    const latDelta = radiusKm / 111;
+    const lonDelta = radiusKm / (111 * Math.cos(latitude * (Math.PI / 180)));
 
-    const minLatDecimal = DecimalUtil.toDecimal(minLat);
-    const maxLatDecimal = DecimalUtil.toDecimal(maxLat);
-    const minLonDecimal = DecimalUtil.toDecimal(minLon);
-    const maxLonDecimal = DecimalUtil.toDecimal(maxLon);
+    const minLat = this.toDecimal(latitude - latDelta);
+    const maxLat = this.toDecimal(latitude + latDelta);
+    const minLon = this.toDecimal(longitude - lonDelta);
+    const maxLon = this.toDecimal(longitude + lonDelta);
 
-    // Query cinemas within bounding box
+    // Query cinemas in bounding box
     const cinemas = await this.prisma.cinemas.findMany({
       where: {
         status: 'ACTIVE',
-        latitude: { gte: minLatDecimal, lte: maxLatDecimal },
-        longitude: { gte: minLonDecimal, lte: maxLonDecimal },
+        latitude: { gte: minLat, lte: maxLat },
+        longitude: { gte: minLon, lte: maxLon },
       },
       include: { halls: true },
     });
@@ -137,7 +148,7 @@ export class CinemaLocationService {
     }
 
     if (minRating) {
-      where.rating = { gte: DecimalUtil.toDecimal(minRating) };
+      where.rating = { gte: this.toDecimal(minRating) };
     }
 
     // Filter by amenities 

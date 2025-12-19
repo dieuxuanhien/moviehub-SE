@@ -77,18 +77,6 @@ export class CinemaService {
     };
   }
 
-  async getAllCinemas(): Promise<ServiceResult<CinemaDetailResponse[]>> {
-    const cinemas = await this.prisma.cinemas.findMany({
-      where: { status: 'ACTIVE' },
-      orderBy: { name: 'asc' },
-    });
-
-    return {
-      data: cinemas.map((cinema) => CinemaMapper.toResponse(cinema)),
-      message: 'Get all cinemas successfully!',
-    };
-  }
-
   async getMoviesByCinema(
     cinemaId: string,
     query: PaginationQuery
