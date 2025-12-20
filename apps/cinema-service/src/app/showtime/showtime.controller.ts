@@ -9,7 +9,7 @@ import {
   GetShowtimesQuery,
   ShowtimeSummaryResponse,
   UpdateShowtimeRequest,
-  SeatPricingWithTtlDto,
+  SeatPricingWithTtlDto
 } from '@movie-hub/shared-types';
 import { ShowtimeCommandService } from './showtime-command.service';
 
@@ -71,7 +71,7 @@ export class ShowtimeController {
       payload.userId
     );
   }
-
+  
   @MessagePattern(CinemaMessage.SHOWTIME.GET_SESSION_TTL)
   getSessionTTL(@Payload() payload: { showtimeId: string; userId: string }) {
     return this.showtimeService.getSessionTTL(
@@ -108,4 +108,6 @@ export class ShowtimeController {
   deleteShowtime(@Payload() payload: { showtimeId: string }) {
     return this.showtimeCommandService.cancelShowtime(payload.showtimeId);
   }
+
+
 }
