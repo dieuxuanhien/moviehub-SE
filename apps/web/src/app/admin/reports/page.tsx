@@ -30,7 +30,6 @@ import {
   RefreshCw,
   ArrowUpRight,
   ArrowDownRight,
-// @ts-expect-error lucide-react lacks type definitions
 } from 'lucide-react';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import {

@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-// @ts-expect-error lucide-react lacks type definitions
 import { Plus, Calendar as CalendarIcon, Clock, Trash2, Pencil } from 'lucide-react';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import {
@@ -21,42 +20,111 @@ import {
   SelectValue,
 } from '@movie-hub/shacdn-ui/select';
 import { Badge } from '@movie-hub/shacdn-ui/badge';
+import { useToast } from '../_libs/use-toast';
 import { Calendar } from '@movie-hub/shacdn-ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@movie-hub/shacdn-ui/popover';
-import { useShowtimes, useDeleteShowtime, useMovies, useCinemas, useHallsGroupedByCinema } from '@/libs/api';
+// import api from '@/lib/api';
 import type { Showtime, Movie, Cinema, Hall } from '../_libs/types';
 import { format } from 'date-fns';
-import ShowtimeDialog from '../_components/ShowtimeDialog';
+
+import { mockShowtimes, mockMovies, mockCinemas, mockHalls } from '../_libs/mockData';
+import ShowtimeDialog from '../_components/ShowtimeDialog'; 
+
 
 export default function ShowtimesPage() {
+  const [showtimes, setShowtimes] = useState<Showtime[]>([]);
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const [halls, setHalls] = useState<Hall[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingShowtime, setEditingShowtime] = useState<Showtime | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedCinemaId, setSelectedCinemaId] = useState('all');
   const [selectedMovieId, setSelectedMovieId] = useState('all');
-
-  // API hooks with flexible filtering
-  const { data: showtimesData = [], isLoading: loading, refetch: refetchShowtimes } = useShowtimes({
-    cinemaId: selectedCinemaId !== 'all' ? selectedCinemaId : undefined,
-    movieId: selectedMovieId !== 'all' ? selectedMovieId : undefined,
-    date: selectedDate.toISOString().split('T')[0],
-  });
-  const showtimes = Array.isArray(showtimesData) ? showtimesData : (showtimesData?.data || []) as Showtime[];
-  const { data: moviesData = [] } = useMovies();
-  const movies = Array.isArray(moviesData) ? moviesData : (moviesData?.data || []) as Movie[];
-  const moviesAdmin = movies;
-  const { data: cinemasData = [] } = useCinemas();
-  const cinemas = Array.isArray(cinemasData) ? cinemasData : (cinemasData?.data || []) as Cinema[];
-  const cinemasAdmin = cinemas;
-  const deleteShowtime = useDeleteShowtime();
-
-  // Halls: derive a flat halls list from grouped halls by cinema
-  const { data: hallsByCinema = {} } = useHallsGroupedByCinema();
-  const halls: Hall[] = Object.values(hallsByCinema).flatMap((g: { cinema: unknown; halls: unknown[] }) => (g.halls || []) as Hall[]);
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Trigger re-fetch when filters change (handled by React Query)
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, selectedCinemaId, selectedMovieId]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+
+      /*
+      // Build query params
+      const params: Record<string, string> = { 
+        date: format(selectedDate, 'yyyy-MM-dd') 
+      };
+      if (selectedCinemaId !== 'all') {
+        params.cinemaId = selectedCinemaId;
+      }
+      if (selectedMovieId !== 'all') {
+        params.movieId = selectedMovieId;
+      }
+
+      const [showtimesRes, moviesRes, cinemasRes] = await Promise.all([
+        api.get('/showtimes', { params }),
+        api.get('/movies'),
+        api.get('/cinemas', { params: { lat: 10.762622, lng: 106.660172 } }),
+      ]);
+      setShowtimes(showtimesRes.data);
+      setMovies(moviesRes.data);
+      setCinemas(cinemasRes.data);
+      */
+
+      // ⭐️ THAY THẾ API CALLS BẰNG MOCK DATA VÀ DELAY
+       await new Promise(resolve => setTimeout(resolve, 600)); 
+
+      // Lọc dữ liệu showtime theo ngày, rạp, phim
+      const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+      let filteredShowtimes = mockShowtimes.filter(st => 
+        format(new Date(st.startTime), 'yyyy-MM-dd') === selectedDateStr
+      );
+
+      // Filter by cinema if selected
+      if (selectedCinemaId !== 'all') {
+        filteredShowtimes = filteredShowtimes.filter(st => st.cinemaId === selectedCinemaId);
+      }
+
+      // Filter by movie if selected
+      if (selectedMovieId !== 'all') {
+        filteredShowtimes = filteredShowtimes.filter(st => st.movieId === selectedMovieId);
+      }
+
+      setShowtimes(filteredShowtimes);
+      setMovies(mockMovies);
+      setCinemas(mockCinemas);
+      setHalls(mockHalls); // Load all halls
+     // ⭐️ KẾT THÚC PHẦN THAY THẾ
+
+     
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch data',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // fetchHalls not needed with mock data - filtering happens in render
+  /*
+  const fetchHalls = async (cinemaId: string) => {
+    try {
+      const response = await api.get('/auditoriums', {
+        params: { cinemaId }
+      });
+      setHalls(response.data);
+    } catch {
+      console.error('Failed to fetch halls');
+    }
+  };
+  */
 
   const handleEdit = (showtime: Showtime) => {
     setEditingShowtime(showtime);
@@ -65,9 +133,15 @@ export default function ShowtimesPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteShowtime.mutateAsync(id);
+      // await api.delete(`/showtimes/showtime/${id}`);
+      toast({ title: 'Success', description: 'Showtime deleted successfully' });
+      fetchData();
     } catch {
-      // Error toast already shown by mutation hook
+      toast({
+        title: 'Error',
+        description: 'Failed to delete showtime',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -89,7 +163,7 @@ export default function ShowtimesPage() {
     if (!acc[movieId]) {
       acc[movieId] = [];
     }
-    acc[movieId].push(showtime as unknown as Showtime);
+    acc[movieId].push(showtime);
     return acc;
   }, {} as Record<string, Showtime[]>);
 
@@ -207,7 +281,7 @@ export default function ShowtimesPage() {
           </Card>
         ) : (
           Object.entries(groupedShowtimes).map(([movieId, movieShowtimes]) => {
-            const movie = moviesAdmin.find((m) => m.id === movieId);
+            const movie = movies.find((m) => m.id === movieId);
             return (
               <Card key={movieId}>
                 <CardHeader>
@@ -322,12 +396,12 @@ export default function ShowtimesPage() {
             setEditingShowtime(null);
           }
         }}
-        movies={moviesAdmin}
-        cinemas={cinemasAdmin}
+        movies={movies}
+        cinemas={cinemas}
         halls={halls}
         editingShowtime={editingShowtime}
         onSuccess={() => {
-          refetchShowtimes();
+          fetchData();
         }}
       />
     </div>
