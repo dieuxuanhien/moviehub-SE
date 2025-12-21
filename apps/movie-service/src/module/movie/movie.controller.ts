@@ -1,13 +1,10 @@
 import {
   CreateMovieReleaseRequest,
   CreateMovieRequest,
-  CreateReviewRequest,
   MovieQuery,
   MovieServiceMessage,
-  ReviewQuery,
   UpdateMovieReleaseRequest,
   UpdateMovieRequest,
-  UpdateReviewRequest,
 } from '@movie-hub/shared-types';
 import {
   Controller,
@@ -89,24 +86,6 @@ export class MovieController {
   @MessagePattern(MovieServiceMessage.MOVIE_RELEASE.DELETED)
   async deleteMovieRelease(@Payload() id: string) {
     return this.movieService.deleteMovieRelease(id);
-  }
-
-  //review
-  @MessagePattern(MovieServiceMessage.MOVIE.GET_REVIEWS)
-  async getReviews(@Payload() query: ReviewQuery) {
-    return this.movieService.getReviewsByMovie(query);
-  }
-
-  @MessagePattern(MovieServiceMessage.MOVIE.CREATED_REVIEW)
-  async createReview(@Payload() dto: CreateReviewRequest) {
-    return this.movieService.createReviewForMovie(dto);
-  }
-
-  @MessagePattern(MovieServiceMessage.MOVIE.UPDATED_REVIEW)
-  async updateReview(
-    @Payload() { id, request }: { id: string; request: UpdateReviewRequest }
-  ) {
-    return this.movieService.updateReview(id, request);
   }
 
   // Function for internal microservice

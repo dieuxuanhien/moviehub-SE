@@ -1,7 +1,8 @@
 // src/app/(admin)/movies/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+// @ts-expect-error lucide-react types
 import { Plus, Search, MoreVertical, Edit, Trash2, Film as FilmIcon, Calendar } from 'lucide-react';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import { Input } from '@movie-hub/shacdn-ui/input';
@@ -36,18 +37,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@movie-hub/shacdn-ui/dropdown-menu';
-import { useToast } from '../_libs/use-toast';
-// import api from '@/lib/api';
+import { useMovies, useCreateMovie, useUpdateMovie, useDeleteMovie, useGenres } from '@/libs/api';
 import type { Movie, AgeRating, LanguageType, MovieCast, CreateMovieDto } from '../_libs/types';
+import type { CreateMovieRequest } from '@/libs/api';
 import Image from 'next/image';
 import MovieReleaseDialog from '../_components/forms/MovieReleaseDialog';
 
-import { mockMovies, mockGenres } from '../_libs/mockData'; // ⭐️ Import mock data
-
-
 export default function MoviesPage() {
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -72,71 +68,46 @@ export default function MoviesPage() {
     cast: [] as MovieCast[],
     genreIds: [] as string[],
   });
-  const { toast } = useToast();
+
+  // API hooks
+  const { data: moviesData = [] } = useMovies();
+  const movies = Array.isArray(moviesData) ? moviesData : (moviesData?.data || []) as Movie[];
+  const { data: genresData = [] } = useGenres();
+  const genres = Array.isArray(genresData) ? genresData : (genresData?.data || []) as typeof genresData;
+  const createMovie = useCreateMovie();
+  const updateMovie = useUpdateMovie();
+  const deleteMovie = useDeleteMovie();
+
+  const loading = createMovie.isPending || updateMovie.isPending || deleteMovie.isPending;
 
   const ageRatingOptions: AgeRating[] = ['P', 'K', 'T13', 'T16', 'T18', 'C'];
   const languageTypeOptions: LanguageType[] = ['ORIGINAL', 'SUBTITLE', 'DUBBED'];
 
-  useEffect(() => {
-    fetchMovies();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fetchMovies = async () => {
-    try {
-      setLoading(true);
-      // const response = await api.get('/movies');
-      // setMovies(response.data.data); // API returns { success, data, message }
-            
-      // ⭐️ PHẦN THAY THẾ
-      await new Promise(resolve => setTimeout(resolve, 500)); 
-      setMovies(mockMovies); 
-      // ⭐️ KẾT THÚC PHẦN THAY THẾ
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch movies',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSubmit = async () => {
     try {
+      const apiData = {
+        ...formData,
+        cast: formData.cast?.map(c => c.name) || [],
+      };
       if (selectedMovie) {
-        // await api.put(`/movies/${selectedMovie.id}`, formData);
-        toast({ title: 'Success', description: 'Movie updated successfully' });
+        await updateMovie.mutateAsync({ id: selectedMovie.id, data: apiData });
       } else {
-        // await api.post('/movies', formData);
-        toast({ title: 'Success', description: 'Movie created successfully' });
+        await createMovie.mutateAsync(apiData as CreateMovieRequest);
       }
       setDialogOpen(false);
-      fetchMovies();
       resetForm();
     } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to save movie',
-        variant: 'destructive',
-      });
+      // Error toast already shown by mutation hooks
     }
   };
 
   const handleDelete = async () => {
     if (!selectedMovie) return;
     try {
-      // await api.delete(`/movies/${selectedMovie.id}`);
-      toast({ title: 'Success', description: 'Movie deleted successfully' });
+      await deleteMovie.mutateAsync(selectedMovie.id);
       setDeleteDialogOpen(false);
-      fetchMovies();
     } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete movie',
-        variant: 'destructive',
-      });
+      // Error toast already shown by mutation hook
     }
   };
 
@@ -317,7 +288,7 @@ export default function MoviesPage() {
                     </div>
                   )}
                   <div className="flex flex-wrap gap-1 mt-2">
-                    {movie.genre.slice(0, 3).map((g) => (
+                    {Array.isArray(movie.genre) && movie.genre.slice(0, 3).map((g) => (
                       <Badge key={g.id} variant="secondary" className="text-xs">
                         {g.name}
                       </Badge>
@@ -582,7 +553,7 @@ export default function MoviesPage() {
             <div className="space-y-2">
               <Label>Genres *</Label>
               <div className="flex flex-wrap gap-2">
-                {mockGenres.map((genre) => (
+                {genres.map((genre) => (
                   <Button
                     key={genre.id}
                     type="button"
