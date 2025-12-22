@@ -4,10 +4,6 @@ import { UserService } from './user.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { SERVICE_NAME } from '@movie-hub/shared-types';
-import { StaffController } from './controller/staff.controller';
-import { StaffService } from './service/staff.service';
-import { ConfigController } from './controller/config.controller';
-import { ConfigService as SettingService } from './service/config.service';
 
 @Module({
   imports: [
@@ -25,7 +21,7 @@ import { ConfigService as SettingService } from './service/config.service';
       },
     ]),
   ],
-  controllers: [UserController, StaffController, ConfigController],
-  providers: [UserService, StaffService, SettingService],
+  controllers: [UserController],
+  providers: [UserService],
 })
 export class UserModule {}

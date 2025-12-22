@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Building2, DoorOpen, Wrench, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
-import { Button } from '@movie-hub/shacdn-ui/button';
+export const dynamic = 'force-dynamic';
+
+import { useState } from 'react';
+import { Building2, DoorOpen, Wrench, CheckCircle2, XCircle } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -19,12 +20,29 @@ import {
 } from '@movie-hub/shacdn-ui/select';
 import { Badge } from '@movie-hub/shacdn-ui/badge';
 import { useToast } from '../_libs/use-toast';
-import type { Cinema, Hall, SeatStatus, SeatDetail, HallDetail } from '../_libs/types';
-import { mockCinemas, mockHalls } from '../_libs/mockData';
+import { useCinemas, useHallsGroupedByCinema, useUpdateSeatStatus } from '@/libs/api';
+import type { Hall, SeatStatus, SeatType } from '@/libs/api/types';
+
+// Frontend-specific types for seat status management
+interface SeatDetail {
+  id: string;
+  row: number;
+  seatNumber: number;
+  type: SeatType;
+  status: SeatStatus;
+}
+
+interface HallDetail {
+  id: string;
+  name: string;
+  type: string;
+  capacity: number;
+  rows: number;
+  status: string;
+  seats: SeatDetail[];
+}
 
 export default function SeatStatusPage() {
-  const [cinemas, setCinemas] = useState<Cinema[]>([]);
-  const [halls, setHalls] = useState<Hall[]>([]);
   const [selectedCinemaId, setSelectedCinemaId] = useState('');
   const [selectedHallId, setSelectedHallId] = useState('');
   const [hallDetail, setHallDetail] = useState<HallDetail | null>(null);
@@ -32,28 +50,21 @@ export default function SeatStatusPage() {
   const [filterStatus, setFilterStatus] = useState<SeatStatus | 'ALL'>('ALL');
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchCinemas();
-  }, []);
+  // API hooks
+  const { data: cinemasData = [] } = useCinemas();
+  const cinemas = cinemasData || [];
+  const { data: hallsByCinema = {} } = useHallsGroupedByCinema();
+  const halls: Hall[] = Object.values(hallsByCinema).flatMap((g) => g.halls || []);
+  const updateSeatMutation = useUpdateSeatStatus();
 
-  const fetchCinemas = async () => {
+  const handleHallChange = async (hallId: string) => {
     try {
-      setCinemas(mockCinemas);
-      setHalls(mockHalls);
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch cinemas',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const fetchHallDetail = async (hallId: string) => {
-    try {
+      setSelectedHallId(hallId);
       setLoading(true);
-      const hall = mockHalls.find(h => h.id === hallId);
+      const hall = halls.find(h => h.id === hallId);
       if (hall) {
+        // Note: In a real scenario, you'd fetch seats from API
+        // For now, generate mock seat data based on hall info
         const mockSeats: SeatDetail[] = [];
         let seatId = 1;
         
@@ -88,6 +99,7 @@ export default function SeatStatusPage() {
 
         setHallDetail({
           ...hall,
+          status: hall.status || 'ACTIVE',
           seats: mockSeats,
         });
       }
@@ -102,15 +114,13 @@ export default function SeatStatusPage() {
     }
   };
 
-  const handleHallChange = (hallId: string) => {
-    setSelectedHallId(hallId);
-    fetchHallDetail(hallId);
-  };
-
-  const updateSeatStatus = async (seatId: string, newStatus: SeatStatus) => {
+  const handleUpdateSeatStatus = async (seatId: string, newStatus: SeatStatus) => {
     try {
-      await api.patch(`/halls/seat/${seatId}/status`, { status: newStatus });
-      
+      await updateSeatMutation.mutateAsync({
+        seatId,
+        data: { status: newStatus },
+      });
+
       if (hallDetail) {
         setHallDetail({
           ...hallDetail,
@@ -125,11 +135,7 @@ export default function SeatStatusPage() {
         description: 'Seat status updated successfully',
       });
     } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to update seat status',
-        variant: 'destructive',
-      });
+      // Error toast already shown by mutation hook
     }
   };
 
@@ -368,7 +374,7 @@ export default function SeatStatusPage() {
                                 const statuses: SeatStatus[] = ['ACTIVE', 'BROKEN', 'MAINTENANCE'];
                                 const currentIndex = statuses.indexOf(seat.status);
                                 const nextStatus = statuses[(currentIndex + 1) % statuses.length];
-                                updateSeatStatus(seat.id, nextStatus);
+                                handleUpdateSeatStatus(seat.id, nextStatus);
                               }}
                               className={`
                                 w-12 h-12 rounded-xl transition-all duration-300

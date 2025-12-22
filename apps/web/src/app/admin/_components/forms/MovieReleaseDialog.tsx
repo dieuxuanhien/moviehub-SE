@@ -21,16 +21,8 @@ import {
 } from '@movie-hub/shacdn-ui/select';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import { useToast } from '../../_libs/use-toast';
-import { useAdminApi } from '@/libs/admin-api';
-import type { Movie } from '../../_libs/types';
-
-interface MovieRelease {
-  id: string;
-  movieId: string;
-  startDate: string;
-  endDate: string;
-  note: string;
-}
+// import { useAdminApi } from '@/libs/admin-api'; // DEPRECATED: Use new hooks from libs/api
+import type { Movie, MovieRelease } from '@/libs/api/types';
 
 interface MovieReleaseDialogProps {
   open: boolean;
@@ -49,7 +41,7 @@ export default function MovieReleaseDialog({
   preSelectedMovieId,
   onSuccess,
 }: MovieReleaseDialogProps) {
-  const api = useAdminApi();
+  // const api = useAdminApi(); // DEPRECATED
   const [formData, setFormData] = useState({
     movieId: '',
     startDate: '',
@@ -62,9 +54,9 @@ export default function MovieReleaseDialog({
     if (editingRelease) {
       setFormData({
         movieId: editingRelease.movieId,
-        startDate: editingRelease.startDate,
-        endDate: editingRelease.endDate,
-        note: editingRelease.note,
+        startDate: typeof editingRelease.startDate === 'string' ? editingRelease.startDate : editingRelease.startDate.toISOString().split('T')[0],
+        endDate: typeof editingRelease.endDate === 'string' ? editingRelease.endDate : editingRelease.endDate.toISOString().split('T')[0],
+        note: editingRelease.note || '',
       });
     } else if (preSelectedMovieId) {
       // Pre-fill movieId when opening from Movies page
@@ -104,29 +96,29 @@ export default function MovieReleaseDialog({
     }
 
     try {
-      if (editingRelease) {
-        await api.movieReleases.update(editingRelease.id, {
-          movieId: formData.movieId,
-          startDate: formData.startDate,
-          endDate: formData.endDate,
-          note: formData.note,
-        });
-        toast({
-          title: 'Success',
-          description: 'Movie release updated successfully',
-        });
-      } else {
-        await api.movieReleases.create({
-          movieId: formData.movieId,
-          startDate: formData.startDate,
-          endDate: formData.endDate,
-          note: formData.note,
-        });
-        toast({
-          title: 'Success',
-          description: 'Movie release created successfully',
-        });
-      }
+      // if (editingRelease) {
+      //   await api.movieReleases.update(editingRelease.id, {
+      //     movieId: formData.movieId,
+      //     startDate: formData.startDate,
+      //     endDate: formData.endDate,
+      //     note: formData.note,
+      //   });
+      //   toast({
+      //     title: 'Success',
+      //     description: 'Movie release updated successfully',
+      //   });
+      // } else {
+      //   await api.movieReleases.create({
+      //     movieId: formData.movieId,
+      //     startDate: formData.startDate,
+      //     endDate: formData.endDate,
+      //     note: formData.note,
+      //   });
+      //   toast({
+      //     title: 'Success',
+      //     description: 'Movie release created successfully',
+      //   });
+      // }
 
       onOpenChange(false);
       resetForm();

@@ -1,8 +1,9 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -26,7 +27,7 @@ import {
 import { Button } from '@movie-hub/shacdn-ui/button';
 import { ScrollArea } from '@movie-hub/shacdn-ui/scroll-area';
 import { cn } from '@movie-hub/shacdn-utils';
-import { useClerk, useUser } from '@clerk/nextjs';
+// import { useClerk, useUser } from '@clerk/nextjs';
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/admin', disabled: false },
@@ -40,9 +41,9 @@ const menuItems = [
   { icon: Eye, label: 'Showtime Seats', href: '/admin/showtime-seats', disabled: false },
   { icon: Zap, label: 'Batch Showtimes', href: '/admin/batch-showtimes', disabled: false },
   { icon: DollarSign, label: 'Ticket Pricing', href: '/admin/ticket-pricing', disabled: false },
-  { icon: Ticket, label: 'Reservations', href: '/admin/reservations', disabled: true },
-  { icon: MessageSquare, label: 'Reviews', href: '/admin/reviews', disabled: true },
-  { icon: Users, label: 'Staff', href: '/admin/staff', disabled: true },
+  { icon: Ticket, label: 'Reservations', href: '/admin/reservations', disabled: false },
+  { icon: MessageSquare, label: 'Reviews', href: '/admin/reviews', disabled: false },
+  { icon: Users, label: 'Staff', href: '/admin/staff', disabled: false },
   { icon: BarChart3, label: 'Reports', href: '/admin/reports', disabled: false },
   { icon: Settings, label: 'Settings', href: '/admin/settings', disabled: false },
 ];
@@ -54,11 +55,12 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { signOut } = useClerk();
-  const { user } = useUser();
+  // const { signOut } = useClerk();
+  // const { user } = useUser();
+  // When Clerk is disabled locally we still need a placeholder for user info
 
   const handleLogout = async () => {
-    await signOut();
+    // await signOut();
     window.location.href = '/';
   };
 
@@ -162,21 +164,11 @@ export default function AdminLayout({
             </div>
             <div className="flex items-center gap-2">
               <div className="text-right mr-3">
-                <p className="text-sm font-medium">{user?.fullName || 'Admin User'}</p>
-                <p className="text-xs text-gray-500">{user?.primaryEmailAddress?.emailAddress || 'admin@cinema.com'}</p>
+                <p className="text-sm font-medium">Admin User</p>
+                <p className="text-xs text-gray-500">admin@cinema.com</p>
               </div>
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-semibold overflow-hidden">
-                {user?.imageUrl ? (
-                  <Image 
-                    src={user.imageUrl} 
-                    alt={user.fullName || ''} 
-                    width={40}
-                    height={40}
-                    className="h-full w-full object-cover" 
-                  />
-                ) : (
-                  user?.firstName?.[0] || 'A'
-                )}
+                A
               </div>
             </div>
           </div>
