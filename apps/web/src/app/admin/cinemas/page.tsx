@@ -1,8 +1,7 @@
 // src/app/(dashboard)/cinemas/page.tsx
 'use client';
 
-import { useState } from 'react';
-// @ts-expect-error - lucide-react lacks type declarations
+import { useState, useEffect } from 'react';
 import { Plus, Search, MoreVertical, Edit, Trash2, MapPin, Phone, Mail, Star, Clock, Users } from 'lucide-react';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import { Input } from '@movie-hub/shacdn-ui/input';
@@ -27,12 +26,13 @@ import {
 } from '@movie-hub/shacdn-ui/dialog';
 import { Label } from '@movie-hub/shacdn-ui/label';
 import { Textarea } from '@movie-hub/shacdn-ui/textarea';
-// removed unused toast import
-import { useCinemas, useCreateCinema, useUpdateCinema, useDeleteCinema } from '@/libs/api';
-import type { CreateCinemaRequest as ApiCreateCinemaRequest } from '@/libs/api';
-import type { Cinema, CreateCinemaRequest } from '@/libs/api/types';
+import { useToast } from '../_libs/use-toast';
+import { mockCinemas, mockHalls } from '../_libs/mockData';
+import type { Cinema, CinemaStatus, CreateCinemaRequest } from '../_libs/types';
 
 export default function CinemasPage() {
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -49,19 +49,34 @@ export default function CinemasPage() {
     amenities: [],
     images: [],
   });
-  // toast not used in this page
+  const { toast } = useToast();
 
-  // API hooks
-  const { data: cinemasData = [], isLoading: loading } = useCinemas();
-  const cinemas = cinemasData || [];
-  const createCinema = useCreateCinema();
-  const updateCinema = useUpdateCinema();
-  const deleteCinema = useDeleteCinema();
+  const fetchCinemas = async () => {
+    try {
+      setLoading(true);
+      // ⭐️ PHẦN THAY THẾ: Dùng dữ liệu giả
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setCinemas(mockCinemas);
+      // ⭐️ KẾT THÚC PHẦN THAY THẾ
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch cinemas',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCinemas();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Calculate halls count for each cinema
   const getHallsCount = (cinemaId: string) => {
-    // Note: This will need useHallsByCinema hook when implemented
-    return 0; // Placeholder
+    return mockHalls.filter((hall) => hall.cinemaId === cinemaId).length;
   };
 
   // Parse operating hours to display format
@@ -98,26 +113,37 @@ export default function CinemasPage() {
   const handleSubmit = async () => {
     try {
       if (selectedCinema) {
-        await updateCinema.mutateAsync({ id: selectedCinema.id, data: formData });
+        // Mock update
+        toast({ title: 'Success', description: 'Cinema updated successfully' });
       } else {
-        // ensure API-required fields have defaults
-        const apiPayload = { ...formData, district: formData?.district ?? '' } as ApiCreateCinemaRequest;
-        await createCinema.mutateAsync(apiPayload);
+        // Mock create
+        toast({ title: 'Success', description: 'Cinema created successfully' });
       }
       setDialogOpen(false);
+      fetchCinemas();
       resetForm();
     } catch {
-      // Error toast already shown by mutation hooks
+      toast({
+        title: 'Error',
+        description: 'Failed to save cinema',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleDelete = async () => {
     if (!selectedCinema) return;
     try {
-      await deleteCinema.mutateAsync(selectedCinema.id);
+      // Mock delete
+      toast({ title: 'Success', description: 'Cinema deleted successfully' });
       setDeleteDialogOpen(false);
+      fetchCinemas();
     } catch {
-      // Error toast already shown by mutation hook
+      toast({
+        title: 'Error',
+        description: 'Failed to delete cinema',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -166,7 +192,7 @@ export default function CinemasPage() {
     cinema.city.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: CinemaStatus) => {
     switch (status) {
       case 'ACTIVE':
         return 'bg-green-100 text-green-700 hover:bg-green-200';
@@ -336,7 +362,7 @@ export default function CinemasPage() {
                       </span>
                     </div>
                     <p className="text-xs text-gray-600">
-                      {cinema.totalReviews || 0} reviews
+                      {cinema.totalReviews} reviews
                     </p>
                   </div>
 

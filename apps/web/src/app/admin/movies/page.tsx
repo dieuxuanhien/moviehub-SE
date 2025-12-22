@@ -1,8 +1,7 @@
 // src/app/(admin)/movies/page.tsx
 'use client';
 
-import { useState } from 'react';
-// @ts-expect-error lucide-react types
+import { useState, useEffect } from 'react';
 import { Plus, Search, MoreVertical, Edit, Trash2, Film as FilmIcon, Calendar } from 'lucide-react';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import { Input } from '@movie-hub/shacdn-ui/input';
@@ -37,20 +36,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@movie-hub/shacdn-ui/dropdown-menu';
-import { useMovies, useCreateMovie, useUpdateMovie, useDeleteMovie, useGenres } from '@/libs/api';
-import type { Movie, AgeRating, LanguageType, MovieCast, CreateMovieRequest } from '@/libs/api/types';
-import type { CreateMovieRequest } from '@/libs/api';
+import { useToast } from '../_libs/use-toast';
+// import api from '@/lib/api';
+import type { Movie, AgeRating, LanguageType, MovieCast, CreateMovieDto } from '../_libs/types';
 import Image from 'next/image';
 import MovieReleaseDialog from '../_components/forms/MovieReleaseDialog';
 
+import { mockMovies, mockGenres } from '../_libs/mockData'; // ⭐️ Import mock data
+
+
 export default function MoviesPage() {
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [addReleaseDialogOpen, setAddReleaseDialogOpen] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [selectedMovieIdForRelease, setSelectedMovieIdForRelease] = useState<string>('');
-  const [formData, setFormData] = useState<Partial<CreateMovieRequest>>({
+  const [formData, setFormData] = useState<Partial<CreateMovieDto>>({
     title: '',
     overview: '',
     originalTitle: '',
@@ -68,46 +72,71 @@ export default function MoviesPage() {
     cast: [] as MovieCast[],
     genreIds: [] as string[],
   });
-
-  // API hooks
-  const { data: moviesData = [] } = useMovies();
-  const movies = moviesData || [];
-  const { data: genresData = [] } = useGenres();
-  const genres = genresData || [];
-  const createMovie = useCreateMovie();
-  const updateMovie = useUpdateMovie();
-  const deleteMovie = useDeleteMovie();
-
-  const loading = createMovie.isPending || updateMovie.isPending || deleteMovie.isPending;
+  const { toast } = useToast();
 
   const ageRatingOptions: AgeRating[] = ['P', 'K', 'T13', 'T16', 'T18', 'C'];
   const languageTypeOptions: LanguageType[] = ['ORIGINAL', 'SUBTITLE', 'DUBBED'];
 
+  useEffect(() => {
+    fetchMovies();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const fetchMovies = async () => {
+    try {
+      setLoading(true);
+      // const response = await api.get('/movies');
+      // setMovies(response.data.data); // API returns { success, data, message }
+            
+      // ⭐️ PHẦN THAY THẾ
+      await new Promise(resolve => setTimeout(resolve, 500)); 
+      setMovies(mockMovies); 
+      // ⭐️ KẾT THÚC PHẦN THAY THẾ
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch movies',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     try {
-      const apiData = {
-        ...formData,
-        cast: formData.cast?.map(c => c.name) || [],
-      };
       if (selectedMovie) {
-        await updateMovie.mutateAsync({ id: selectedMovie.id, data: apiData });
+        // await api.put(`/movies/${selectedMovie.id}`, formData);
+        toast({ title: 'Success', description: 'Movie updated successfully' });
       } else {
-        await createMovie.mutateAsync(apiData as CreateMovieRequest);
+        // await api.post('/movies', formData);
+        toast({ title: 'Success', description: 'Movie created successfully' });
       }
       setDialogOpen(false);
+      fetchMovies();
       resetForm();
     } catch {
-      // Error toast already shown by mutation hooks
+      toast({
+        title: 'Error',
+        description: 'Failed to save movie',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleDelete = async () => {
     if (!selectedMovie) return;
     try {
-      await deleteMovie.mutateAsync(selectedMovie.id);
+      // await api.delete(`/movies/${selectedMovie.id}`);
+      toast({ title: 'Success', description: 'Movie deleted successfully' });
       setDeleteDialogOpen(false);
+      fetchMovies();
     } catch {
-      // Error toast already shown by mutation hook
+      toast({
+        title: 'Error',
+        description: 'Failed to delete movie',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -151,7 +180,7 @@ export default function MoviesPage() {
       productionCountry: movie.productionCountry,
       director: movie.director || '',
       cast: movie.cast,
-      genreIds: movie.genre ? [movie.genre].map(g => g.id) : [],
+      genreIds: movie.genre.map(g => g.id),
     });
     setDialogOpen(true);
   };
@@ -288,15 +317,15 @@ export default function MoviesPage() {
                     </div>
                   )}
                   <div className="flex flex-wrap gap-1 mt-2">
-                    {movie.genre && [movie.genre].slice(0, 3).map((g) => (
+                    {movie.genre.slice(0, 3).map((g) => (
                       <Badge key={g.id} variant="secondary" className="text-xs">
                         {g.name}
                       </Badge>
                     ))}
                   </div>
                   <div className="pt-2">
-                    <Badge className={getStatusColor(movie.status || 'COMING_SOON')}>
-                      {(movie.status || 'COMING_SOON').replace('_', ' ')}
+                    <Badge className={getStatusColor(movie.status || 'upcoming')}>
+                      {(movie.status || 'upcoming').replace('_', ' ')}
                     </Badge>
                   </div>
                 </div>
@@ -553,7 +582,7 @@ export default function MoviesPage() {
             <div className="space-y-2">
               <Label>Genres *</Label>
               <div className="flex flex-wrap gap-2">
-                {genres.map((genre) => (
+                {mockGenres.map((genre) => (
                   <Button
                     key={genre.id}
                     type="button"

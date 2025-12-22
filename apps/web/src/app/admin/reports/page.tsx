@@ -30,7 +30,6 @@ import {
   RefreshCw,
   ArrowUpRight,
   ArrowDownRight,
-// @ts-expect-error lucide-react lacks type definitions
 } from 'lucide-react';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import {
@@ -60,7 +59,7 @@ import {
   TabsTrigger,
 } from '@movie-hub/shacdn-ui/tabs';
 import { Badge } from '@movie-hub/shacdn-ui/badge';
-import type { Cinema, Movie } from '@/libs/api/types';
+import type { Cinema, Movie } from '../_libs/types';
 import { mockCinemas, mockMovies } from '../_libs/mockData';
 
 // Mock data for reports

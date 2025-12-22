@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-// @ts-expect-error lucide-react lacks type definitions
+import { useState, useEffect } from 'react';
 import { Building2, DoorOpen, DollarSign, Calendar, Sparkles, Edit2, Check, X } from 'lucide-react';
 import {
   Card,
@@ -21,9 +20,8 @@ import { Badge } from '@movie-hub/shacdn-ui/badge';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import { Input } from '@movie-hub/shacdn-ui/input';
 import { useToast } from '../_libs/use-toast';
-import { useCinemas, useHallsByCinema, useTicketPricing, useUpdateTicketPricing } from '@/libs/api';
-import type { SeatType, DayType } from '@/libs/api/types';
-import type { TicketPricingFiltersParams } from '@/libs/api';
+import type { Cinema, Hall, SeatType, DayType } from '../_libs/types';
+import { mockCinemas, mockHalls } from '../_libs/mockData';
 
 interface TicketPricing {
   id: string;
@@ -34,24 +32,95 @@ interface TicketPricing {
 }
 
 export default function TicketPricingPage() {
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const [halls, setHalls] = useState<Hall[]>([]);
   const [selectedCinemaId, setSelectedCinemaId] = useState('');
   const [selectedHallId, setSelectedHallId] = useState('');
+  const [pricings, setPricings] = useState<TicketPricing[]>([]);
+  const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState('');
   const { toast } = useToast();
 
-  // API hooks
-  const { data: cinemasData = [] } = useCinemas();
-  const cinemas = cinemasData || [];
-  const { data: hallsData = [] } = useHallsByCinema(selectedCinemaId);
-  const halls = hallsData || [];
-  const { data: pricingsData = [], isLoading: loading } = useTicketPricing(selectedHallId ? { hallId: selectedHallId } as TicketPricingFiltersParams & { hallId: string } : undefined);
-  const pricings = pricingsData || [];
-  const updatePricing = useUpdateTicketPricing();
+  useEffect(() => {
+    fetchCinemas();
+  }, []);
+
+  const fetchCinemas = async () => {
+    try {
+      setCinemas(mockCinemas);
+      setHalls(mockHalls);
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch cinemas',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const fetchPricings = async (hallId: string) => {
+    try {
+      setLoading(true);
+      // Mock data
+      const seatTypes: SeatType[] = ['STANDARD', 'VIP', 'COUPLE', 'PREMIUM', 'WHEELCHAIR'];
+      const dayTypes: DayType[] = ['WEEKDAY', 'WEEKEND', 'HOLIDAY'];
+      
+      // Each combination has its own price
+      const mockPrices: Record<string, number> = {
+        // STANDARD
+        'STANDARD_WEEKDAY': 75000,
+        'STANDARD_WEEKEND': 90000,
+        'STANDARD_HOLIDAY': 110000,
+        // VIP
+        'VIP_WEEKDAY': 120000,
+        'VIP_WEEKEND': 150000,
+        'VIP_HOLIDAY': 180000,
+        // COUPLE
+        'COUPLE_WEEKDAY': 200000,
+        'COUPLE_WEEKEND': 250000,
+        'COUPLE_HOLIDAY': 300000,
+        // PREMIUM
+        'PREMIUM_WEEKDAY': 150000,
+        'PREMIUM_WEEKEND': 180000,
+        'PREMIUM_HOLIDAY': 220000,
+        // WHEELCHAIR
+        'WHEELCHAIR_WEEKDAY': 75000,
+        'WHEELCHAIR_WEEKEND': 90000,
+        'WHEELCHAIR_HOLIDAY': 110000,
+      };
+
+      const mockPricings: TicketPricing[] = [];
+      let idCounter = 1;
+
+      seatTypes.forEach(seatType => {
+        dayTypes.forEach(dayType => {
+          const key = `${seatType}_${dayType}`;
+          mockPricings.push({
+            id: `pricing_${idCounter++}`,
+            hallId: hallId,
+            seatType: seatType,
+            dayType: dayType,
+            price: mockPrices[key] || 75000,
+          });
+        });
+      });
+
+      setPricings(mockPricings);
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch ticket pricings',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleHallChange = (hallId: string) => {
     setSelectedHallId(hallId);
-    // Pricings will automatically fetch via React Query when selectedHallId changes
+    fetchPricings(hallId);
   };
 
   const startEdit = (pricing: TicketPricing) => {
@@ -76,7 +145,9 @@ export default function TicketPricingPage() {
         return;
       }
 
-      await updatePricing.mutateAsync({ id: pricingId, data: { price: newPrice } });
+      setPricings(prev =>
+        prev.map(p => (p.id === pricingId ? { ...p, price: newPrice } : p))
+      );
 
       toast({
         title: 'Success',
