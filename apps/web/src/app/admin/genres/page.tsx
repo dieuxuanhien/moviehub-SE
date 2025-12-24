@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+export const dynamic = 'force-dynamic';
+
+import { useState } from 'react';
 import { Plus, Pencil, Trash2, Tag } from 'lucide-react';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import {
@@ -21,23 +23,10 @@ import {
 import { Label } from '@movie-hub/shacdn-ui/label';
 import { Input } from '@movie-hub/shacdn-ui/input';
 import { useToast } from '../_libs/use-toast';
-// import api from '@/lib/api';
-import type { Genre } from '../_libs/types';
-
-const mockGenres: Genre[] = [
-  { id: 'g_001', name: 'Action' },
-  { id: 'g_002', name: 'Horror' },
-  { id: 'g_003', name: 'Drama' },
-  { id: 'g_004', name: 'Comedy' },
-  { id: 'g_005', name: 'Sci-Fi' },
-  { id: 'g_006', name: 'Romance' },
-  { id: 'g_007', name: 'Thriller' },
-  { id: 'g_008', name: 'Animation' },
-];
+import { useGenres, useCreateGenre, useUpdateGenre, useDeleteGenre } from '@/libs/api';
+import type { Genre } from '@/libs/api/types';
 
 export default function GenresPage() {
-  const [genres, setGenres] = useState<Genre[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingGenre, setEditingGenre] = useState<Genre | null>(null);
   const [formData, setFormData] = useState({
@@ -45,30 +34,21 @@ export default function GenresPage() {
   });
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchGenres();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // API hooks
+  const { data: genresData = [], isLoading: loading, error } = useGenres();
+  const genres = genresData || [];
+  const createGenre = useCreateGenre();
+  const updateGenre = useUpdateGenre();
+  const deleteGenre = useDeleteGenre();
 
-  const fetchGenres = async () => {
-    try {
-      setLoading(true);
-      // const response = await api.get('/genres');
-      // setGenres(response.data);
-      
-      // Mock data with delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setGenres(mockGenres);
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch genres',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Show error toast if query fails
+  if (error) {
+    toast({
+      title: 'Error',
+      description: 'Failed to fetch genres',
+      variant: 'destructive',
+    });
+  }
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
@@ -83,22 +63,15 @@ export default function GenresPage() {
     try {
       if (editingGenre) {
         // Update existing genre
-        // await api.put(`/genres/${editingGenre.id}`, formData);
-        toast({ title: 'Success', description: 'Genre updated successfully' });
+        await updateGenre.mutateAsync({ id: editingGenre.id, data: formData });
       } else {
         // Create new genre
-        // await api.post('/genres', formData);
-        toast({ title: 'Success', description: 'Genre created successfully' });
+        await createGenre.mutateAsync(formData);
       }
       setDialogOpen(false);
-      fetchGenres();
       resetForm();
     } catch {
-      toast({
-        title: 'Error',
-        description: editingGenre ? 'Failed to update genre' : 'Failed to create genre',
-        variant: 'destructive',
-      });
+      // Error toast already shown by mutation hooks
     }
   };
 
@@ -116,15 +89,9 @@ export default function GenresPage() {
     }
 
     try {
-      // await api.delete(`/genres/${id}`);
-      toast({ title: 'Success', description: 'Genre deleted successfully' });
-      fetchGenres();
+      await deleteGenre.mutateAsync(id);
     } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete genre',
-        variant: 'destructive',
-      });
+      // Error toast already shown by mutation hook
     }
   };
 

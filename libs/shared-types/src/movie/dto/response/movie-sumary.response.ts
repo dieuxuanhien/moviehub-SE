@@ -8,6 +8,4 @@ export interface MovieSummary {
   ageRating: AgeRatingEnum;
   productionCountry: string;
   languageType: LanguageOptionEnum;
-  averageRating: number;
-  reviewCount: number;
 }

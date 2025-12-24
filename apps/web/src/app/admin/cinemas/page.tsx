@@ -1,7 +1,9 @@
 // src/app/(dashboard)/cinemas/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+export const dynamic = 'force-dynamic';
+
+import { useState } from 'react';
 import { Plus, Search, MoreVertical, Edit, Trash2, MapPin, Phone, Mail, Star, Clock, Users } from 'lucide-react';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import { Input } from '@movie-hub/shacdn-ui/input';
@@ -26,13 +28,12 @@ import {
 } from '@movie-hub/shacdn-ui/dialog';
 import { Label } from '@movie-hub/shacdn-ui/label';
 import { Textarea } from '@movie-hub/shacdn-ui/textarea';
-import { useToast } from '../_libs/use-toast';
-import { mockCinemas, mockHalls } from '../_libs/mockData';
-import type { Cinema, CinemaStatus, CreateCinemaRequest } from '../_libs/types';
+// removed unused toast import
+import { useCinemas, useCreateCinema, useUpdateCinema, useDeleteCinema, useHallsGroupedByCinema } from '@/libs/api';
+import type { CreateCinemaRequest as ApiCreateCinemaRequest } from '@/libs/api';
+import type { Cinema, CreateCinemaRequest } from '@/libs/api/types';
 
 export default function CinemasPage() {
-  const [cinemas, setCinemas] = useState<Cinema[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -44,39 +45,32 @@ export default function CinemasPage() {
     district: '',
     phone: '',
     email: '',
+    website: '',
+    latitude: undefined,
+    longitude: undefined,
     description: '',
-    timezone: 'Asia/Ho_Chi_Minh',
     amenities: [],
+    facilities: {},
     images: [],
+    virtualTour360Url: '',
+    operatingHours: {},
+    socialMedia: {},
+    timezone: 'Asia/Ho_Chi_Minh',
   });
-  const { toast } = useToast();
+  // toast not used in this page
 
-  const fetchCinemas = async () => {
-    try {
-      setLoading(true);
-      // ⭐️ PHẦN THAY THẾ: Dùng dữ liệu giả
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setCinemas(mockCinemas);
-      // ⭐️ KẾT THÚC PHẦN THAY THẾ
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch cinemas',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // API hooks
+  const { data: cinemasData = [], isLoading: loading } = useCinemas();
+  const cinemas = cinemasData || [];
+  const { data: hallsByCinema = {} } = useHallsGroupedByCinema();
+  const createCinema = useCreateCinema();
+  const updateCinema = useUpdateCinema();
+  const deleteCinema = useDeleteCinema();
 
-  useEffect(() => {
-    fetchCinemas();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Calculate halls count for each cinema
+  // Calculate halls count for each cinema - using actual API data
   const getHallsCount = (cinemaId: string) => {
-    return mockHalls.filter((hall) => hall.cinemaId === cinemaId).length;
+    const hallsForCinema = hallsByCinema[cinemaId]?.halls || [];
+    return hallsForCinema.length;
   };
 
   // Parse operating hours to display format
@@ -110,40 +104,74 @@ export default function CinemasPage() {
     return '24/7';
   };
 
+  // Normalize operating hours from DB format to form format (open/close time inputs)
+  const normalizeOperatingHours = (hours: any) => {
+    if (!hours) return { open: '', close: '' };
+    
+    const h = hours as Record<string, any>;
+    
+    // Already in open/close format
+    if (h.open && h.close) {
+      return { open: h.open, close: h.close };
+    }
+    
+    // Parse from mon_sun format (e.g., "9:00 - 24:00")
+    if (h.mon_sun && typeof h.mon_sun === 'string') {
+      const parts = h.mon_sun.split(' - ');
+      if (parts.length === 2) {
+        return {
+          open: parts[0].trim(),
+          close: parts[1].trim(),
+        };
+      }
+    }
+    
+    // Parse from day format (e.g., "9:00-24:00")
+    const firstValue = Object.values(h)[0];
+    if (typeof firstValue === 'string' && firstValue.includes('-')) {
+      const parts = firstValue.split('-');
+      if (parts.length === 2) {
+        return {
+          open: parts[0].trim(),
+          close: parts[1].trim(),
+        };
+      }
+    }
+    
+    return { open: '', close: '' };
+  };
+
   const handleSubmit = async () => {
     try {
+      // Normalize operatingHours back to mon_sun format for API
+      const submitData = { ...formData };
+      if (formData.operatingHours?.open && formData.operatingHours?.close) {
+        submitData.operatingHours = {
+          mon_sun: `${formData.operatingHours.open} - ${formData.operatingHours.close}`,
+        };
+      }
+      
       if (selectedCinema) {
-        // Mock update
-        toast({ title: 'Success', description: 'Cinema updated successfully' });
+        await updateCinema.mutateAsync({ id: selectedCinema.id, data: submitData });
       } else {
-        // Mock create
-        toast({ title: 'Success', description: 'Cinema created successfully' });
+        // ensure API-required fields have defaults
+        const apiPayload = { ...submitData, district: submitData?.district ?? '' } as ApiCreateCinemaRequest;
+        await createCinema.mutateAsync(apiPayload);
       }
       setDialogOpen(false);
-      fetchCinemas();
       resetForm();
     } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to save cinema',
-        variant: 'destructive',
-      });
+      // Error toast already shown by mutation hooks
     }
   };
 
   const handleDelete = async () => {
     if (!selectedCinema) return;
     try {
-      // Mock delete
-      toast({ title: 'Success', description: 'Cinema deleted successfully' });
+      await deleteCinema.mutateAsync(selectedCinema.id);
       setDeleteDialogOpen(false);
-      fetchCinemas();
     } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete cinema',
-        variant: 'destructive',
-      });
+      // Error toast already shown by mutation hook
     }
   };
 
@@ -155,16 +183,25 @@ export default function CinemasPage() {
       district: '',
       phone: '',
       email: '',
+      website: '',
+      latitude: undefined,
+      longitude: undefined,
       description: '',
-      timezone: 'Asia/Ho_Chi_Minh',
       amenities: [],
+      facilities: {},
       images: [],
+      virtualTour360Url: '',
+      operatingHours: {},
+      socialMedia: {},
+      timezone: 'Asia/Ho_Chi_Minh',
     });
     setSelectedCinema(null);
   };
 
   const openEditDialog = (cinema: Cinema) => {
     setSelectedCinema(cinema);
+    // Normalize operatingHours to open/close format for the form
+    const normalizedHours = normalizeOperatingHours(cinema.operatingHours);
     setFormData({
       name: cinema.name,
       address: cinema.address,
@@ -177,12 +214,12 @@ export default function CinemasPage() {
       longitude: cinema.longitude,
       description: cinema.description || '',
       amenities: cinema.amenities || [],
-      facilities: cinema.facilities,
+      facilities: cinema.facilities || {},
       images: cinema.images || [],
       virtualTour360Url: cinema.virtualTour360Url || '',
-      operatingHours: cinema.operatingHours,
-      socialMedia: cinema.socialMedia,
-      timezone: cinema.timezone,
+      operatingHours: normalizedHours,
+      socialMedia: cinema.socialMedia || {},
+      timezone: cinema.timezone || 'Asia/Ho_Chi_Minh',
     });
     setDialogOpen(true);
   };
@@ -192,7 +229,7 @@ export default function CinemasPage() {
     cinema.city.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getStatusColor = (status: CinemaStatus) => {
+  const getStatusColor = (status: string | undefined) => {
     switch (status) {
       case 'ACTIVE':
         return 'bg-green-100 text-green-700 hover:bg-green-200';
@@ -362,7 +399,7 @@ export default function CinemasPage() {
                       </span>
                     </div>
                     <p className="text-xs text-gray-600">
-                      {cinema.totalReviews} reviews
+                      {cinema.totalReviews || 0} reviews
                     </p>
                   </div>
 
@@ -513,6 +550,59 @@ export default function CinemasPage() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="website">Website</Label>
+              <Input
+                id="website"
+                value={formData.website}
+                onChange={(e) =>
+                  setFormData({ ...formData, website: e.target.value })
+                }
+                placeholder="https://cinema.example.com"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="latitude">Latitude</Label>
+                <Input
+                  id="latitude"
+                  type="number"
+                  step="any"
+                  value={formData.latitude || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, latitude: e.target.value ? parseFloat(e.target.value) : undefined })
+                  }
+                  placeholder="10.762622"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="longitude">Longitude</Label>
+                <Input
+                  id="longitude"
+                  type="number"
+                  step="any"
+                  value={formData.longitude || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, longitude: e.target.value ? parseFloat(e.target.value) : undefined })
+                  }
+                  placeholder="106.660172"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="timezone">Timezone</Label>
+              <Input
+                id="timezone"
+                value={formData.timezone}
+                onChange={(e) =>
+                  setFormData({ ...formData, timezone: e.target.value })
+                }
+                placeholder="Asia/Ho_Chi_Minh"
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
@@ -523,6 +613,168 @@ export default function CinemasPage() {
                 placeholder="Enter cinema description..."
                 rows={4}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="virtualTour360Url">Virtual Tour 360 URL</Label>
+              <Input
+                id="virtualTour360Url"
+                value={formData.virtualTour360Url}
+                onChange={(e) =>
+                  setFormData({ ...formData, virtualTour360Url: e.target.value })
+                }
+                placeholder="https://example.com/virtual-tour"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="amenities">Amenities (comma-separated)</Label>
+                <Input
+                  id="amenities"
+                  value={formData.amenities?.join(', ') || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, amenities: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })
+                  }
+                  placeholder="WiFi, Parking, Food Court"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="images">Images (comma-separated URLs)</Label>
+                <Input
+                  id="images"
+                  value={formData.images?.join(', ') || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, images: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })
+                  }
+                  placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              {/* Facilities: dynamic key/value list */}
+              <div className="space-y-2 flex flex-col">
+                <Label>Facilities</Label>
+                <div className="space-y-2 flex-1">
+                  {(Object.entries(formData.facilities || {}) as [string, any][]).map(([key, value], idx) => (
+                    <div key={key || idx} className="flex gap-2">
+                      <Input
+                        value={key}
+                        placeholder="key"
+                        onChange={(e) => {
+                          const newKey = e.target.value;
+                          const fac = { ...(formData.facilities || {}) } as Record<string, any>;
+                          // rename key
+                          const val = fac[key];
+                          delete fac[key];
+                          fac[newKey] = val;
+                          setFormData({ ...formData, facilities: fac });
+                        }}
+                      />
+                      <Input
+                        value={value === undefined || value === null ? '' : String(value)}
+                        placeholder="value"
+                        onChange={(e) => {
+                          const fac = { ...(formData.facilities || {}) } as Record<string, any>;
+                          const parsed = (() => {
+                            const v = e.target.value.trim();
+                            if (v === 'true') return true;
+                            if (v === 'false') return false;
+                            const n = Number(v);
+                            return Number.isNaN(n) ? v : n;
+                          })();
+                          fac[key || `key_${idx}`] = parsed;
+                          setFormData({ ...formData, facilities: fac });
+                        }}
+                      />
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          const fac = { ...(formData.facilities || {}) } as Record<string, any>;
+                          delete fac[key];
+                          setFormData({ ...formData, facilities: fac });
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  onClick={() => {
+                    const fac = { ...(formData.facilities || {}) } as Record<string, any>;
+                    const newKey = `facility_${Date.now()}`;
+                    fac[newKey] = '';
+                    setFormData({ ...formData, facilities: fac });
+                  }}
+                  className="mt-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add facility
+                </Button>
+              </div>
+
+              {/* Operating hours: open/close times */}
+              <div className="space-y-2">
+                <Label>Operating Hours</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-sm">Open</Label>
+                    <Input
+                      type="time"
+                      value={formData.operatingHours?.open || ''}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          operatingHours: { ...(formData.operatingHours || {}), open: e.target.value },
+                        })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Close</Label>
+                    <Input
+                      type="time"
+                      value={formData.operatingHours?.close || ''}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          operatingHours: { ...(formData.operatingHours || {}), close: e.target.value },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Social media: common fields */}
+              <div className="space-y-2">
+                <Label>Social Media</Label>
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Facebook URL"
+                    value={formData.socialMedia?.facebook || ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, socialMedia: { ...(formData.socialMedia || {}), facebook: e.target.value } })
+                    }
+                  />
+                  <Input
+                    placeholder="Instagram URL"
+                    value={formData.socialMedia?.instagram || ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, socialMedia: { ...(formData.socialMedia || {}), instagram: e.target.value } })
+                    }
+                  />
+                  <Input
+                    placeholder="Twitter / X URL"
+                    value={formData.socialMedia?.twitter || ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, socialMedia: { ...(formData.socialMedia || {}), twitter: e.target.value } })
+                    }
+                  />
+                </div>
+              </div>
             </div>
           </div>
           <DialogFooter>

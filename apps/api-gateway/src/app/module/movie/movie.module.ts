@@ -7,8 +7,6 @@ import { MovieController } from './controller/movie.controller';
 import { GenreController } from './controller/genre.controller';
 import { GenreService } from './service/genre.service';
 import { MovieReleaseController } from './controller/movie-release.controller';
-import { ReviewController } from './controller/review.controller';
-import { ReviewService } from './service/review.service';
 
 @Module({
   imports: [
@@ -26,8 +24,8 @@ import { ReviewService } from './service/review.service';
       },
     ]),
   ],
-  controllers: [MovieController, GenreController, MovieReleaseController, ReviewController],
-  providers: [MovieService, GenreService, ReviewService],
+  controllers: [MovieController, GenreController, MovieReleaseController],
+  providers: [MovieService, GenreService],
   exports: [],
 })
 export class MovieModule {}
