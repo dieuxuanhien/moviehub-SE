@@ -1,9 +1,7 @@
 // src/app/(admin)/movies/page.tsx
 'use client';
 
-export const dynamic = 'force-dynamic';
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Search, MoreVertical, Edit, Trash2, Film as FilmIcon, Calendar } from 'lucide-react';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import { Input } from '@movie-hub/shacdn-ui/input';
@@ -38,20 +36,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@movie-hub/shacdn-ui/dropdown-menu';
-import { useMovies, useCreateMovie, useUpdateMovie, useDeleteMovie, useGenres } from '@/libs/api';
-import type { Movie, CreateMovieRequest, AgeRating, LanguageType, MovieCast } from '@/libs/api/types';
-import { AgeRatingEnum, LanguageOptionEnum } from '@movie-hub/shared-types/movie/enum';
+import { useToast } from '../_libs/use-toast';
+// import api from '@/lib/api';
+import type { Movie, AgeRating, LanguageType, MovieCast, CreateMovieDto } from '../_libs/types';
 import Image from 'next/image';
 import MovieReleaseDialog from '../_components/forms/MovieReleaseDialog';
 
+import { mockMovies, mockGenres } from '../_libs/mockData'; // ⭐️ Import mock data
+
+
 export default function MoviesPage() {
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [addReleaseDialogOpen, setAddReleaseDialogOpen] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [selectedMovieIdForRelease, setSelectedMovieIdForRelease] = useState<string>('');
-  const [formData, setFormData] = useState<Partial<CreateMovieRequest>>({
+  const [formData, setFormData] = useState<Partial<CreateMovieDto>>({
     title: '',
     overview: '',
     originalTitle: '',
@@ -60,55 +63,80 @@ export default function MoviesPage() {
     backdropUrl: '',
     runtime: 0,
     releaseDate: '',
-    ageRating: AgeRatingEnum.P as AgeRating,
+    ageRating: 'P' as AgeRating,
     originalLanguage: 'en',
     spokenLanguages: ['en'],
-    languageType: LanguageOptionEnum.SUBTITLE as LanguageType,
+    languageType: 'SUBTITLE' as LanguageType,
     productionCountry: 'US',
     director: '',
     cast: [] as MovieCast[],
     genreIds: [] as string[],
   });
+  const { toast } = useToast();
 
-  // API hooks
-  const { data: moviesData = [] } = useMovies();
-  const movies = moviesData || [];
-  const { data: genresData = [] } = useGenres();
-  const genres = genresData || [];
-  const createMovie = useCreateMovie();
-  const updateMovie = useUpdateMovie();
-  const deleteMovie = useDeleteMovie();
+  const ageRatingOptions: AgeRating[] = ['P', 'K', 'T13', 'T16', 'T18', 'C'];
+  const languageTypeOptions: LanguageType[] = ['ORIGINAL', 'SUBTITLE', 'DUBBED'];
 
-  const loading = createMovie.isPending || updateMovie.isPending || deleteMovie.isPending;
+  useEffect(() => {
+    fetchMovies();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const ageRatingOptions: AgeRating[] = [AgeRatingEnum.P, AgeRatingEnum.K, AgeRatingEnum.T13, AgeRatingEnum.T16, AgeRatingEnum.T18, AgeRatingEnum.C];
-  const languageTypeOptions: LanguageType[] = [LanguageOptionEnum.ORIGINAL, LanguageOptionEnum.SUBTITLE, LanguageOptionEnum.DUBBED];
+  const fetchMovies = async () => {
+    try {
+      setLoading(true);
+      // const response = await api.get('/movies');
+      // setMovies(response.data.data); // API returns { success, data, message }
+            
+      // ⭐️ PHẦN THAY THẾ
+      await new Promise(resolve => setTimeout(resolve, 500)); 
+      setMovies(mockMovies); 
+      // ⭐️ KẾT THÚC PHẦN THAY THẾ
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch movies',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     try {
-      const apiData = {
-        ...formData,
-        cast: formData.cast || [],
-      };
       if (selectedMovie) {
-        await updateMovie.mutateAsync({ id: selectedMovie.id, data: apiData });
+        // await api.put(`/movies/${selectedMovie.id}`, formData);
+        toast({ title: 'Success', description: 'Movie updated successfully' });
       } else {
-        await createMovie.mutateAsync(apiData as CreateMovieRequest);
+        // await api.post('/movies', formData);
+        toast({ title: 'Success', description: 'Movie created successfully' });
       }
       setDialogOpen(false);
+      fetchMovies();
       resetForm();
     } catch {
-      // Error toast already shown by mutation hooks
+      toast({
+        title: 'Error',
+        description: 'Failed to save movie',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleDelete = async () => {
     if (!selectedMovie) return;
     try {
-      await deleteMovie.mutateAsync(selectedMovie.id);
+      // await api.delete(`/movies/${selectedMovie.id}`);
+      toast({ title: 'Success', description: 'Movie deleted successfully' });
       setDeleteDialogOpen(false);
+      fetchMovies();
     } catch {
-      // Error toast already shown by mutation hook
+      toast({
+        title: 'Error',
+        description: 'Failed to delete movie',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -122,10 +150,10 @@ export default function MoviesPage() {
       backdropUrl: '',
       runtime: 0,
       releaseDate: '',
-      ageRating: AgeRatingEnum.P,
+      ageRating: 'P',
       originalLanguage: 'en',
       spokenLanguages: ['en'],
-      languageType: LanguageOptionEnum.SUBTITLE,
+      languageType: 'SUBTITLE',
       productionCountry: 'US',
       director: '',
       cast: [],
@@ -136,9 +164,6 @@ export default function MoviesPage() {
 
   const openEditDialog = (movie: Movie) => {
     setSelectedMovie(movie);
-    const releaseDateStr = typeof movie.releaseDate === 'string' 
-      ? movie.releaseDate 
-      : new Date(movie.releaseDate).toISOString().split('T')[0];
     setFormData({
       title: movie.title,
       overview: movie.overview,
@@ -147,7 +172,7 @@ export default function MoviesPage() {
       trailerUrl: movie.trailerUrl || '',
       backdropUrl: movie.backdropUrl || '',
       runtime: movie.runtime,
-      releaseDate: releaseDateStr,
+      releaseDate: movie.releaseDate,
       ageRating: movie.ageRating,
       originalLanguage: movie.originalLanguage,
       spokenLanguages: movie.spokenLanguages,
@@ -155,7 +180,7 @@ export default function MoviesPage() {
       productionCountry: movie.productionCountry,
       director: movie.director || '',
       cast: movie.cast,
-      genreIds: movie.genres ? movie.genres.map(g => g.id) : [],
+      genreIds: movie.genre.map(g => g.id),
     });
     setDialogOpen(true);
   };
@@ -292,15 +317,15 @@ export default function MoviesPage() {
                     </div>
                   )}
                   <div className="flex flex-wrap gap-1 mt-2">
-                    {(movie.genres || []).slice(0, 3).map((g) => (
+                    {movie.genre.slice(0, 3).map((g) => (
                       <Badge key={g.id} variant="secondary" className="text-xs">
                         {g.name}
                       </Badge>
                     ))}
                   </div>
                   <div className="pt-2">
-                    <Badge className={getStatusColor(movie.status || 'COMING_SOON')}>
-                      {(movie.status || 'COMING_SOON').replace('_', ' ')}
+                    <Badge className={getStatusColor(movie.status || 'upcoming')}>
+                      {(movie.status || 'upcoming').replace('_', ' ')}
                     </Badge>
                   </div>
                 </div>
@@ -433,7 +458,7 @@ export default function MoviesPage() {
                 <Input
                   id="releaseDate"
                   type="date"
-                  value={typeof formData.releaseDate === 'string' ? formData.releaseDate : (formData.releaseDate instanceof Date ? formData.releaseDate.toISOString().split('T')[0] : '')}
+                  value={formData.releaseDate}
                   onChange={(e) =>
                     setFormData({ ...formData, releaseDate: e.target.value })
                   }
@@ -486,36 +511,20 @@ export default function MoviesPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="director">Director *</Label>
-                <Input
-                  id="director"
-                  value={formData.director}
-                  onChange={(e) =>
-                    setFormData({ ...formData, director: e.target.value })
-                  }
-                  placeholder="Christopher Nolan"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="spokenLanguages">Spoken Languages * (comma-separated)</Label>
-                <Input
-                  id="spokenLanguages"
-                  value={formData.spokenLanguages?.join(', ') || 'en'}
-                  onChange={(e) =>
-                    setFormData({ 
-                      ...formData, 
-                      spokenLanguages: e.target.value.split(',').map(s => s.trim()).filter(Boolean) 
-                    })
-                  }
-                  placeholder="en, vi, zh"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="director">Director</Label>
+              <Input
+                id="director"
+                value={formData.director}
+                onChange={(e) =>
+                  setFormData({ ...formData, director: e.target.value })
+                }
+                placeholder="Christopher Nolan"
+              />
             </div>
 
             <div className="space-y-2">
-              <Label>Cast (Diễn viên) *</Label>
+              <Label>Cast (Diễn viên)</Label>
               <div className="space-y-2">
                 {(formData.cast || []).map((actor, index) => (
                   <div key={index} className="flex gap-2">
@@ -530,13 +539,13 @@ export default function MoviesPage() {
                       className="flex-1"
                     />
                     <Input
-                      value={actor.character || ''}
+                      value={actor.profileUrl || ''}
                       onChange={(e) => {
                         const newCast = [...(formData.cast || [])];
-                        newCast[index] = { ...newCast[index], character: e.target.value };
+                        newCast[index] = { ...newCast[index], profileUrl: e.target.value };
                         setFormData({ ...formData, cast: newCast });
                       }}
-                      placeholder="Character name (optional)"
+                      placeholder="Profile URL (optional)"
                       className="flex-1"
                     />
                     <Button
@@ -559,7 +568,7 @@ export default function MoviesPage() {
                   onClick={() => {
                     setFormData({
                       ...formData,
-                      cast: [...(formData.cast || []), { name: '', character: '' }],
+                      cast: [...(formData.cast || []), { name: '', profileUrl: '' }],
                     });
                   }}
                   className="w-full"
@@ -573,7 +582,7 @@ export default function MoviesPage() {
             <div className="space-y-2">
               <Label>Genres *</Label>
               <div className="flex flex-wrap gap-2">
-                {genres.map((genre) => (
+                {mockGenres.map((genre) => (
                   <Button
                     key={genre.id}
                     type="button"
