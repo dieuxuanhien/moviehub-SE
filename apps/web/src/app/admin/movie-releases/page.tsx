@@ -1,8 +1,6 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Plus, Calendar as CalendarIcon, Pencil, Trash2, Film, Clock, Zap } from 'lucide-react';
@@ -24,12 +22,13 @@ import {
 } from '@movie-hub/shacdn-ui/select';
 import { Badge } from '@movie-hub/shacdn-ui/badge';
 import { useToast } from '../_libs/use-toast';
-import { useMovieReleases, useDeleteMovieRelease, useMovies, useCinemas, useHallsGroupedByCinema } from '@/libs/api';
-import type { MovieRelease } from '@/libs/api';
-import type { Hall } from '@/libs/api/types';
+// import api from '@/lib/api';
+import type { Movie } from '../_libs/types';
 import { format } from 'date-fns';
+import { mockMovies, mockReleases, mockCinemas, mockHalls } from '../_libs/mockData';
 import MovieReleaseDialog from '../_components/forms/MovieReleaseDialog';
-import ShowtimeDialog from '../_components/forms/ShowtimeDialog';
+import ShowtimeDialog from '../_components/ShowtimeDialog';
+import type { Cinema, Hall } from '../_libs/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,8 +41,22 @@ import {
 } from '@movie-hub/shacdn-ui/dropdown-menu';
 import { MoreVertical } from 'lucide-react';
 
+interface MovieRelease {
+  id: string;
+  movieId: string;
+  startDate: string;
+  endDate: string;
+  status?: 'ACTIVE' | 'UPCOMING' | 'ENDED';
+  note: string;
+}
+
 export default function MovieReleasesPage() {
   const router = useRouter();
+  const [releases, setReleases] = useState<MovieRelease[]>([]);
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const [halls, setHalls] = useState<Hall[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [showtimeDialogOpen, setShowtimeDialogOpen] = useState(false);
   const [editingRelease, setEditingRelease] = useState<MovieRelease | null>(null);
@@ -55,18 +68,37 @@ export default function MovieReleasesPage() {
   
   const { toast } = useToast();
 
-  // API hooks
-  const { data: releasesData = [], isLoading: loading, refetch: refetchReleases } = useMovieReleases();
-  const releases = releasesData || [];
-  const { data: moviesData = [] } = useMovies();
-  const movies = moviesData || [];
-  const { data: cinemasData = [] } = useCinemas();
-  const cinemas = cinemasData || [];
-  const deleteRelease = useDeleteMovieRelease();
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Halls: derive a flat halls list from grouped halls by cinema
-  const { data: hallsByCinema = {} } = useHallsGroupedByCinema();
-  const halls: Hall[] = Object.values(hallsByCinema).flatMap((g: unknown) => (g as { halls?: Hall[] }).halls || []);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      // const [releasesRes, moviesRes] = await Promise.all([
+      //   api.get('/movie-releases'),
+      //   api.get('/movies'),
+      // ]);
+      // setReleases(releasesRes.data);
+      // setMovies(moviesRes.data);
+
+      // Mock data with delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setReleases(mockReleases);
+      setMovies(mockMovies);
+      setCinemas(mockCinemas);
+      setHalls(mockHalls);
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch movie releases',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEdit = (release: MovieRelease) => {
     setEditingRelease(release);
@@ -79,9 +111,15 @@ export default function MovieReleasesPage() {
     }
 
     try {
-      await deleteRelease.mutateAsync(id);
+      // await api.delete(`/movie-releases/${id}`);
+      toast({ title: 'Success', description: 'Release deleted successfully' });
+      fetchData();
     } catch {
-      // Error toast already shown by mutation hook
+      toast({
+        title: 'Error',
+        description: 'Failed to delete release',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -432,7 +470,7 @@ export default function MovieReleasesPage() {
         movies={movies}
         editingRelease={editingRelease}
         onSuccess={() => {
-          refetchReleases();
+          fetchData();
         }}
       />
 
@@ -455,7 +493,6 @@ export default function MovieReleasesPage() {
             title: 'Success',
             description: 'Showtime created successfully',
           });
-          refetchReleases();
         }}
       />
     </div>

@@ -1,9 +1,8 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { useState, useEffect } from 'react';
-import { Building2, DoorOpen, Wrench, CheckCircle2, XCircle } from 'lucide-react';
+import { Building2, DoorOpen, Wrench, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
+import { Button } from '@movie-hub/shacdn-ui/button';
 import {
   Card,
   CardContent,
@@ -20,30 +19,12 @@ import {
 } from '@movie-hub/shacdn-ui/select';
 import { Badge } from '@movie-hub/shacdn-ui/badge';
 import { useToast } from '../_libs/use-toast';
-import { useCinemas, useHallsByCinema, useUpdateSeatStatus, hallsApi } from '@/libs/api';
-import type { SeatStatus, SeatType } from '@/libs/api/types';
-import { SeatStatusEnum, SeatTypeEnum } from '@movie-hub/shared-types/cinema/enum';
-
-// Frontend-specific types for seat status management
-interface SeatDetail {
-  id: string;
-  row: number;
-  seatNumber: number;
-  type: SeatType;
-  status: SeatStatus;
-}
-
-interface HallDetail {
-  id: string;
-  name: string;
-  type: string;
-  capacity: number;
-  rows: number;
-  status: string;
-  seats: SeatDetail[];
-}
+import type { Cinema, Hall, SeatStatus, SeatDetail, HallDetail } from '../_libs/types';
+import { mockCinemas, mockHalls } from '../_libs/mockData';
 
 export default function SeatStatusPage() {
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const [halls, setHalls] = useState<Hall[]>([]);
   const [selectedCinemaId, setSelectedCinemaId] = useState('');
   const [selectedHallId, setSelectedHallId] = useState('');
   const [hallDetail, setHallDetail] = useState<HallDetail | null>(null);
@@ -51,61 +32,65 @@ export default function SeatStatusPage() {
   const [filterStatus, setFilterStatus] = useState<SeatStatus | 'ALL'>('ALL');
   const { toast } = useToast();
 
-  // API hooks
-  const { data: cinemasData = [] } = useCinemas();
-  const cinemas = cinemasData || [];
-  const { data: halls = [] } = useHallsByCinema(selectedCinemaId);
-  const updateSeatMutation = useUpdateSeatStatus();
-
   useEffect(() => {
-    // Reset selected hall and details when cinema changes
-    setSelectedHallId('');
-    setHallDetail(null);
-  }, [selectedCinemaId]);
+    fetchCinemas();
+  }, []);
 
-  const handleHallChange = async (hallId: string) => {
+  const fetchCinemas = async () => {
     try {
-      setSelectedHallId(hallId);
-      setLoading(true);
-      
-      // Fetch full hall detail to get real seatMap with actual seat UUIDs
-      // useHallsByCinema returns summaries without seatMap
-      const hallDetail = await hallsApi.getById(hallId);
-      
-      const hallSeats: SeatDetail[] = [];
-      
-      if (hallDetail.seatMap && hallDetail.seatMap.length > 0) {
-        // Use actual seatMap from BE with real seat IDs
-        hallDetail.seatMap.forEach((row, rowIndex) => {
-          row.seats.forEach((seat) => {
-            hallSeats.push({
-              id: seat.id,
-              row: rowIndex + 1,
-              seatNumber: seat.seatNumber,
-              type: seat.type,
-              status: seat.status,
-            });
-          });
-        });
-      } else {
-        // Fallback: if BE doesn't return seatMap, show error (BE issue)
-        toast({
-          title: 'Warning',
-          description: 'Hall seatMap not available from backend. Please check with admin.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      setHallDetail({
-        id: hallDetail.id,
-        name: hallDetail.name,
-        type: hallDetail.type,
-        capacity: hallDetail.capacity,
-        rows: hallDetail.rows,
-        status: hallDetail.status || 'ACTIVE',
-        seats: hallSeats,
+      setCinemas(mockCinemas);
+      setHalls(mockHalls);
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch cinemas',
+        variant: 'destructive',
       });
+    }
+  };
+
+  const fetchHallDetail = async (hallId: string) => {
+    try {
+      setLoading(true);
+      const hall = mockHalls.find(h => h.id === hallId);
+      if (hall) {
+        const mockSeats: SeatDetail[] = [];
+        let seatId = 1;
+        
+        for (let row = 1; row <= hall.rows; row++) {
+          const seatsPerRow = Math.ceil(hall.capacity / hall.rows);
+          for (let seatNum = 1; seatNum <= seatsPerRow; seatNum++) {
+            const statuses: SeatStatus[] = ['ACTIVE', 'ACTIVE', 'ACTIVE', 'ACTIVE', 'ACTIVE', 'BROKEN', 'MAINTENANCE'];
+            
+            let seatType: 'STANDARD' | 'VIP' | 'COUPLE' | 'PREMIUM' | 'WHEELCHAIR' = 'STANDARD';
+            if (row <= 2) {
+              seatType = 'VIP';
+            } else if (row === 3) {
+              seatType = 'PREMIUM';
+            } else if (row === 4 && seatNum >= 4 && seatNum <= 7) {
+              seatType = 'COUPLE';
+            } else if (row === hall.rows && (seatNum === 1 || seatNum === seatsPerRow)) {
+              seatType = 'WHEELCHAIR';
+            } else {
+              seatType = 'STANDARD';
+            }
+            
+            mockSeats.push({
+              id: `seat_${seatId}`,
+              row,
+              seatNumber: seatNum,
+              type: seatType,
+              status: statuses[Math.floor(Math.random() * statuses.length)],
+            });
+            seatId++;
+          }
+        }
+
+        setHallDetail({
+          ...hall,
+          seats: mockSeats,
+        });
+      }
     } catch {
       toast({
         title: 'Error',
@@ -117,13 +102,15 @@ export default function SeatStatusPage() {
     }
   };
 
-  const handleUpdateSeatStatus = async (seatId: string, newStatus: SeatStatus) => {
-    try {
-      await updateSeatMutation.mutateAsync({
-        seatId,
-        data: { status: newStatus },
-      });
+  const handleHallChange = (hallId: string) => {
+    setSelectedHallId(hallId);
+    fetchHallDetail(hallId);
+  };
 
+  const updateSeatStatus = async (seatId: string, newStatus: SeatStatus) => {
+    try {
+      await api.patch(`/halls/seat/${seatId}/status`, { status: newStatus });
+      
       if (hallDetail) {
         setHallDetail({
           ...hallDetail,
@@ -138,17 +125,21 @@ export default function SeatStatusPage() {
         description: 'Seat status updated successfully',
       });
     } catch {
-      // Error toast already shown by mutation hook
+      toast({
+        title: 'Error',
+        description: 'Failed to update seat status',
+        variant: 'destructive',
+      });
     }
   };
 
   const getStatusColor = (status: SeatStatus) => {
     switch (status) {
-      case SeatStatusEnum.ACTIVE:
+      case 'ACTIVE':
         return 'bg-green-100 text-green-700 border-green-200';
-      case SeatStatusEnum.BROKEN:
+      case 'BROKEN':
         return 'bg-red-100 text-red-700 border-red-200';
-      case SeatStatusEnum.MAINTENANCE:
+      case 'MAINTENANCE':
         return 'bg-orange-100 text-orange-700 border-orange-200';
       default:
         return 'bg-gray-100 text-gray-700 border-gray-200';
@@ -157,24 +148,24 @@ export default function SeatStatusPage() {
 
   const getStatusIcon = (status: SeatStatus) => {
     switch (status) {
-      case SeatStatusEnum.ACTIVE:
+      case 'ACTIVE':
         return <CheckCircle2 className="h-3 w-3" />;
-      case SeatStatusEnum.BROKEN:
+      case 'BROKEN':
         return <XCircle className="h-3 w-3" />;
-      case SeatStatusEnum.MAINTENANCE:
+      case 'MAINTENANCE':
         return <Wrench className="h-3 w-3" />;
     }
   };
 
-  const getSeatTypeColor = (type: SeatType) => {
+  const getSeatTypeColor = (type: string) => {
     switch (type) {
-      case SeatTypeEnum.VIP:
+      case 'VIP':
         return 'border-purple-500';
-      case SeatTypeEnum.COUPLE:
+      case 'COUPLE':
         return 'border-pink-500';
-      case SeatTypeEnum.PREMIUM:
+      case 'PREMIUM':
         return 'border-yellow-500';
-      case SeatTypeEnum.WHEELCHAIR:
+      case 'WHEELCHAIR':
         return 'border-blue-500';
       default:
         return 'border-gray-400';
@@ -183,11 +174,11 @@ export default function SeatStatusPage() {
 
   const getSeatStatusBgColor = (status: SeatStatus) => {
     switch (status) {
-      case SeatStatusEnum.ACTIVE:
+      case 'ACTIVE':
         return 'bg-emerald-500';
-      case SeatStatusEnum.BROKEN:
+      case 'BROKEN':
         return 'bg-rose-600';
-      case SeatStatusEnum.MAINTENANCE:
+      case 'MAINTENANCE':
         return 'bg-amber-400';
       default:
         return 'bg-gray-400';
@@ -199,9 +190,9 @@ export default function SeatStatusPage() {
   ) || [];
 
   const statusCounts = {
-    ACTIVE: hallDetail?.seats.filter(s => s.status === SeatStatusEnum.ACTIVE).length || 0,
-    BROKEN: hallDetail?.seats.filter(s => s.status === SeatStatusEnum.BROKEN).length || 0,
-    MAINTENANCE: hallDetail?.seats.filter(s => s.status === SeatStatusEnum.MAINTENANCE).length || 0,
+    ACTIVE: hallDetail?.seats.filter(s => s.status === 'ACTIVE').length || 0,
+    BROKEN: hallDetail?.seats.filter(s => s.status === 'BROKEN').length || 0,
+    MAINTENANCE: hallDetail?.seats.filter(s => s.status === 'MAINTENANCE').length || 0,
   };
 
   const selectedCinema = cinemas.find(c => c.id === selectedCinemaId);
@@ -255,14 +246,16 @@ export default function SeatStatusPage() {
                   <SelectValue placeholder="Select hall" />
                 </SelectTrigger>
                 <SelectContent>
-                  {halls.map((hall) => (
-                    <SelectItem key={hall.id} value={hall.id}>
-                      <div className="flex items-center gap-2">
-                        <DoorOpen className="h-4 w-4" />
-                        {hall.name} - {hall.capacity} seats
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {halls
+                    .filter(h => h.cinemaId === selectedCinemaId)
+                    .map((hall) => (
+                      <SelectItem key={hall.id} value={hall.id}>
+                        <div className="flex items-center gap-2">
+                          <DoorOpen className="h-4 w-4" />
+                          {hall.name} - {hall.capacity} seats
+                        </div>
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -339,9 +332,9 @@ export default function SeatStatusPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="ALL">All Seats</SelectItem>
-                    <SelectItem value={SeatStatusEnum.ACTIVE}>Active Only</SelectItem>
-                    <SelectItem value={SeatStatusEnum.BROKEN}>Broken Only</SelectItem>
-                    <SelectItem value={SeatStatusEnum.MAINTENANCE}>Maintenance Only</SelectItem>
+                    <SelectItem value="ACTIVE">Active Only</SelectItem>
+                    <SelectItem value="BROKEN">Broken Only</SelectItem>
+                    <SelectItem value="MAINTENANCE">Maintenance Only</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -372,10 +365,10 @@ export default function SeatStatusPage() {
                           <div key={seat.id} className="group relative">
                             <button
                               onClick={() => {
-                                const statuses: SeatStatus[] = [SeatStatusEnum.ACTIVE, SeatStatusEnum.BROKEN, SeatStatusEnum.MAINTENANCE];
+                                const statuses: SeatStatus[] = ['ACTIVE', 'BROKEN', 'MAINTENANCE'];
                                 const currentIndex = statuses.indexOf(seat.status);
                                 const nextStatus = statuses[(currentIndex + 1) % statuses.length];
-                                handleUpdateSeatStatus(seat.id, nextStatus);
+                                updateSeatStatus(seat.id, nextStatus);
                               }}
                               className={`
                                 w-12 h-12 rounded-xl transition-all duration-300
@@ -387,17 +380,17 @@ export default function SeatStatusPage() {
                               `}
                             >
                               <span className="text-sm drop-shadow-lg">{seat.seatNumber}</span>
-                              {seat.status !== SeatStatusEnum.ACTIVE && (
+                              {seat.status !== 'ACTIVE' && (
                                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                  <span className="text-3xl opacity-40">{seat.status === SeatStatusEnum.BROKEN ? '✕' : '🔧'}</span>
+                                  <span className="text-3xl opacity-40">{seat.status === 'BROKEN' ? '✕' : '🔧'}</span>
                                 </div>
                               )}
-                              {seat.type !== SeatTypeEnum.STANDARD && (
+                              {seat.type !== 'STANDARD' && (
                                 <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-white shadow-lg flex items-center justify-center text-[10px]">
-                                  {seat.type === SeatTypeEnum.VIP ? '👑' :
-                                   seat.type === SeatTypeEnum.COUPLE ? '💑' :
-                                   seat.type === SeatTypeEnum.PREMIUM ? '⭐' :
-                                   seat.type === SeatTypeEnum.WHEELCHAIR ? '♿' : ''}
+                                  {seat.type === 'VIP' ? '👑' :
+                                   seat.type === 'COUPLE' ? '💑' :
+                                   seat.type === 'PREMIUM' ? '⭐' :
+                                   seat.type === 'WHEELCHAIR' ? '♿' : ''}
                                 </div>
                               )}
                             </button>
@@ -405,12 +398,12 @@ export default function SeatStatusPage() {
                               <div className="bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-xl px-4 py-3 whitespace-nowrap shadow-2xl border border-gray-700">
                                 <div className="flex items-center gap-2 mb-2">
                                   <p className="font-bold text-lg">{String.fromCharCode(64 + seat.row)}{seat.seatNumber}</p>
-                                  {seat.type !== SeatTypeEnum.STANDARD && (
+                                  {seat.type !== 'STANDARD' && (
                                     <span className="text-lg">
-                                      {seat.type === SeatTypeEnum.VIP ? '👑' :
-                                       seat.type === SeatTypeEnum.COUPLE ? '💑' :
-                                       seat.type === SeatTypeEnum.PREMIUM ? '⭐' :
-                                       seat.type === SeatTypeEnum.WHEELCHAIR ? '♿' : ''}
+                                      {seat.type === 'VIP' ? '👑' :
+                                       seat.type === 'COUPLE' ? '💑' :
+                                       seat.type === 'PREMIUM' ? '⭐' :
+                                       seat.type === 'WHEELCHAIR' ? '♿' : ''}
                                     </span>
                                   )}
                                 </div>
@@ -444,7 +437,7 @@ export default function SeatStatusPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-700 mb-3">Seat Types (Border Indicator)</p>
                   <div className="flex flex-wrap gap-4">
-                    {[{type: SeatTypeEnum.STANDARD, emoji: ''}, {type: SeatTypeEnum.VIP, emoji: '👑'}, {type: SeatTypeEnum.COUPLE, emoji: '💑'}, {type: SeatTypeEnum.PREMIUM, emoji: '⭐'}, {type: SeatTypeEnum.WHEELCHAIR, emoji: '♿'}].map(item => (
+                    {[{type: 'STANDARD', emoji: ''}, {type: 'VIP', emoji: '👑'}, {type: 'COUPLE', emoji: '💑'}, {type: 'PREMIUM', emoji: '⭐'}, {type: 'WHEELCHAIR', emoji: '♿'}].map(item => (
                       <div key={item.type} className="flex items-center gap-2">
                         <div className={`w-10 h-10 rounded-full border-2 ${getSeatTypeColor(item.type)} bg-gray-100 flex items-center justify-center text-lg shadow-sm`}>
                           {item.emoji}
