@@ -21,8 +21,16 @@ import {
 } from '@movie-hub/shacdn-ui/select';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import { useToast } from '../../_libs/use-toast';
-import { useCreateMovieRelease, useUpdateMovieRelease } from '@/libs/api';
-import type { Movie, MovieRelease } from '@/libs/api/types';
+import { useAdminApi } from '@/libs/admin-api';
+import type { Movie } from '../../_libs/types';
+
+interface MovieRelease {
+  id: string;
+  movieId: string;
+  startDate: string;
+  endDate: string;
+  note: string;
+}
 
 interface MovieReleaseDialogProps {
   open: boolean;
@@ -41,8 +49,7 @@ export default function MovieReleaseDialog({
   preSelectedMovieId,
   onSuccess,
 }: MovieReleaseDialogProps) {
-  const createMovieRelease = useCreateMovieRelease();
-  const updateMovieRelease = useUpdateMovieRelease();
+  const api = useAdminApi();
   const [formData, setFormData] = useState({
     movieId: '',
     startDate: '',
@@ -55,9 +62,9 @@ export default function MovieReleaseDialog({
     if (editingRelease) {
       setFormData({
         movieId: editingRelease.movieId,
-        startDate: typeof editingRelease.startDate === 'string' ? editingRelease.startDate : editingRelease.startDate.toISOString().split('T')[0],
-        endDate: typeof editingRelease.endDate === 'string' ? editingRelease.endDate : editingRelease.endDate.toISOString().split('T')[0],
-        note: editingRelease.note || '',
+        startDate: editingRelease.startDate,
+        endDate: editingRelease.endDate,
+        note: editingRelease.note,
       });
     } else if (preSelectedMovieId) {
       // Pre-fill movieId when opening from Movies page
@@ -87,7 +94,7 @@ export default function MovieReleaseDialog({
   };
 
   const handleSubmit = async () => {
-    if (!formData.movieId || !formData.startDate || !formData.endDate) {
+    if (!formData.movieId || !formData.startDate || !formData.endDate || !formData.note) {
       toast({
         title: 'Validation Error',
         description: 'Please fill in all required fields',
@@ -97,24 +104,39 @@ export default function MovieReleaseDialog({
     }
 
     try {
-      const payload = {
-        movieId: formData.movieId,
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-        note: formData.note || undefined, // note is optional in backend
-      };
-
       if (editingRelease) {
-        await updateMovieRelease.mutateAsync({ id: editingRelease.id, data: payload });
+        await api.movieReleases.update(editingRelease.id, {
+          movieId: formData.movieId,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+          note: formData.note,
+        });
+        toast({
+          title: 'Success',
+          description: 'Movie release updated successfully',
+        });
       } else {
-        await createMovieRelease.mutateAsync(payload);
+        await api.movieReleases.create({
+          movieId: formData.movieId,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+          note: formData.note,
+        });
+        toast({
+          title: 'Success',
+          description: 'Movie release created successfully',
+        });
       }
 
       onOpenChange(false);
       resetForm();
       onSuccess?.();
     } catch {
-      // Error toast already shown by mutation hooks
+      toast({
+        title: 'Error',
+        description: `Failed to ${editingRelease ? 'update' : 'create'} movie release`,
+        variant: 'destructive',
+      });
     }
   };
 
