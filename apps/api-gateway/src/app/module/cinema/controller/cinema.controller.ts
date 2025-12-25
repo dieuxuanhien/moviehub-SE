@@ -17,7 +17,6 @@ import {
 import { CinemaService } from '../service/cinema.service';
 import {
   AdminGetShowtimesQuery,
-  CinemaStatusEnum,
   CreateCinemaRequest,
   GetShowtimesQuery,
   ShowtimesFilterDTO,
@@ -42,9 +41,8 @@ export class CinemaController {
    * Get all cinemas
    */
   @Get()
-  async getAllCinemas(@Query('status') status?: CinemaStatusEnum) {
-    const cinemaStatus = status ?? CinemaStatusEnum.ACTIVE;
-    return this.cinemaService.getCinemas(cinemaStatus);
+  async getAllCinemas() {
+    return this.cinemaService.getCinemas();
   }
 
   /**

@@ -1,20 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ArgumentsHost, Catch } from '@nestjs/common';
-import { BaseRpcExceptionFilter, RpcException } from '@nestjs/microservices';
+import { Catch } from '@nestjs/common';
+import { BaseRpcExceptionFilter } from '@nestjs/microservices';
+import { throwError } from 'rxjs';
 import { PrismaClientKnownRequestError } from '../../generated/prisma/runtime/library';
 import { ResourceNotFoundException } from '@movie-hub/shared-types';
 
 @Catch()
 export class AllExceptionsFilter extends BaseRpcExceptionFilter {
-  catch(exception: any, host: ArgumentsHost) {
-    // ✅ Nếu đã là RpcException → để BaseRpcExceptionFilter xử lý
-    if (exception instanceof RpcException) {
-      return super.catch(exception, host);
-    }
-
-    // Prisma
+  catch(exception: any) {
+    // Prisma lỗi
     if (exception instanceof PrismaClientKnownRequestError) {
-      let response;
+      let response: any;
 
       switch (exception.code) {
         case 'P2002':
@@ -53,23 +49,22 @@ export class AllExceptionsFilter extends BaseRpcExceptionFilter {
           };
       }
 
-      return super.catch(new RpcException(response), host);
+      return throwError(() => response);
     }
 
     // Custom not found
     if (exception instanceof ResourceNotFoundException) {
-      return super.catch(new RpcException(exception.getError()), host);
+      return throwError(() => exception.getError());
     }
 
-    // Fallback
-    return super.catch(
-      new RpcException({
-        summary: 'Unexpected error',
-        statusCode: 500,
-        code: 'UNKNOWN_ERROR',
-        message: exception?.message || 'An unexpected error occurred',
-      }),
-      host
-    );
+    // Lỗi khác
+    const response = {
+      summary: 'Unexpected error',
+      statusCode: 500,
+      code: 'UNKNOWN_ERROR',
+      message: exception.message || 'An unexpected error occurred',
+    };
+
+    return throwError(() => response);
   }
 }

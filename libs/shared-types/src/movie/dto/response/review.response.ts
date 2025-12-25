@@ -1,6 +1,6 @@
 export interface ReviewResponse {
   id: string;
-  rating: number;
-  content: string;
+  rating: Date;
+  content: Date;
   createdAt: Date;
 }
