@@ -1,7 +1,5 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
 import { PrismaService } from '../prisma.service';
 import { NotificationService, TicketWithQRCode } from '../notification/notification.service';
 import { TicketService } from '../ticket/ticket.service';
@@ -14,9 +12,6 @@ import {
   TicketStatus,
   ServiceResult,
   AdminFindAllPaymentsDto,
-  UserMessage,
-  UserDetailDto,
-  SERVICE_NAME,
 } from '@movie-hub/shared-types';
 import * as crypto from 'crypto';
 import moment from 'moment';
@@ -35,7 +30,6 @@ export class PaymentService {
     private prisma: PrismaService,
     private configService: ConfigService,
     private bookingEventService: BookingEventService,
-    @Inject(SERVICE_NAME.USER) private userClient: ClientProxy,
     private notificationService: NotificationService,
     private ticketService: TicketService
   ) {
@@ -373,27 +367,27 @@ export class PaymentService {
    * Admin: Find all payments with comprehensive filters
    */
   async adminFindAllPayments(
-    filters: AdminFindAllPaymentsDto = {}
+    filters: AdminFindAllPaymentsDto
   ): Promise<ServiceResult<PaymentDetailDto[]>> {
-    const page = filters?.page || 1;
-    const limit = filters?.limit || 10;
+    const page = filters.page || 1;
+    const limit = filters.limit || 10;
     const skip = (page - 1) * limit;
 
     const where: any = {};
 
-    if (filters?.bookingId) where.booking_id = filters.bookingId;
-    if (filters?.status) where.status = filters.status;
-    if (filters?.paymentMethod) where.payment_method = filters.paymentMethod;
+    if (filters.bookingId) where.booking_id = filters.bookingId;
+    if (filters.status) where.status = filters.status;
+    if (filters.paymentMethod) where.payment_method = filters.paymentMethod;
 
-    if (filters?.startDate || filters?.endDate) {
+    if (filters.startDate || filters.endDate) {
       where.created_at = {};
       if (filters.startDate) where.created_at.gte = filters.startDate;
       if (filters.endDate) where.created_at.lte = filters.endDate;
     }
 
     const orderBy: any = {};
-    const sortBy = filters?.sortBy || 'created_at';
-    const sortOrder = filters?.sortOrder || 'desc';
+    const sortBy = filters.sortBy || 'created_at';
+    const sortOrder = filters.sortOrder || 'desc';
     orderBy[sortBy] = sortOrder;
 
     const [payments, total] = await Promise.all([
@@ -460,25 +454,24 @@ export class PaymentService {
    * Find payments by date range
    */
   async findPaymentsByDateRange(filters: {
-    startDate?: Date;
-    endDate?: Date;
+    startDate: Date;
+    endDate: Date;
     status?: PaymentStatus;
     page?: number;
     limit?: number;
-  } = {}): Promise<ServiceResult<PaymentDetailDto[]>> {
-    const page = filters?.page || 1;
-    const limit = filters?.limit || 10;
+  }): Promise<ServiceResult<PaymentDetailDto[]>> {
+    const page = filters.page || 1;
+    const limit = filters.limit || 10;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: any = {
+      created_at: {
+        gte: filters.startDate,
+        lte: filters.endDate,
+      },
+    };
 
-    if (filters?.startDate || filters?.endDate) {
-      where.created_at = {};
-      if (filters.startDate) where.created_at.gte = filters.startDate;
-      if (filters.endDate) where.created_at.lte = filters.endDate;
-    }
-
-    if (filters?.status) where.status = filters.status;
+    if (filters.status) where.status = filters.status;
 
     const [payments, total] = await Promise.all([
       this.prisma.payments.findMany({
@@ -536,16 +529,16 @@ export class PaymentService {
     startDate?: Date;
     endDate?: Date;
     paymentMethod?: string;
-  } = {}): Promise<ServiceResult<any>> {
+  }): Promise<ServiceResult<any>> {
     const where: any = {};
 
-    if (filters?.startDate || filters?.endDate) {
+    if (filters.startDate || filters.endDate) {
       where.created_at = {};
       if (filters.startDate) where.created_at.gte = filters.startDate;
       if (filters.endDate) where.created_at.lte = filters.endDate;
     }
 
-    if (filters?.paymentMethod) where.payment_method = filters.paymentMethod;
+    if (filters.paymentMethod) where.payment_method = filters.paymentMethod;
 
     const [totalPayments, successfulPayments, failedPayments, pendingPayments, payments] = await Promise.all([
       this.prisma.payments.count({ where }),
@@ -603,7 +596,6 @@ export class PaymentService {
   /**
    * Send booking confirmation email ASYNCHRONOUSLY with QR codes
    * This runs in background and never blocks the payment flow
-   * Fetches user details (email, name, phone) from user service via event-driven TCP call
    */
   private async sendBookingConfirmationEmailAsync(bookingId: string): Promise<void> {
     try {
@@ -621,24 +613,6 @@ export class PaymentService {
         console.error('[Email] Booking not found:', bookingId);
         return;
       }
-
-      // ✅ ASYNC: Fetch user details from USER service via TCP (event-driven)
-      let userDetails: UserDetailDto | null = null;
-      try {
-        userDetails = await firstValueFrom(
-          this.userClient.send<UserDetailDto>(UserMessage.GET_USER_DETAIL, fullBooking.user_id)
-        );
-        console.log(`[Email] Fetched user details from user service for user ${fullBooking.user_id}`);
-      } catch (userError) {
-        console.error(`[Email] Failed to fetch user details from user service:`, userError);
-        // Gracefully fall back to booking's stored customer info
-        console.log('[Email] Falling back to booking stored customer information');
-      }
-
-      // Use user details if available, otherwise use booking's stored customer info
-      const customerEmail = userDetails?.email || fullBooking.customer_email;
-      const customerName = userDetails?.fullName || fullBooking.customer_name;
-      const customerPhone = userDetails?.phone || fullBooking.customer_phone;
 
       // Generate QR codes for all tickets IN PARALLEL
       const ticketsWithQR = await Promise.all(
@@ -672,9 +646,9 @@ export class PaymentService {
         bookingCode: fullBooking.booking_code,
         showtimeId: fullBooking.showtime_id,
         userId: fullBooking.user_id,
-        customerName: customerName,
-        customerEmail: customerEmail,
-        customerPhone: customerPhone,
+        customerName: fullBooking.customer_name,
+        customerEmail: fullBooking.customer_email,
+        customerPhone: fullBooking.customer_phone,
         movieTitle: 'Movie Title', // TODO: Fetch from cinema-service
         cinemaName: 'Cinema Name', // TODO: Fetch from cinema-service
         hallName: 'Hall Name', // TODO: Fetch from cinema-service
@@ -717,10 +691,10 @@ export class PaymentService {
         tickets: ticketsWithQR,
       });
 
-      console.log(`[Email] Booking confirmation sent successfully to ${customerEmail}`);
+      console.log(`[Email] Booking confirmation sent successfully to ${fullBooking.customer_email}`);
 
       // Also send SMS if phone number available (fire-and-forget)
-      if (customerPhone) {
+      if (fullBooking.customer_phone) {
         this.notificationService.sendBookingConfirmationSMS(bookingForEmail).catch(smsError => {
           console.error('[SMS] Failed to send booking confirmation SMS:', smsError);
         });

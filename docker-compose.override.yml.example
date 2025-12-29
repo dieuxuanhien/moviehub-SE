@@ -12,32 +12,31 @@ services:
     command: sh -c "npx prisma migrate deploy && cd prisma && npx tsx seed.ts && cd .. && node main.js"
     environment:
       - NODE_ENV=development
-   
+    volumes:
+      - ./apps/movie-service/src:/app/apps/movie-service/src
 
   
   user-service:
     environment:
       - NODE_ENV=development
-    command: sh -c "npx prisma migrate deploy && cd prisma && npx tsx seed.ts && cd .. && node main.js"
+    volumes:
+      - ./apps/user-service/src:/app/apps/user-service/src
+    
 
   cinema-service:
     environment:
       - NODE_ENV=development
-    command: sh -c "npx prisma migrate deploy && cd prisma && npx tsx seed.ts && cd .. && node main.js"
-  
-  
-  booking-service:
-    environment:
-      - NODE_ENV=development
-    command: sh -c "npx prisma migrate deploy && cd prisma && npx tsx seed.ts && cd .. && node main.js"
-  
+    volumes:
+      - ./apps/cinema-service/src:/app/apps/cinema-service/src
+
   api-gateway:
     environment:
       - NODE_ENV=development
-   
+    volumes:
+      - ./apps/api-gateway/src:/app/apps/api-gateway/src
 
-  # web:
-  #   environment:
-  #     - NODE_ENV=development
-  #   volumes:
-  #     - ./apps/web/src:/app/apps/web/src
+  web:
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./apps/web/src:/app/apps/web/src
