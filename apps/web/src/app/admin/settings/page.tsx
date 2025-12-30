@@ -1,7 +1,5 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { useState, useEffect } from 'react';
 import {
   Settings,
@@ -20,6 +18,7 @@ import {
   Upload,
   Download,
   Trash2,
+  Globe,
   Moon,
   Sun,
   Monitor,
@@ -51,69 +50,14 @@ import {
 } from '@movie-hub/shacdn-ui/tabs';
 import { Separator } from '@movie-hub/shacdn-ui/separator';
 import { useToast } from '../_libs/use-toast';
-
-// Frontend-specific settings types
-interface ProfileSettings {
-  name: string;
-  email: string;
-  phone: string;
-  avatar: string;
-  role: string;
-  department: string;
-  timezone: string;
-  language: string;
-}
-
-interface NotificationSettings {
-  emailNotifications: boolean;
-  pushNotifications: boolean;
-  smsNotifications: boolean;
-  bookingAlerts: boolean;
-  revenueReports: boolean;
-  systemAlerts: boolean;
-  marketingEmails: boolean;
-  weeklyDigest: boolean;
-}
-
-interface SecuritySettings {
-  twoFactorEnabled: boolean;
-  sessionTimeout: number;
-  passwordExpiry: number;
-  loginNotifications: boolean;
-  ipWhitelist: string[];
-  lastPasswordChange: string;
-}
-
-interface SystemSettings {
-  maintenanceMode: boolean;
-  debugMode: boolean;
-  apiRateLimit: number;
-  maxUploadSize: number;
-  cacheEnabled: boolean;
-  cacheTTL: number;
-  backupFrequency: string;
-  logRetention: number;
-}
-
-interface BillingSettings {
-  companyName: string;
-  taxId: string;
-  billingEmail: string;
-  billingAddress: string;
-  paymentMethod: string;
-  autoRenewal: boolean;
-  currentPlan: string;
-  nextBillingDate: string;
-}
-
-interface AppearanceSettings {
-  theme: 'light' | 'dark' | 'system';
-  accentColor: string;
-  fontSize: 'small' | 'medium' | 'large';
-  compactMode: boolean;
-  animations: boolean;
-  sidebarCollapsed: boolean;
-}
+import type {
+  ProfileSettings,
+  NotificationSettings,
+  SecuritySettings,
+  SystemSettings,
+  BillingSettings,
+  AppearanceSettings,
+} from '../_libs/types';
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(false);

@@ -1,9 +1,7 @@
 // src/app/(admin)/halls/page.tsx
 'use client';
 
-export const dynamic = 'force-dynamic';
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Search, MoreVertical, Edit, Trash2, DoorOpen } from 'lucide-react';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import { Input } from '@movie-hub/shacdn-ui/input';
@@ -38,69 +36,98 @@ import {
   SelectValue,
 } from '@movie-hub/shacdn-ui/select';
 import { useToast } from '../_libs/use-toast';
-import { useHallsGroupedByCinema, useCreateHall, useUpdateHall, useDeleteHall, useCinemas, hallsApi } from '@/libs/api';
-import type { Hall, HallType, CreateHallRequest } from '@/libs/api/types';
-import { HallTypeEnum, LayoutTypeEnum } from '@movie-hub/shared-types/cinema/enum';
+// import api from '@/lib/api';
+import type { Hall, Cinema, HallType, CreateHallRequest } from '../_libs/types';
+
+import { mockHalls, mockCinemas } from '../_libs/mockData'; 
+
 
 export default function HallsPage() {
+  const [halls, setHalls] = useState<Hall[]>([]);
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [validationErrorOpen, setValidationErrorOpen] = useState(false);
-  const [validationErrorMessage, setValidationErrorMessage] = useState('');
   const [selectedHall, setSelectedHall] = useState<Hall | null>(null);
   const [formData, setFormData] = useState<Partial<CreateHallRequest>>({
     cinemaId: '',
     name: '',
-    type: HallTypeEnum.STANDARD as HallType,
+    type: 'STANDARD' as HallType,
     screenType: '',
     soundSystem: '',
     features: [],
-    layoutType: LayoutTypeEnum.STANDARD,
+    layoutType: 'STANDARD',
   });
-  useToast();
+  const { toast } = useToast();
 
-  // API hooks - using workaround hook for grouped data
-  const { data: hallsByCinema = {}, isLoading: loading } = useHallsGroupedByCinema();
-  const createHall = useCreateHall();
-  const updateHall = useUpdateHall();
-  const deleteHall = useDeleteHall();
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  // Fetch cinemas list separately (so Add Hall dropdown works even when no halls exist)
-  const { data: cinemasData = [] } = useCinemas();
-  const cinemasDataArray = Array.isArray(cinemasData) ? cinemasData : [];
-  // Extract all halls and cinemas from grouped data
-  const derivedCinemas = Object.values(hallsByCinema).map(group => group.cinema);
-  const cinemas = cinemasDataArray.length > 0 ? cinemasDataArray : derivedCinemas;
-  const halls = Object.values(hallsByCinema).flatMap(group => group.halls);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+
+      // const cinemaId = 'c_hcm_001'; // Replace with selected cinema
+      // const [hallsRes, cinemasRes] = await Promise.all([
+      //   api.get(`/halls/cinema/${cinemaId}`),
+      //   api.get('/cinema'),
+      // ]);
+      // setHalls(hallsRes.data.data);
+      // setCinemas(cinemasRes.data.data);
+      
+      // ⭐️ PHẦN THAY THẾ: Dùng dữ liệu giả
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setHalls(mockHalls);
+      setCinemas(mockCinemas);
+      // ⭐️ KẾT THÚC PHẦN THAY THẾ
+      
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch data',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     try {
       if (selectedHall) {
-        await updateHall.mutateAsync({ id: selectedHall.id, data: formData });
+        // await api.patch(`/halls/hall/${selectedHall.id}`, formData);
+        toast({ title: 'Success', description: 'Hall updated successfully' });
       } else {
-        // Ensure cinemaId is set before creating
-        if (!formData.cinemaId) {
-          setValidationErrorMessage('Please select a cinema');
-          setValidationErrorOpen(true);
-          return;
-        }
-        await createHall.mutateAsync(formData as CreateHallRequest);
+        // await api.post('/halls/hall', formData);
+        toast({ title: 'Success', description: 'Hall created successfully' });
       }
       setDialogOpen(false);
+      fetchData();
       resetForm();
     } catch {
-      // Error toast already shown by mutation hooks
+      toast({
+        title: 'Error',
+        description: 'Failed to save hall',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleDelete = async () => {
     if (!selectedHall) return;
     try {
-      await deleteHall.mutateAsync(selectedHall.id);
+      // await api.delete(`/halls/hall/${selectedHall.id}`);
+      toast({ title: 'Success', description: 'Hall deleted successfully' });
       setDeleteDialogOpen(false);
+      fetchData();
     } catch {
-      // Error toast already shown by mutation hook
+      toast({
+        title: 'Error',
+        description: 'Failed to delete hall',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -108,42 +135,26 @@ export default function HallsPage() {
     setFormData({
       cinemaId: '',
       name: '',
-      type: HallTypeEnum.STANDARD,
+      type: 'STANDARD',
       screenType: '',
       soundSystem: '',
       features: [],
-      layoutType: LayoutTypeEnum.STANDARD,
+      layoutType: 'STANDARD',
     });
     setSelectedHall(null);
   };
 
-  const openEditDialog = async (hall: Hall) => {
-    // Try to fetch full hall detail so we have features / seatMap etc.
-    try {
-      const detail = await hallsApi.getById(hall.id);
-      setSelectedHall(detail);
-      setFormData({
-        cinemaId: detail.cinemaId,
-        name: detail.name,
-        type: detail.type,
-        screenType: detail.screenType || '',
-        soundSystem: detail.soundSystem || '',
-        features: detail.features || [],
-        layoutType: detail.layoutType || LayoutTypeEnum.STANDARD,
-      });
-    } catch {
-      // Fallback to using supplied hall object when detail fetch fails
-      setSelectedHall(hall);
-      setFormData({
-        cinemaId: hall.cinemaId,
-        name: hall.name,
-        type: hall.type,
-        screenType: hall.screenType || '',
-        soundSystem: hall.soundSystem || '',
-        features: hall.features || [],
-        layoutType: hall.layoutType || LayoutTypeEnum.STANDARD,
-      });
-    }
+  const openEditDialog = (hall: Hall) => {
+    setSelectedHall(hall);
+    setFormData({
+      cinemaId: hall.cinemaId,
+      name: hall.name,
+      type: hall.type,
+      screenType: hall.screenType || '',
+      soundSystem: hall.soundSystem || '',
+      features: hall.features || [],
+      layoutType: hall.layoutType || 'STANDARD',
+    });
     setDialogOpen(true);
   };
 
@@ -151,8 +162,8 @@ export default function HallsPage() {
     hall.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Group filtered halls by cinema (don't shadow the API `hallsByCinema` variable)
-  const groupedFilteredHalls = filteredHalls.reduce((acc, hall) => {
+  // Group halls by cinema
+  const hallsByCinema = filteredHalls.reduce((acc, hall) => {
     const cinemaId = hall.cinemaId;
     if (!acc[cinemaId]) {
       acc[cinemaId] = [];
@@ -172,13 +183,13 @@ export default function HallsPage() {
     return colors[type] || 'bg-gray-100 text-gray-700';
   };
 
-  const getStatusColor = (status: string | undefined) => {
+  const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       ACTIVE: 'bg-green-100 text-green-700',
       MAINTENANCE: 'bg-yellow-100 text-yellow-700',
       CLOSED: 'bg-red-100 text-red-700',
     };
-    return (status && colors[status]) || 'bg-gray-100 text-gray-700';
+    return colors[status] || 'bg-gray-100 text-gray-700';
   };
 
   return (
@@ -224,12 +235,11 @@ export default function HallsPage() {
         <CardContent className="space-y-8">
           {loading ? (
             <div className="text-center py-8">Loading...</div>
-          ) : Object.keys(groupedFilteredHalls).length === 0 ? (
+          ) : Object.keys(hallsByCinema).length === 0 ? (
             <div className="text-center py-8">No halls found</div>
           ) : (
-            Object.entries(groupedFilteredHalls).map(([cinemaId, cinemaHalls]) => {
+            Object.entries(hallsByCinema).map(([cinemaId, cinemaHalls]) => {
               const cinema = cinemas.find((c) => c.id === cinemaId);
-              const headerCinema = cinemaHalls[0]?.cinema || cinema;
               return (
                 <div key={cinemaId} className="space-y-4">
                   {/* Cinema Header */}
@@ -238,8 +248,8 @@ export default function HallsPage() {
                       <DoorOpen className="h-5 w-5 text-purple-600" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900">{headerCinema?.name || 'Unknown Cinema'}</h3>
-                      <p className="text-sm text-gray-500">{headerCinema?.city || ''} • {cinemaHalls.length} halls</p>
+                      <h3 className="text-lg font-bold text-gray-900">{cinema?.name || 'Unknown Cinema'}</h3>
+                      <p className="text-sm text-gray-500">{cinema?.city || ''} • {cinemaHalls.length} halls</p>
                     </div>
                   </div>
 
@@ -386,10 +396,10 @@ export default function HallsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={HallTypeEnum.STANDARD}>Standard</SelectItem>
-                    <SelectItem value={HallTypeEnum.PREMIUM}>Premium</SelectItem>
-                    <SelectItem value={HallTypeEnum.IMAX}>IMAX</SelectItem>
-                    <SelectItem value={HallTypeEnum.FOUR_DX}>4DX</SelectItem>
+                    <SelectItem value="STANDARD">Standard</SelectItem>
+                    <SelectItem value="PREMIUM">Premium</SelectItem>
+                    <SelectItem value="IMAX">IMAX</SelectItem>
+                    <SelectItem value="FOUR_DX">4DX</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -425,32 +435,19 @@ export default function HallsPage() {
               <Select
                 value={formData.layoutType}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, layoutType: value as LayoutTypeEnum })
+                  setFormData({ ...formData, layoutType: value as 'STANDARD' | 'DUAL_AISLE' | 'STADIUM' })
                 }
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={LayoutTypeEnum.STANDARD}>Standard</SelectItem>
-                  <SelectItem value={LayoutTypeEnum.DUAL_AISLE}>Dual Aisle</SelectItem>
-                  <SelectItem value={LayoutTypeEnum.STADIUM}>Stadium</SelectItem>
+                  <SelectItem value="STANDARD">Standard</SelectItem>
+                  <SelectItem value="DUAL_AISLE">Dual Aisle</SelectItem>
+                  <SelectItem value="STADIUM">Stadium</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            {selectedHall && (
-              <div className="grid grid-cols-2 gap-4 p-3 bg-gray-50 rounded border">
-                <div>
-                  <Label className="text-xs text-gray-600">Capacity</Label>
-                  <div className="text-lg font-semibold">{selectedHall.capacity} seats</div>
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-600">Rows</Label>
-                  <div className="text-lg font-semibold">{selectedHall.rows} rows</div>
-                </div>
-              </div>
-            )}
 
             <div className="space-y-2">
               <Label>Features (Optional)</Label>
@@ -498,21 +495,6 @@ export default function HallsPage() {
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
               Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Validation Error Dialog */}
-      <Dialog open={validationErrorOpen} onOpenChange={setValidationErrorOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Validation Error</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-gray-600">{validationErrorMessage}</p>
-          <DialogFooter>
-            <Button onClick={() => setValidationErrorOpen(false)}>
-              OK
             </Button>
           </DialogFooter>
         </DialogContent>
