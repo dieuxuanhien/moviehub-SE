@@ -1,7 +1,6 @@
 export interface MovieReleaseResponse {
   id: string;
-  movieId: string;
   startDate: Date;
-  endDate?: Date | null;
-  note?: string | null;
+  endDate: Date;
+  note: string;
 }
