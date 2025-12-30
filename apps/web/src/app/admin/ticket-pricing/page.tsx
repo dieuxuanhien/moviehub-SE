@@ -1,9 +1,7 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { useState, useEffect } from 'react';
-import { Building2, DoorOpen, DollarSign, Calendar, Sparkles, Edit2, Check, X, AlertCircle } from 'lucide-react';
+import { Building2, DoorOpen, DollarSign, Calendar, Sparkles, Edit2, Check, X } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -18,15 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@movie-hub/shacdn-ui/select';
-import { Alert, AlertDescription } from '@movie-hub/shacdn-ui/alert';
 import { Badge } from '@movie-hub/shacdn-ui/badge';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import { Input } from '@movie-hub/shacdn-ui/input';
 import { useToast } from '../_libs/use-toast';
-import { useCinemas, useHallsByCinema, useTicketPricing, useUpdateTicketPricing } from '@/libs/api';
-import type { SeatType, DayType } from '@/libs/api/types';
-import { SeatTypeEnum, DayTypeEnum } from '@movie-hub/shared-types/cinema/enum';
-import type { TicketPricingFiltersParams } from '@/libs/api';
+import type { Cinema, Hall, SeatType, DayType } from '../_libs/types';
+import { mockCinemas, mockHalls } from '../_libs/mockData';
 
 interface TicketPricing {
   id: string;
@@ -37,33 +32,95 @@ interface TicketPricing {
 }
 
 export default function TicketPricingPage() {
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const [halls, setHalls] = useState<Hall[]>([]);
   const [selectedCinemaId, setSelectedCinemaId] = useState('');
   const [selectedHallId, setSelectedHallId] = useState('');
+  const [pricings, setPricings] = useState<TicketPricing[]>([]);
+  const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState('');
   const { toast } = useToast();
 
-  // API hooks
-  const { data: cinemasData = [], isLoading: cinemasLoading, isError: cinemasError } = useCinemas();
-  const cinemas = cinemasData || [];
-  const { data: hallsData = [], isLoading: hallsLoading, isError: hallsError } = useHallsByCinema(selectedCinemaId);
-  const halls = hallsData || [];
-  const { data: pricingsData = [], isLoading: loading, isError: pricingsError } = useTicketPricing(selectedHallId ? { hallId: selectedHallId } as TicketPricingFiltersParams & { hallId: string } : undefined);
-  const pricings = pricingsData || [];
-  const updatePricing = useUpdateTicketPricing();
-
-  // Reset hall ID when cinema changes
   useEffect(() => {
-    setSelectedHallId('');
-  }, [selectedCinemaId]);
+    fetchCinemas();
+  }, []);
 
-  const handleCinemaChange = (cinemaId: string) => {
-    setSelectedCinemaId(cinemaId);
+  const fetchCinemas = async () => {
+    try {
+      setCinemas(mockCinemas);
+      setHalls(mockHalls);
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch cinemas',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const fetchPricings = async (hallId: string) => {
+    try {
+      setLoading(true);
+      // Mock data
+      const seatTypes: SeatType[] = ['STANDARD', 'VIP', 'COUPLE', 'PREMIUM', 'WHEELCHAIR'];
+      const dayTypes: DayType[] = ['WEEKDAY', 'WEEKEND', 'HOLIDAY'];
+      
+      // Each combination has its own price
+      const mockPrices: Record<string, number> = {
+        // STANDARD
+        'STANDARD_WEEKDAY': 75000,
+        'STANDARD_WEEKEND': 90000,
+        'STANDARD_HOLIDAY': 110000,
+        // VIP
+        'VIP_WEEKDAY': 120000,
+        'VIP_WEEKEND': 150000,
+        'VIP_HOLIDAY': 180000,
+        // COUPLE
+        'COUPLE_WEEKDAY': 200000,
+        'COUPLE_WEEKEND': 250000,
+        'COUPLE_HOLIDAY': 300000,
+        // PREMIUM
+        'PREMIUM_WEEKDAY': 150000,
+        'PREMIUM_WEEKEND': 180000,
+        'PREMIUM_HOLIDAY': 220000,
+        // WHEELCHAIR
+        'WHEELCHAIR_WEEKDAY': 75000,
+        'WHEELCHAIR_WEEKEND': 90000,
+        'WHEELCHAIR_HOLIDAY': 110000,
+      };
+
+      const mockPricings: TicketPricing[] = [];
+      let idCounter = 1;
+
+      seatTypes.forEach(seatType => {
+        dayTypes.forEach(dayType => {
+          const key = `${seatType}_${dayType}`;
+          mockPricings.push({
+            id: `pricing_${idCounter++}`,
+            hallId: hallId,
+            seatType: seatType,
+            dayType: dayType,
+            price: mockPrices[key] || 75000,
+          });
+        });
+      });
+
+      setPricings(mockPricings);
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch ticket pricings',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleHallChange = (hallId: string) => {
     setSelectedHallId(hallId);
-    // Pricings will automatically fetch via React Query when selectedHallId changes
+    fetchPricings(hallId);
   };
 
   const startEdit = (pricing: TicketPricing) => {
@@ -81,25 +138,27 @@ export default function TicketPricingPage() {
       const newPrice = parseInt(editPrice);
       if (isNaN(newPrice) || newPrice <= 0) {
         toast({
-          title: 'Invalid Price',
-          description: 'Please enter a valid price greater than 0',
+          title: 'Error',
+          description: 'Please enter a valid price',
           variant: 'destructive',
         });
         return;
       }
 
-      await updatePricing.mutateAsync({ id: pricingId, data: { price: newPrice } });
+      setPricings(prev =>
+        prev.map(p => (p.id === pricingId ? { ...p, price: newPrice } : p))
+      );
 
       toast({
         title: 'Success',
-        description: `Ticket pricing updated to ${formatPrice(newPrice)}`,
+        description: 'Ticket pricing updated successfully',
       });
 
       cancelEdit();
-    } catch (error) {
+    } catch {
       toast({
-        title: 'Update Failed',
-        description: error instanceof Error ? error.message : 'Failed to update ticket pricing. Please try again.',
+        title: 'Error',
+        description: 'Failed to update ticket pricing',
         variant: 'destructive',
       });
     }
@@ -114,13 +173,13 @@ export default function TicketPricingPage() {
 
   const getSeatTypeIcon = (type: SeatType) => {
     switch (type) {
-      case SeatTypeEnum.VIP:
+      case 'VIP':
         return '👑';
-      case SeatTypeEnum.COUPLE:
+      case 'COUPLE':
         return '💑';
-      case SeatTypeEnum.PREMIUM:
+      case 'PREMIUM':
         return '⭐';
-      case SeatTypeEnum.WHEELCHAIR:
+      case 'WHEELCHAIR':
         return '♿';
       default:
         return '🪑';
@@ -129,22 +188,22 @@ export default function TicketPricingPage() {
 
   const getDayTypeColor = (type: DayType) => {
     switch (type) {
-      case DayTypeEnum.WEEKDAY:
+      case 'WEEKDAY':
         return 'bg-blue-100 text-blue-700 border-blue-200';
-      case DayTypeEnum.WEEKEND:
+      case 'WEEKEND':
         return 'bg-purple-100 text-purple-700 border-purple-200';
-      case DayTypeEnum.HOLIDAY:
+      case 'HOLIDAY':
         return 'bg-amber-100 text-amber-700 border-amber-200';
     }
   };
 
   const getDayTypeIcon = (type: DayType) => {
     switch (type) {
-      case DayTypeEnum.WEEKDAY:
+      case 'WEEKDAY':
         return '📅';
-      case DayTypeEnum.WEEKEND:
+      case 'WEEKEND':
         return '🎉';
-      case DayTypeEnum.HOLIDAY:
+      case 'HOLIDAY':
         return '✨';
     }
   };
@@ -161,8 +220,8 @@ export default function TicketPricingPage() {
     return acc;
   }, {} as Record<SeatType, TicketPricing[]>);
 
-  const seatTypeOrder: SeatType[] = [SeatTypeEnum.STANDARD, SeatTypeEnum.VIP, SeatTypeEnum.COUPLE, SeatTypeEnum.PREMIUM, SeatTypeEnum.WHEELCHAIR];
-  const dayTypeOrder: DayType[] = [DayTypeEnum.WEEKDAY, DayTypeEnum.WEEKEND, DayTypeEnum.HOLIDAY];
+  const seatTypeOrder: SeatType[] = ['STANDARD', 'VIP', 'COUPLE', 'PREMIUM', 'WHEELCHAIR'];
+  const dayTypeOrder: DayType[] = ['WEEKDAY', 'WEEKEND', 'HOLIDAY'];
 
   return (
     <div className="space-y-6">
@@ -183,17 +242,11 @@ export default function TicketPricingPage() {
           <CardDescription>Choose a cinema and hall to manage ticket pricing</CardDescription>
         </CardHeader>
         <CardContent>
-          {cinemasError && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>Failed to load cinemas. Please refresh the page.</AlertDescription>
-            </Alert>
-          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Cinema Selector */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Cinema</label>
-              <Select value={selectedCinemaId} onValueChange={handleCinemaChange}>
+              <Select value={selectedCinemaId} onValueChange={setSelectedCinemaId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select cinema" />
                 </SelectTrigger>
@@ -216,30 +269,24 @@ export default function TicketPricingPage() {
               <Select
                 value={selectedHallId}
                 onValueChange={handleHallChange}
-                disabled={!selectedCinemaId || hallsLoading}
+                disabled={!selectedCinemaId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={hallsLoading ? "Loading halls..." : "Select hall"} />
+                  <SelectValue placeholder="Select hall" />
                 </SelectTrigger>
                 <SelectContent>
-                  {halls.length === 0 && !hallsLoading && (
-                    <div className="px-2 py-1.5 text-sm text-gray-500">
-                      No halls available for this cinema
-                    </div>
-                  )}
-                  {halls.map((hall) => (
-                    <SelectItem key={hall.id} value={hall.id}>
-                      <div className="flex items-center gap-2">
-                        <DoorOpen className="h-4 w-4" />
-                        {hall.name} - {hall.capacity} seats
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {halls
+                    .filter(h => h.cinemaId === selectedCinemaId)
+                    .map((hall) => (
+                      <SelectItem key={hall.id} value={hall.id}>
+                        <div className="flex items-center gap-2">
+                          <DoorOpen className="h-4 w-4" />
+                          {hall.name} - {hall.capacity} seats
+                        </div>
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
-              {hallsError && (
-                <p className="text-sm text-red-500 mt-1">Failed to load halls for this cinema</p>
-              )}
             </div>
           </div>
         </CardContent>
@@ -250,11 +297,6 @@ export default function TicketPricingPage() {
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-emerald-600 border-r-transparent"></div>
           <p className="mt-4 text-gray-500">Loading pricing data...</p>
         </div>
-      ) : pricingsError ? (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>Failed to load ticket pricing data. Please try selecting another hall.</AlertDescription>
-        </Alert>
       ) : selectedHallId && pricings.length > 0 ? (
         <>
           {/* Hall Info */}
@@ -316,48 +358,28 @@ export default function TicketPricingPage() {
 
                             {editingId === pricing.id ? (
                               <div className="space-y-3">
-                                <div>
-                                  <label className="text-sm text-gray-600 mb-1 block">Price (VND)</label>
-                                  <Input
-                                    type="number"
-                                    value={editPrice}
-                                    onChange={(e) => setEditPrice(e.target.value)}
-                                    placeholder="Enter price"
-                                    className="text-lg font-bold"
-                                    autoFocus
-                                    min="1"
-                                  />
-                                  {editPrice && parseInt(editPrice) > 0 && (
-                                    <p className="text-xs text-gray-500 mt-1">
-                                      = {formatPrice(parseInt(editPrice))}
-                                    </p>
-                                  )}
-                                </div>
+                                <Input
+                                  type="number"
+                                  value={editPrice}
+                                  onChange={(e) => setEditPrice(e.target.value)}
+                                  placeholder="Enter price"
+                                  className="text-lg font-bold"
+                                  autoFocus
+                                />
                                 <div className="flex gap-2">
                                   <Button
                                     size="sm"
                                     onClick={() => saveEdit(pricing.id)}
                                     className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-                                    disabled={updatePricing.isPending}
                                   >
-                                    {updatePricing.isPending ? (
-                                      <>
-                                        <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-r-transparent mr-1"></div>
-                                        Saving...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Check className="h-4 w-4 mr-1" />
-                                        Save
-                                      </>
-                                    )}
+                                    <Check className="h-4 w-4 mr-1" />
+                                    Save
                                   </Button>
                                   <Button
                                     size="sm"
                                     variant="outline"
                                     onClick={cancelEdit}
                                     className="flex-1"
-                                    disabled={updatePricing.isPending}
                                   >
                                     <X className="h-4 w-4 mr-1" />
                                     Cancel
@@ -422,22 +444,14 @@ export default function TicketPricingPage() {
             </CardContent>
           </Card>
         </>
-      ) : selectedHallId && pricings.length === 0 && !loading ? (
-        <Card>
-          <CardContent className="py-16 text-center">
-            <DollarSign className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No ticket pricing rules found for this hall</p>
-            <p className="text-sm text-gray-400 mt-2">Contact support to set up pricing for this hall</p>
-          </CardContent>
-        </Card>
-      ) : !selectedHallId ? (
+      ) : (
         <Card>
           <CardContent className="py-16 text-center">
             <DollarSign className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500">Select a cinema and hall to manage ticket pricing</p>
           </CardContent>
         </Card>
-      ) : null}
+      )}
     </div>
   );
 }

@@ -12,23 +12,19 @@ import {
   Seat,
   ShowtimeSeat,
   TicketPricing,
+  CinemaStatus,
   HallType,
+  HallStatus,
   LayoutType,
+  ShowtimeFormat,
+  ShowtimeStatus,
+  DayType,
   AgeRating,
   LanguageType,
   SeatType,
   SeatStatus,
-} from '@/libs/api/types';
-
-import {
-  CinemaStatus,
-  HallStatus,
-  ShowtimeFormat,
-  ShowtimeStatus,
+  ShowtimeSeatStatus,
 } from './types';
-
-// Using plain string enum names in mock data to avoid runtime enum references
-import { SeatStatusEnum, SeatTypeEnum, DayTypeEnum } from '@movie-hub/shared-types/cinema/enum';
 
 // ========== MOVIE RELEASES ==========
 export const mockReleases: MovieRelease[] = [
@@ -447,7 +443,7 @@ export const mockMovies: Movie[] = [
     languageType: 'SUBTITLE' as LanguageType,
     originalLanguage: 'en',
     spokenLanguages: ['en'],
-    genre: [mockGenres[0]],
+    genre: [mockGenres[0], mockGenres[1]],
     cast: [
       {
         name: 'Tom Cruise',
@@ -462,7 +458,7 @@ export const mockMovies: Movie[] = [
     ],
     director: 'Christopher McQuarrie',
     releaseDate: '2023-07-12',
-    status: 'NOW_SHOWING',
+    status: 'now_showing',
   },
   {
     id: 'm_002',
@@ -481,7 +477,7 @@ export const mockMovies: Movie[] = [
     languageType: 'SUBTITLE' as LanguageType,
     originalLanguage: 'en',
     spokenLanguages: ['en'],
-    genre: [mockGenres[2]],
+    genre: [mockGenres[2], mockGenres[3], mockGenres[4]],
     cast: [
       {
         name: 'Cillian Murphy',
@@ -496,7 +492,7 @@ export const mockMovies: Movie[] = [
     ],
     director: 'Christopher Nolan',
     releaseDate: '2023-07-21',
-    status: 'NOW_SHOWING',
+    status: 'now_showing',
   },
   {
     id: 'm_003',
@@ -515,7 +511,7 @@ export const mockMovies: Movie[] = [
     languageType: 'SUBTITLE' as LanguageType,
     originalLanguage: 'en',
     spokenLanguages: ['en'],
-    genre: [mockGenres[5]],
+    genre: [mockGenres[5], mockGenres[6]],
     cast: [
       {
         name: 'Timothée Chalamet',
@@ -530,7 +526,7 @@ export const mockMovies: Movie[] = [
     ],
     director: 'Denis Villeneuve',
     releaseDate: '2024-03-01',
-    status: 'COMING_SOON',
+    status: 'upcoming',
   },
   {
     id: 'm_004',
@@ -549,7 +545,7 @@ export const mockMovies: Movie[] = [
     languageType: 'SUBTITLE' as LanguageType,
     originalLanguage: 'en',
     spokenLanguages: ['en'],
-    genre: [mockGenres[7]],
+    genre: [mockGenres[7], mockGenres[10]],
     cast: [
       {
         name: 'Margot Robbie',
@@ -564,7 +560,7 @@ export const mockMovies: Movie[] = [
     ],
     director: 'Greta Gerwig',
     releaseDate: '2023-07-21',
-    status: 'NOW_SHOWING',
+    status: 'now_showing',
   },
   {
     id: 'm_005',
@@ -583,7 +579,7 @@ export const mockMovies: Movie[] = [
     languageType: 'SUBTITLE' as LanguageType,
     originalLanguage: 'en',
     spokenLanguages: ['en'],
-    genre: [mockGenres[0]],
+    genre: [mockGenres[0], mockGenres[5], mockGenres[6]],
     cast: [
       {
         name: 'Brie Larson',
@@ -598,7 +594,7 @@ export const mockMovies: Movie[] = [
     ],
     director: 'Nia DaCosta',
     releaseDate: '2023-11-10',
-    status: 'NOW_SHOWING',
+    status: 'now_showing',
   },
   {
     id: 'm_006',
@@ -617,7 +613,7 @@ export const mockMovies: Movie[] = [
     languageType: 'SUBTITLE' as LanguageType,
     originalLanguage: 'en',
     spokenLanguages: ['en'],
-    genre: [mockGenres[7]],
+    genre: [mockGenres[7], mockGenres[10], mockGenres[11]],
     cast: [
       {
         name: 'Timothée Chalamet',
@@ -632,7 +628,7 @@ export const mockMovies: Movie[] = [
     ],
     director: 'Paul King',
     releaseDate: '2023-12-15',
-    status: 'COMING_SOON',
+    status: 'upcoming',
   },
 ];
 
@@ -653,7 +649,9 @@ export const mockShowtimes: Showtime[] = [
     language: 'en',
     subtitles: ['vi'],
     availableSeats: 200,
+    totalSeats: 350,
     status: 'SELLING' as ShowtimeStatus,
+    dayType: 'WEEKDAY' as DayType,
     createdAt: '2025-01-01T10:00:00Z',
     updatedAt: '2025-01-01T10:00:00Z',
   },
@@ -669,7 +667,9 @@ export const mockShowtimes: Showtime[] = [
     language: 'en',
     subtitles: ['vi'],
     availableSeats: 45,
+    totalSeats: 120,
     status: 'SELLING' as ShowtimeStatus,
+    dayType: 'WEEKDAY' as DayType,
     createdAt: '2025-01-01T10:00:00Z',
     updatedAt: '2025-01-01T10:00:00Z',
   },
@@ -685,7 +685,9 @@ export const mockShowtimes: Showtime[] = [
     language: 'en',
     subtitles: ['vi'],
     availableSeats: 12,
+    totalSeats: 40,
     status: 'SELLING' as ShowtimeStatus,
+    dayType: 'WEEKDAY' as DayType,
     createdAt: '2025-01-01T10:00:00Z',
     updatedAt: '2025-01-01T10:00:00Z',
   },
@@ -701,7 +703,9 @@ export const mockShowtimes: Showtime[] = [
     language: 'en',
     subtitles: ['vi'],
     availableSeats: 0,
+    totalSeats: 50,
     status: 'SELLING' as ShowtimeStatus,
+    dayType: 'WEEKDAY' as DayType,
     createdAt: '2025-01-01T10:00:00Z',
     updatedAt: '2025-01-01T10:00:00Z',
   },
@@ -717,7 +721,9 @@ export const mockShowtimes: Showtime[] = [
     language: 'en',
     subtitles: ['vi'],
     availableSeats: 120,
+    totalSeats: 350,
     status: 'SELLING' as ShowtimeStatus,
+    dayType: 'WEEKDAY' as DayType,
     createdAt: '2025-01-01T10:00:00Z',
     updatedAt: '2025-01-01T10:00:00Z',
   },
@@ -733,7 +739,9 @@ export const mockShowtimes: Showtime[] = [
     language: 'en',
     subtitles: ['vi'],
     availableSeats: 180,
+    totalSeats: 350,
     status: 'SELLING' as ShowtimeStatus,
+    dayType: 'WEEKDAY' as DayType,
     createdAt: '2025-01-01T10:00:00Z',
     updatedAt: '2025-01-01T10:00:00Z',
   },
@@ -749,7 +757,9 @@ export const mockShowtimes: Showtime[] = [
     language: 'en',
     subtitles: ['vi'],
     availableSeats: 35,
+    totalSeats: 80,
     status: 'SELLING' as ShowtimeStatus,
+    dayType: 'WEEKDAY' as DayType,
     createdAt: '2025-01-01T10:00:00Z',
     updatedAt: '2025-01-01T10:00:00Z',
   },
@@ -765,7 +775,9 @@ export const mockShowtimes: Showtime[] = [
     language: 'en',
     subtitles: ['vi'],
     availableSeats: 55,
+    totalSeats: 120,
     status: 'SELLING' as ShowtimeStatus,
+    dayType: 'WEEKDAY' as DayType,
     createdAt: '2025-01-01T10:00:00Z',
     updatedAt: '2025-01-01T10:00:00Z',
   },
@@ -781,7 +793,9 @@ export const mockShowtimes: Showtime[] = [
     language: 'en',
     subtitles: ['vi'],
     availableSeats: 45,
+    totalSeats: 80,
     status: 'SELLING' as ShowtimeStatus,
+    dayType: 'WEEKDAY' as DayType,
     createdAt: '2025-01-01T10:00:00Z',
     updatedAt: '2025-01-01T10:00:00Z',
   },
@@ -791,48 +805,33 @@ export const mockShowtimes: Showtime[] = [
 export const mockStaff: Staff[] = [
   {
     id: 's_001',
-    cinemaId: 'c_hcm_001',
-    fullName: 'Nguyễn Văn A',
+    name: 'Nguyễn Văn A',
+    role: 'Cinema Manager',
     email: 'anv@cinema.com',
     phone: '0901234567',
-    gender: 'MALE',
-    dob: '1990-05-15',
-    position: 'CINEMA_MANAGER',
-    status: 'ACTIVE',
-    workType: 'FULL_TIME',
-    shiftType: 'MORNING',
-    salary: 5000000,
-    hireDate: '2020-03-01',
+    hiredAt: '2020-03-01',
+    status: 'Active',
+    locationId: 'c_hcm_001',
   },
   {
     id: 's_002',
-    cinemaId: 'c_hn_002',
-    fullName: 'Trần Thị B',
+    name: 'Trần Thị B',
+    role: 'Ticketing Staff',
     email: 'btt@cinema.com',
     phone: '0907654321',
-    gender: 'FEMALE',
-    dob: '1995-08-20',
-    position: 'TICKET_CLERK',
-    status: 'ACTIVE',
-    workType: 'FULL_TIME',
-    shiftType: 'AFTERNOON',
-    salary: 3000000,
-    hireDate: '2022-08-15',
+    hiredAt: '2022-08-15',
+    status: 'Active',
+    locationId: 'c_hn_002',
   },
   {
     id: 's_003',
-    cinemaId: 'c_dn_003',
-    fullName: 'Lê Văn C',
+    name: 'Lê Văn C',
+    role: 'Maintenance Technician',
     email: 'clv@cinema.com',
     phone: '0912345678',
-    gender: 'MALE',
-    dob: '1988-12-10',
-    position: 'PROJECTIONIST',
-    status: 'INACTIVE',
-    workType: 'PART_TIME',
-    shiftType: 'NIGHT',
-    salary: 2500000,
-    hireDate: '2019-01-20',
+    hiredAt: '2019-01-20',
+    status: 'Inactive',
+    locationId: 'c_dn_003',
   },
 ];
 
@@ -844,21 +843,24 @@ const generateSeats = (hallId: string, rows: number, seatsPerRow: number): Seat[
   for (let r = 0; r < rows && r < rowLabels.length; r++) {
     for (let s = 1; s <= seatsPerRow; s++) {
       const seatType: SeatType = 
-        r >= rows - 2 ? SeatTypeEnum.VIP : 
-        r >= rows - 4 ? SeatTypeEnum.PREMIUM : 
-        SeatTypeEnum.STANDARD;
+        r >= rows - 2 ? 'VIP' : 
+        r >= rows - 4 ? 'PREMIUM' : 
+        'STANDARD';
       
       const status: SeatStatus = 
-        Math.random() > 0.95 ? SeatStatusEnum.BROKEN : 
-        Math.random() > 0.9 ? SeatStatusEnum.MAINTENANCE : 
-        SeatStatusEnum.ACTIVE;
+        Math.random() > 0.95 ? 'BROKEN' : 
+        Math.random() > 0.9 ? 'MAINTENANCE' : 
+        'ACTIVE';
       
       seats.push({
         id: `seat_${hallId}_${rowLabels[r]}${s}`,
-        rowLetter: rowLabels[r],
-        seatNumber: s,
+        hallId,
+        row: rowLabels[r],
+        number: s,
         type: seatType,
         status,
+        createdAt: '2025-01-01T10:00:00Z',
+        updatedAt: '2025-01-01T10:00:00Z',
       });
     }
   }
@@ -873,29 +875,27 @@ export const mockSeats: Seat[] = [
   ...generateSeats('h_bitexco_gold', 6, 8),
 ];
 
-// Map seats by hall for easy lookup
-const seatsByHall: Record<string, Seat[]> = {
-  'h_lm81_imax': mockSeats.slice(0, 375),
-  'h_lm81_4dx': mockSeats.slice(375, 495),
-  'h_lm81_premium': mockSeats.slice(495, 575),
-  'h_caugiau_comfort': mockSeats.slice(575, 655),
-  'h_bitexco_gold': mockSeats.slice(655, 703),
-};
-
 // ========== SHOWTIME SEATS ==========
 const generateShowtimeSeats = (showtimeId: string, hallId: string): ShowtimeSeat[] => {
-  const hallSeats = seatsByHall[hallId] || [];
+  const hallSeats = mockSeats.filter(s => s.hallId === hallId);
   return hallSeats.map((seat, index) => {
-    const isBooked = index % 5 === 0;
-    const isReserved = index % 7 === 0 && !isBooked;
+    const status: ShowtimeSeatStatus = 
+      seat.status !== 'ACTIVE' ? 'LOCKED' :
+      index % 5 === 0 ? 'BOOKED' : 
+      index % 7 === 0 ? 'RESERVED' : 
+      'AVAILABLE';
+    
     const basePrice = seat.type === 'VIP' ? 150000 : seat.type === 'PREMIUM' ? 120000 : 90000;
     
     return {
-      ...seat,
+      id: `sts_${showtimeId}_${seat.id}`,
       showtimeId,
-      isReserved,
-      isBooked,
+      seatId: seat.id,
+      status,
       price: basePrice,
+      seat,
+      createdAt: '2025-01-01T10:00:00Z',
+      updatedAt: '2025-01-01T10:00:00Z',
     };
   });
 };
@@ -909,24 +909,24 @@ export const mockShowtimeSeats: ShowtimeSeat[] = [
 // ========== TICKET PRICING ==========
 export const mockTicketPricing: TicketPricing[] = [
   // IMAX Hall pricing
-  { id: 'tp_001', hallId: 'h_lm81_imax', seatType: SeatTypeEnum.STANDARD, dayType: DayTypeEnum.WEEKDAY, price: 120000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
-  { id: 'tp_002', hallId: 'h_lm81_imax', seatType: SeatTypeEnum.STANDARD, dayType: DayTypeEnum.WEEKEND, price: 140000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
-  { id: 'tp_003', hallId: 'h_lm81_imax', seatType: SeatTypeEnum.STANDARD, dayType: DayTypeEnum.HOLIDAY, price: 160000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
-  { id: 'tp_004', hallId: 'h_lm81_imax', seatType: SeatTypeEnum.VIP, dayType: DayTypeEnum.WEEKDAY, price: 180000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
-  { id: 'tp_005', hallId: 'h_lm81_imax', seatType: SeatTypeEnum.VIP, dayType: DayTypeEnum.WEEKEND, price: 200000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
-  { id: 'tp_006', hallId: 'h_lm81_imax', seatType: SeatTypeEnum.VIP, dayType: DayTypeEnum.HOLIDAY, price: 220000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
-  { id: 'tp_007', hallId: 'h_lm81_imax', seatType: SeatTypeEnum.PREMIUM, dayType: DayTypeEnum.WEEKDAY, price: 150000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
-  { id: 'tp_008', hallId: 'h_lm81_imax', seatType: SeatTypeEnum.PREMIUM, dayType: DayTypeEnum.WEEKEND, price: 170000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
+  { id: 'tp_001', hallId: 'h_lm81_imax', seatType: 'STANDARD', dayType: 'WEEKDAY', price: 120000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
+  { id: 'tp_002', hallId: 'h_lm81_imax', seatType: 'STANDARD', dayType: 'WEEKEND', price: 140000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
+  { id: 'tp_003', hallId: 'h_lm81_imax', seatType: 'STANDARD', dayType: 'HOLIDAY', price: 160000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
+  { id: 'tp_004', hallId: 'h_lm81_imax', seatType: 'VIP', dayType: 'WEEKDAY', price: 180000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
+  { id: 'tp_005', hallId: 'h_lm81_imax', seatType: 'VIP', dayType: 'WEEKEND', price: 200000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
+  { id: 'tp_006', hallId: 'h_lm81_imax', seatType: 'VIP', dayType: 'HOLIDAY', price: 220000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
+  { id: 'tp_007', hallId: 'h_lm81_imax', seatType: 'PREMIUM', dayType: 'WEEKDAY', price: 150000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
+  { id: 'tp_008', hallId: 'h_lm81_imax', seatType: 'PREMIUM', dayType: 'WEEKEND', price: 170000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
   // 4DX Hall pricing
-  { id: 'tp_009', hallId: 'h_lm81_4dx', seatType: SeatTypeEnum.STANDARD, dayType: DayTypeEnum.WEEKDAY, price: 150000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
-  { id: 'tp_010', hallId: 'h_lm81_4dx', seatType: SeatTypeEnum.STANDARD, dayType: DayTypeEnum.WEEKEND, price: 180000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
-  { id: 'tp_011', hallId: 'h_lm81_4dx', seatType: SeatTypeEnum.VIP, dayType: DayTypeEnum.WEEKDAY, price: 200000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
-  { id: 'tp_012', hallId: 'h_lm81_4dx', seatType: SeatTypeEnum.VIP, dayType: DayTypeEnum.WEEKEND, price: 230000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
+  { id: 'tp_009', hallId: 'h_lm81_4dx', seatType: 'STANDARD', dayType: 'WEEKDAY', price: 150000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
+  { id: 'tp_010', hallId: 'h_lm81_4dx', seatType: 'STANDARD', dayType: 'WEEKEND', price: 180000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
+  { id: 'tp_011', hallId: 'h_lm81_4dx', seatType: 'VIP', dayType: 'WEEKDAY', price: 200000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
+  { id: 'tp_012', hallId: 'h_lm81_4dx', seatType: 'VIP', dayType: 'WEEKEND', price: 230000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
   // Premium Hall pricing
-  { id: 'tp_013', hallId: 'h_lm81_premium', seatType: SeatTypeEnum.STANDARD, dayType: DayTypeEnum.WEEKDAY, price: 100000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
-  { id: 'tp_014', hallId: 'h_lm81_premium', seatType: SeatTypeEnum.STANDARD, dayType: DayTypeEnum.WEEKEND, price: 120000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
-  { id: 'tp_015', hallId: 'h_lm81_premium', seatType: SeatTypeEnum.VIP, dayType: DayTypeEnum.WEEKDAY, price: 150000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
-  { id: 'tp_016', hallId: 'h_lm81_premium', seatType: SeatTypeEnum.VIP, dayType: DayTypeEnum.WEEKEND, price: 180000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
+  { id: 'tp_013', hallId: 'h_lm81_premium', seatType: 'STANDARD', dayType: 'WEEKDAY', price: 100000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
+  { id: 'tp_014', hallId: 'h_lm81_premium', seatType: 'STANDARD', dayType: 'WEEKEND', price: 120000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
+  { id: 'tp_015', hallId: 'h_lm81_premium', seatType: 'VIP', dayType: 'WEEKDAY', price: 150000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
+  { id: 'tp_016', hallId: 'h_lm81_premium', seatType: 'VIP', dayType: 'WEEKEND', price: 180000, createdAt: '2025-01-01T10:00:00Z', updatedAt: '2025-01-01T10:00:00Z' },
 ];
 
 // ========== HELPER FUNCTIONS ==========
@@ -943,7 +943,7 @@ export const getHallsByCinemaId = (cinemaId: string): Hall[] =>
   mockHalls.filter((h) => h.cinemaId === cinemaId);
 
 export const getSeatsByHallId = (hallId: string): Seat[] =>
-  seatsByHall[hallId] || [];
+  mockSeats.filter((s) => s.hallId === hallId);
 
 export const getShowtimeSeatsByShowtimeId = (showtimeId: string): ShowtimeSeat[] =>
   mockShowtimeSeats.filter((s) => s.showtimeId === showtimeId);
