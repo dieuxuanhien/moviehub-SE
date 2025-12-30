@@ -28,11 +28,12 @@ export default function RootLayout({
         <QueryClientProviders>
           <ClerkProvider
             appearance={{
+              theme: 'simple',
               variables: {
                 colorPrimary: '#f43f5e',
               },
             }}
-            afterSignOutUrl="/admin/login"
+            afterSignOutUrl="/"
           >
             <PageWrapper>
             

@@ -1,8 +1,6 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Tag } from 'lucide-react';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import {
@@ -23,33 +21,54 @@ import {
 import { Label } from '@movie-hub/shacdn-ui/label';
 import { Input } from '@movie-hub/shacdn-ui/input';
 import { useToast } from '../_libs/use-toast';
-import { useGenres, useCreateGenre, useUpdateGenre, useDeleteGenre } from '@/libs/api';
-import type { Genre } from '@/libs/api/types';
+// import api from '@/lib/api';
+import type { Genre } from '../_libs/types';
+
+const mockGenres: Genre[] = [
+  { id: 'g_001', name: 'Action' },
+  { id: 'g_002', name: 'Horror' },
+  { id: 'g_003', name: 'Drama' },
+  { id: 'g_004', name: 'Comedy' },
+  { id: 'g_005', name: 'Sci-Fi' },
+  { id: 'g_006', name: 'Romance' },
+  { id: 'g_007', name: 'Thriller' },
+  { id: 'g_008', name: 'Animation' },
+];
 
 export default function GenresPage() {
+  const [genres, setGenres] = useState<Genre[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingGenre, setEditingGenre] = useState<Genre | null>(null);
-  const [genreSearch, setGenreSearch] = useState('');
   const [formData, setFormData] = useState({
     name: '',
   });
   const { toast } = useToast();
 
-  // API hooks
-  const { data: genresData = [], isLoading: loading, error } = useGenres();
-  const genres = genresData || [];
-  const createGenre = useCreateGenre();
-  const updateGenre = useUpdateGenre();
-  const deleteGenre = useDeleteGenre();
+  useEffect(() => {
+    fetchGenres();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Show error toast if query fails
-  if (error) {
-    toast({
-      title: 'Error',
-      description: 'Failed to fetch genres',
-      variant: 'destructive',
-    });
-  }
+  const fetchGenres = async () => {
+    try {
+      setLoading(true);
+      // const response = await api.get('/genres');
+      // setGenres(response.data);
+      
+      // Mock data with delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setGenres(mockGenres);
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch genres',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
@@ -64,15 +83,22 @@ export default function GenresPage() {
     try {
       if (editingGenre) {
         // Update existing genre
-        await updateGenre.mutateAsync({ id: editingGenre.id, data: formData });
+        // await api.put(`/genres/${editingGenre.id}`, formData);
+        toast({ title: 'Success', description: 'Genre updated successfully' });
       } else {
         // Create new genre
-        await createGenre.mutateAsync(formData);
+        // await api.post('/genres', formData);
+        toast({ title: 'Success', description: 'Genre created successfully' });
       }
       setDialogOpen(false);
+      fetchGenres();
       resetForm();
     } catch {
-      // Error toast already shown by mutation hooks
+      toast({
+        title: 'Error',
+        description: editingGenre ? 'Failed to update genre' : 'Failed to create genre',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -90,9 +116,15 @@ export default function GenresPage() {
     }
 
     try {
-      await deleteGenre.mutateAsync(id);
+      // await api.delete(`/genres/${id}`);
+      toast({ title: 'Success', description: 'Genre deleted successfully' });
+      fetchGenres();
     } catch {
-      // Error toast already shown by mutation hook
+      toast({
+        title: 'Error',
+        description: 'Failed to delete genre',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -102,11 +134,6 @@ export default function GenresPage() {
       name: '',
     });
   };
-
-  // Filter genres based on search
-  const filteredGenres = genres.filter((g: Genre) =>
-    g.name.toLowerCase().includes(genreSearch.toLowerCase())
-  );
 
   return (
     <div className="space-y-6">
@@ -132,17 +159,9 @@ export default function GenresPage() {
           <CardHeader>
             <CardTitle>All Genres</CardTitle>
             <CardDescription>
-              {filteredGenres.length} of {genres.length} genre{genres.length !== 1 ? 's' : ''} found
+              {genres.length} genre{genres.length !== 1 ? 's' : ''} in total
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Input
-              placeholder="🔍 Search genres by name..."
-              value={genreSearch}
-              onChange={(e) => setGenreSearch(e.target.value)}
-              className="w-full h-11 border-gray-200 focus:border-purple-400 focus:ring-purple-200 mb-6"
-            />
-          </CardContent>
         </Card>
 
         {loading ? (
@@ -167,22 +186,9 @@ export default function GenresPage() {
               </Button>
             </CardContent>
           </Card>
-        ) : filteredGenres.length === 0 ? (
-          <Card>
-            <CardContent className="py-16 text-center">
-              <Tag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 mb-4">No genres match your search.</p>
-              <Button
-                variant="outline"
-                onClick={() => setGenreSearch('')}
-              >
-                Clear Search
-              </Button>
-            </CardContent>
-          </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredGenres.map((genre) => (
+            {genres.map((genre) => (
               <Card 
                 key={genre.id} 
                 className="group hover:shadow-lg transition-all duration-200 hover:-translate-y-1 border-2 hover:border-purple-200"
