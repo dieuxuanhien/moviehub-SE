@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, startTransition } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -21,16 +21,8 @@ import {
 } from '@movie-hub/shacdn-ui/select';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import { useToast } from '../../_libs/use-toast';
-import { useAdminApi } from '@/libs/admin-api';
-import type { Movie } from '../../_libs/types';
-
-interface MovieRelease {
-  id: string;
-  movieId: string;
-  startDate: string;
-  endDate: string;
-  note: string;
-}
+import { useCreateMovieRelease, useUpdateMovieRelease } from '@/libs/api';
+import type { Movie, MovieRelease } from '@/libs/api/types';
 
 interface MovieReleaseDialogProps {
   open: boolean;
@@ -49,7 +41,8 @@ export default function MovieReleaseDialog({
   preSelectedMovieId,
   onSuccess,
 }: MovieReleaseDialogProps) {
-  const api = useAdminApi();
+  const createMovieRelease = useCreateMovieRelease();
+  const updateMovieRelease = useUpdateMovieRelease();
   const [formData, setFormData] = useState({
     movieId: '',
     startDate: '',
@@ -60,11 +53,27 @@ export default function MovieReleaseDialog({
 
   useEffect(() => {
     if (editingRelease) {
+      // Helper to format date - handle both string and Date objects
+      const formatDate = (date: string | Date | undefined): string => {
+        if (!date) return '';
+        if (typeof date === 'string') {
+          // If it's already in YYYY-MM-DD format, return as-is
+          if (date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            return date;
+          }
+          // If it's ISO format with time, extract date part
+          return date.split('T')[0];
+        }
+        // If it's a Date object, convert to YYYY-MM-DD
+        return date.toISOString().split('T')[0];
+      };
+
       setFormData({
-        movieId: editingRelease.movieId,
-        startDate: editingRelease.startDate,
-        endDate: editingRelease.endDate,
-        note: editingRelease.note,
+        // Fall back to editingRelease.movie?.id when movieId missing from BE
+        movieId: editingRelease.movieId || editingRelease.movie?.id || '',
+        startDate: formatDate(editingRelease.startDate),
+        endDate: formatDate(editingRelease.endDate),
+        note: editingRelease.note || '',
       });
     } else if (preSelectedMovieId) {
       // Pre-fill movieId when opening from Movies page
@@ -94,7 +103,7 @@ export default function MovieReleaseDialog({
   };
 
   const handleSubmit = async () => {
-    if (!formData.movieId || !formData.startDate || !formData.endDate || !formData.note) {
+    if (!formData.movieId || !formData.startDate || !formData.endDate) {
       toast({
         title: 'Validation Error',
         description: 'Please fill in all required fields',
@@ -104,43 +113,40 @@ export default function MovieReleaseDialog({
     }
 
     try {
+      // Build payloads: create requires movieId, update should not change relation
+      const basePayload = {
+        // Send ISO timestamps to avoid backend parsing ambiguity
+        startDate: new Date(formData.startDate).toISOString(),
+        endDate: new Date(formData.endDate).toISOString(),
+        note: formData.note || undefined, // note is optional in backend
+      };
+
+      const createPayload = { movieId: formData.movieId, ...basePayload };
+
+      // Temporary debug log: inspect payload before submit
+      console.log('[MovieReleaseDialog] submit payload (create):', createPayload);
+      console.log('[MovieReleaseDialog] submit payload (update):', basePayload);
+
       if (editingRelease) {
-        await api.movieReleases.update(editingRelease.id, {
-          movieId: formData.movieId,
-          startDate: formData.startDate,
-          endDate: formData.endDate,
-          note: formData.note,
-        });
-        toast({
-          title: 'Success',
-          description: 'Movie release updated successfully',
-        });
+        // For update, omit movieId to avoid backend validation rejecting relation changes
+        await updateMovieRelease.mutateAsync({ id: editingRelease.id, data: basePayload });
       } else {
-        await api.movieReleases.create({
-          movieId: formData.movieId,
-          startDate: formData.startDate,
-          endDate: formData.endDate,
-          note: formData.note,
-        });
-        toast({
-          title: 'Success',
-          description: 'Movie release created successfully',
-        });
+        await createMovieRelease.mutateAsync(createPayload);
       }
 
       onOpenChange(false);
       resetForm();
       onSuccess?.();
     } catch {
-      toast({
-        title: 'Error',
-        description: `Failed to ${editingRelease ? 'update' : 'create'} movie release`,
-        variant: 'destructive',
-      });
+      // Error toast already shown by mutation hooks
     }
   };
 
-  const selectedMovie = movies.find(m => m.id === formData.movieId);
+  const selectedId = formData.movieId || editingRelease?.movieId || '';
+  const selectedMovie = movies.find((m) => m.id === selectedId) || editingRelease?.movie;
+  const selectedLabel = selectedMovie
+    ? `${selectedMovie.title} (${selectedMovie.runtime} mins)`
+    : (selectedId ? `Movie (${selectedId})` : undefined);
   const isMovieDisabled = !!preSelectedMovieId;
 
   return (
@@ -155,32 +161,35 @@ export default function MovieReleaseDialog({
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="movieId">Movie *</Label>
-            {isMovieDisabled ? (
-              <Input
-                id="movieId"
-                value={selectedMovie?.title || ''}
-                disabled
-                className="bg-gray-50"
-              />
-            ) : (
-              <Select
-                value={formData.movieId}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, movieId: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select movie" />
-                </SelectTrigger>
-                <SelectContent>
-                  {movies.map((movie) => (
-                    <SelectItem key={movie.id} value={movie.id}>
-                      {movie.title} ({movie.runtime} mins)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            <Select
+              value={selectedId}
+              onValueChange={(value) => {
+                // Use startTransition to schedule a low-priority state update
+                // which avoids synchronous unmounts of portal children
+                startTransition(() => {
+                  setFormData((prev) => ({ ...prev, movieId: value }));
+                });
+              }}
+              disabled={isMovieDisabled}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select movie">
+                  {selectedLabel}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {editingRelease && !movies.find(m => m.id === editingRelease.movieId) && (
+                  <SelectItem key={`injected-${editingRelease.movieId}`} value={editingRelease.movieId}>
+                    {editingRelease.movie ? `${editingRelease.movie.title} (${editingRelease.movie.runtime} mins) - Current` : `Movie (${editingRelease.movieId}) - Current`}
+                  </SelectItem>
+                )}
+                {movies.map((movie) => (
+                  <SelectItem key={movie.id} value={movie.id}>
+                    {movie.title} ({movie.runtime} mins)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -209,7 +218,7 @@ export default function MovieReleaseDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="note">Note *</Label>
+            <Label htmlFor="note">Note</Label>
             <Textarea
               id="note"
               value={formData.note}

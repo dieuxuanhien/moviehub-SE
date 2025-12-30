@@ -6,7 +6,6 @@ import {
   Param,
   Patch,
   Post,
-  Query,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -15,7 +14,6 @@ import { TransformInterceptor } from '../../../common/interceptor/transform.inte
 import { ClerkAuthGuard } from '../../../common/guard/clerk-auth.guard';
 import { CurrentUserId } from '../../../common/decorator/current-user-id.decorator';
 import {
-  AdminShowtimeFilterDTO,
   BatchCreateShowtimesInput,
   CreateShowtimeRequest,
   UpdateSeatStatusRequest,
@@ -32,8 +30,8 @@ export class ShowtimeController {
 
   @Get()
   @UseGuards(ClerkAuthGuard)
-  getShowtimes(@Query() filter: AdminShowtimeFilterDTO) {
-    return this.showtimeService.getShowtimes(filter);
+  test() {
+    return 'Oke';
   }
 
   @Get(':id/seats')
@@ -43,12 +41,6 @@ export class ShowtimeController {
     @CurrentUserId() userId: string
   ) {
     return this.showtimeService.getShowtimeSeats(showtimeId, userId);
-  }
-
-  @Get(':id')
-  @UseGuards(ClerkAuthGuard)
-  getShowtime(@Param('id') showtimeId: string) {
-    return this.showtimeService.getShowtime(showtimeId);
   }
 
   @Get('showtime/:showtimeId/ttl')

@@ -3,9 +3,9 @@ import { z } from 'zod';
 
 export const CreateMovieReleaseSchema = z
   .object({
-    movieId: z.uuid(),
+    movieId: z.uuid().optional(),
     startDate: z.coerce.date(),
-    endDate: z.coerce.date().optional(),
+    endDate: z.coerce.date(),
     note: z.string().max(500).optional(),
   })
   .strict();
