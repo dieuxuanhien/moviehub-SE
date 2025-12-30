@@ -10,8 +10,11 @@ const nextConfig = {
   // See: https://nx.dev/recipes/next/next-config-setup
   nx: {},
   
-  // Enable standalone output for optimized Docker builds (reduces image size by 80%)
-  output: 'standalone',
+  // Skip prerendering admin routes that require runtime API calls
+  typescript: {
+    tsconfigPath: './tsconfig.json'
+  },
+  
   images: {
     remotePatterns: [
       {
@@ -20,6 +23,19 @@ const nextConfig = {
       },
   
     ],
+  },
+
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Provide empty modules for server-side only dependencies in client bundle
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        'class-transformer/storage': false,
+        'class-transformer': false,
+        'class-validator': false,
+      };
+    }
+    return config;
   },
 };
 

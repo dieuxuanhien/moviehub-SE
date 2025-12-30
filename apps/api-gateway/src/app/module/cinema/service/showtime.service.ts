@@ -1,5 +1,4 @@
 import {
-  AdminShowtimeFilterDTO,
   BatchCreateShowtimesInput,
   CinemaMessage,
   CreateShowtimeRequest,
@@ -16,12 +15,6 @@ export class ShowtimeService {
     @Inject(SERVICE_NAME.CINEMA) private readonly cinemaClient: ClientProxy
   ) {}
 
-  async getShowtimes(filter: AdminShowtimeFilterDTO) {
-    return lastValueFrom(
-      this.cinemaClient.send(CinemaMessage.SHOWTIME.FILTER_SHOWTIME, filter)
-    );
-  }
-
   async getCinemas() {
     return lastValueFrom(this.cinemaClient.send(CinemaMessage.GET_CINEMAS, {}));
   }
@@ -34,12 +27,6 @@ export class ShowtimeService {
       })
     );
     return { data: result };
-  }
-
-  async getShowtime(showtimeId: string) {
-    return lastValueFrom(
-      this.cinemaClient.send(CinemaMessage.SHOWTIME.GET_SHOWTIME, showtimeId)
-    );
   }
 
   async getSessionTTL(showtimeId: string, userId: string) {

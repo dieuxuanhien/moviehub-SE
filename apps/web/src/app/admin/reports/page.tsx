@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import {
@@ -59,7 +61,7 @@ import {
   TabsTrigger,
 } from '@movie-hub/shacdn-ui/tabs';
 import { Badge } from '@movie-hub/shacdn-ui/badge';
-import type { Cinema, Movie } from '../_libs/types';
+import type { Cinema, Movie } from '@/libs/api/types';
 import { mockCinemas, mockMovies } from '../_libs/mockData';
 
 // Mock data for reports
