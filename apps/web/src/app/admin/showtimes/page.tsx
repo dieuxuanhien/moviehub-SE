@@ -1,8 +1,6 @@
 // src/app/(admin)/showtimes/page.tsx
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { useState, useEffect } from 'react';
 import { Plus, Calendar as CalendarIcon, Clock, Trash2, Pencil } from 'lucide-react';
 import { Button } from '@movie-hub/shacdn-ui/button';
@@ -22,64 +20,132 @@ import {
   SelectValue,
 } from '@movie-hub/shacdn-ui/select';
 import { Badge } from '@movie-hub/shacdn-ui/badge';
+import { useToast } from '../_libs/use-toast';
 import { Calendar } from '@movie-hub/shacdn-ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@movie-hub/shacdn-ui/popover';
-import { useShowtimes, useDeleteShowtime, useMovies, useCinemas, useHallsGroupedByCinema } from '@/libs/api';
-import type { Showtime, Hall } from '@/libs/api/types';
+// import api from '@/lib/api';
+import type { Showtime, Movie, Cinema, Hall } from '../_libs/types';
 import { format } from 'date-fns';
-import ShowtimeDialog from '../_components/forms/ShowtimeDialog';
+
+import { mockShowtimes, mockMovies, mockCinemas, mockHalls } from '../_libs/mockData';
+import ShowtimeDialog from '../_components/ShowtimeDialog'; 
+
 
 export default function ShowtimesPage() {
+  const [showtimes, setShowtimes] = useState<Showtime[]>([]);
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const [halls, setHalls] = useState<Hall[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingShowtime, setEditingShowtime] = useState<Showtime | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date>(() => new Date()); // Set to today by default
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedCinemaId, setSelectedCinemaId] = useState('all');
   const [selectedMovieId, setSelectedMovieId] = useState('all');
-
-  // API hooks: pass date (now defaults to today)
-  const { data: showtimesData = [], isLoading: loading, refetch: refetchShowtimes } = useShowtimes({
-    cinemaId: selectedCinemaId !== 'all' ? selectedCinemaId : undefined,
-    movieId: selectedMovieId !== 'all' ? selectedMovieId : undefined,
-    date: selectedDate.toISOString().split('T')[0],
-  });
-  const showtimes = showtimesData || [];
-  const { data: moviesData = [] } = useMovies();
-  const movies = moviesData || [];
-  const moviesAdmin = movies;
-  const { data: cinemasData = [] } = useCinemas();
-  const cinemas = cinemasData || [];
-  const cinemasAdmin = cinemas;
-  const deleteShowtime = useDeleteShowtime();
-
-  // Halls: derive a flat halls list from grouped halls by cinema
-  const { data: hallsByCinema = {} } = useHallsGroupedByCinema();
-  const halls: Hall[] = Object.values(hallsByCinema).flatMap((g: { cinema: unknown; halls: unknown[] }) => (g.halls || []) as Hall[]);
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Trigger re-fetch when filters change (handled by React Query)
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, selectedCinemaId, selectedMovieId]);
 
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+
+      /*
+      // Build query params
+      const params: Record<string, string> = { 
+        date: format(selectedDate, 'yyyy-MM-dd') 
+      };
+      if (selectedCinemaId !== 'all') {
+        params.cinemaId = selectedCinemaId;
+      }
+      if (selectedMovieId !== 'all') {
+        params.movieId = selectedMovieId;
+      }
+
+      const [showtimesRes, moviesRes, cinemasRes] = await Promise.all([
+        api.get('/showtimes', { params }),
+        api.get('/movies'),
+        api.get('/cinemas', { params: { lat: 10.762622, lng: 106.660172 } }),
+      ]);
+      setShowtimes(showtimesRes.data);
+      setMovies(moviesRes.data);
+      setCinemas(cinemasRes.data);
+      */
+
+      // ⭐️ THAY THẾ API CALLS BẰNG MOCK DATA VÀ DELAY
+       await new Promise(resolve => setTimeout(resolve, 600)); 
+
+      // Lọc dữ liệu showtime theo ngày, rạp, phim
+      const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+      let filteredShowtimes = mockShowtimes.filter(st => 
+        format(new Date(st.startTime), 'yyyy-MM-dd') === selectedDateStr
+      );
+
+      // Filter by cinema if selected
+      if (selectedCinemaId !== 'all') {
+        filteredShowtimes = filteredShowtimes.filter(st => st.cinemaId === selectedCinemaId);
+      }
+
+      // Filter by movie if selected
+      if (selectedMovieId !== 'all') {
+        filteredShowtimes = filteredShowtimes.filter(st => st.movieId === selectedMovieId);
+      }
+
+      setShowtimes(filteredShowtimes);
+      setMovies(mockMovies);
+      setCinemas(mockCinemas);
+      setHalls(mockHalls); // Load all halls
+     // ⭐️ KẾT THÚC PHẦN THAY THẾ
+
+     
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch data',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // fetchHalls not needed with mock data - filtering happens in render
+  /*
+  const fetchHalls = async (cinemaId: string) => {
+    try {
+      const response = await api.get('/auditoriums', {
+        params: { cinemaId }
+      });
+      setHalls(response.data);
+    } catch {
+      console.error('Failed to fetch halls');
+    }
+  };
+  */
+
   const handleEdit = (showtime: Showtime) => {
-    // Showtime object should have movieId and movieReleaseId from API
-    // If it doesn't, try to find from the loaded data
-    const enrichedShowtime = {
-      ...showtime,
-      movieId: showtime.movieId || '',
-      movieReleaseId: showtime.movieReleaseId || '',
-    };
-    setEditingShowtime(enrichedShowtime);
+    setEditingShowtime(showtime);
     setDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteShowtime.mutateAsync(id);
+      // await api.delete(`/showtimes/showtime/${id}`);
+      toast({ title: 'Success', description: 'Showtime deleted successfully' });
+      fetchData();
     } catch {
-      // Error toast already shown by mutation hook
+      toast({
+        title: 'Error',
+        description: 'Failed to delete showtime',
+        variant: 'destructive',
+      });
     }
   };
 
-  const getStatusColor = (status: string | undefined) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'SELLING':
         return 'bg-green-100 text-green-700';
@@ -97,7 +163,7 @@ export default function ShowtimesPage() {
     if (!acc[movieId]) {
       acc[movieId] = [];
     }
-    acc[movieId].push(showtime as unknown as Showtime);
+    acc[movieId].push(showtime);
     return acc;
   }, {} as Record<string, Showtime[]>);
 
@@ -105,8 +171,8 @@ export default function ShowtimesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Suất Chiếu</h1>
-          <p className="text-gray-500 mt-1">Quản lý suất chiếu và lịch chiếu</p>
+          <h1 className="text-3xl font-bold tracking-tight">Showtimes</h1>
+          <p className="text-gray-500 mt-1">Manage movie showtimes and schedules</p>
         </div>
         <Button
           onClick={() => {
@@ -116,23 +182,22 @@ export default function ShowtimesPage() {
           className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Thêm Suất Chiếu
+          Add Showtime
         </Button>
       </div>
 
       <Card>
         <CardContent className="pt-6">
-          {/* Modern Filter Container with Gradient */}
-          <div className="p-4 bg-gradient-to-r from-purple-50 via-blue-50 to-pink-50 rounded-lg border border-purple-200/50 shadow-sm">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:max-w-4xl">
               {/* Date Picker */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">📅 Ngày</label>
+                <Label className="text-sm font-medium">Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button className="w-full justify-between h-11 bg-white border border-purple-200 hover:border-purple-300 hover:bg-purple-50 text-left text-black font-medium transition-colors">
-                      {selectedDate ? format(selectedDate, 'dd/MM/yyyy') : 'Chọn Ngày'}
-                      <CalendarIcon className="h-4 w-4 text-purple-600" />
+                    <Button variant="outline" className="w-full justify-between">
+                      {format(selectedDate, 'PPP')}
+                      <CalendarIcon className="h-4 w-4 opacity-50" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
@@ -140,31 +205,20 @@ export default function ShowtimesPage() {
                       mode="single"
                       selected={selectedDate}
                       onSelect={(date) => date && setSelectedDate(date)}
-                      className="[&_[role=button]]:text-black [&_[role=button]]:font-semibold"
                     />
-                    <div className="border-t p-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedDate(new Date())}
-                        className="w-full"
-                      >
-                        Đặt Lại Hôm Nay
-                      </Button>
-                    </div>
                   </PopoverContent>
                 </Popover>
               </div>
 
               {/* Cinema Filter */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">🏢 Rạp Chiếu</label>
+                <Label className="text-sm font-medium">Cinema</Label>
                 <Select value={selectedCinemaId} onValueChange={setSelectedCinemaId}>
-                  <SelectTrigger className="h-11 bg-white border border-purple-200 hover:border-purple-300 focus:border-purple-400 font-medium">
-                    <SelectValue placeholder="Tất Cả Rạp Chiếu" />
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Cinemas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tất Cả Rạp Chiếu</SelectItem>
+                    <SelectItem value="all">All Cinemas</SelectItem>
                     {cinemas.map((cinema) => (
                       <SelectItem key={cinema.id} value={cinema.id}>
                         {cinema.name}
@@ -176,13 +230,13 @@ export default function ShowtimesPage() {
 
               {/* Movie Filter */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">🎬 Phim</label>
+                <Label className="text-sm font-medium">Movie</Label>
                 <Select value={selectedMovieId} onValueChange={setSelectedMovieId}>
-                  <SelectTrigger className="h-11 bg-white border border-purple-200 hover:border-purple-300 focus:border-purple-400 font-medium">
-                    <SelectValue placeholder="Tất Cả Phim" />
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Movies" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tất Cả Phim</SelectItem>
+                    <SelectItem value="all">All Movies</SelectItem>
                     {movies.map((movie) => (
                       <SelectItem key={movie.id} value={movie.id}>
                         {movie.title}
@@ -193,44 +247,23 @@ export default function ShowtimesPage() {
               </div>
             </div>
 
-            {/* Active Filters Display */}
-            {(selectedCinemaId !== 'all' || selectedMovieId !== 'all') && (
-              <div className="flex flex-wrap gap-2 pt-3 mt-3 border-t border-purple-200/50">
-                {selectedCinemaId !== 'all' && (
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-full border border-purple-200 shadow-sm">
-                    <span className="text-xs text-gray-600">Rạp: <span className="font-semibold text-purple-700">{cinemas.find(c => c.id === selectedCinemaId)?.name || selectedCinemaId}</span></span>
-                    <button onClick={() => setSelectedCinemaId('all')} className="text-purple-400 hover:text-purple-600">✕</button>
-                  </div>
-                )}
-                {selectedMovieId !== 'all' && (
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-full border border-purple-200 shadow-sm">
-                    <span className="text-xs text-gray-600">Phim: <span className="font-semibold text-purple-700">{movies.find(m => m.id === selectedMovieId)?.title || selectedMovieId}</span></span>
-                    <button onClick={() => setSelectedMovieId('all')} className="text-purple-400 hover:text-purple-600">✕</button>
-                  </div>
-                )}
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-500">
+                {showtimes.length} showtimes scheduled
               </div>
-            )}
-          </div>
-
-          {/* Stats Row */}
-          <div className="flex items-center justify-between mt-4">
-            <div className="text-sm font-medium text-gray-700">
-              <span className="text-purple-600 font-bold">{showtimes.length}</span> suất chiếu được lên lịch
+              {(selectedCinemaId !== 'all' || selectedMovieId !== 'all') && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setSelectedCinemaId('all');
+                    setSelectedMovieId('all');
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              )}
             </div>
-            {(selectedCinemaId !== 'all' || selectedMovieId !== 'all') && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  setSelectedCinemaId('all');
-                  setSelectedMovieId('all');
-                  setSelectedDate(new Date());
-                }}
-                className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800"
-              >
-                ✕ Xóa Tất Cả Bộ Lọc
-              </Button>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -238,56 +271,29 @@ export default function ShowtimesPage() {
       <div className="space-y-4">
         {loading ? (
           <Card>
-            <CardContent className="py-12 text-center">Đang tải...</CardContent>
+            <CardContent className="py-12 text-center">Loading...</CardContent>
           </Card>
         ) : Object.keys(groupedShowtimes).length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
-              Không có suất chiếu nào được lên lịch cho ngày này
+              No showtimes scheduled for this date
             </CardContent>
           </Card>
         ) : (
           Object.entries(groupedShowtimes).map(([movieId, movieShowtimes]) => {
-            // Try to get movieTitle from showtime response (BE provides this if movie-service call succeeds)
-            let movieTitle = movieShowtimes[0]?.movieTitle;
-            
-            // Fallback: if movieTitle not in showtime response, look up from movies array
-            if (!movieTitle) {
-              const movie = moviesAdmin.find((m) => m.id === movieId);
-              movieTitle = movie?.title;
-            }
-            
-            // Final fallback if movie not found in either place
-            if (!movieTitle) {
-              movieTitle = `Phim Không Xác Định (${movieId})`;
-            }
-            
-            const movie = moviesAdmin.find((m) => m.id === movieId);
-            
-            // Log if title had to fallback (helps identify if BE is returning movieTitle)
-            if (!movieShowtimes[0]?.movieTitle && movie?.title) {
-              console.log('[ShowtimesPage] Using movie title from movies API (BE movieTitle was null)', {
-                movieId,
-                movieTitle: movie.title,
-              });
-            }
-            
+            const movie = movies.find((m) => m.id === movieId);
             return (
               <Card key={movieId}>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    <span>{movieTitle}</span>
+                    <span>{movie?.title || 'Unknown Movie'}</span>
                     <Badge variant="secondary">
-                      {movieShowtimes.length} phiên chiếu
+                      {movieShowtimes.length} sessions
                     </Badge>
                   </CardTitle>
-                  {movie && (
-                    <CardDescription>
-                      {movie.runtime && `${movie.runtime} phút`}
-                      {movie.ageRating && movie.runtime && ' · '}
-                      {movie.ageRating}
-                    </CardDescription>
-                  )}
+                  <CardDescription>
+                    {movie?.runtime} mins · {movie?.ageRating}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -329,24 +335,19 @@ export default function ShowtimesPage() {
                               <div className="flex items-center gap-2 text-sm text-gray-600">
                                 <Clock className="h-4 w-4" />
                                 {format(new Date(showtime.startTime), 'HH:mm')} -{' '}
-                                {movie?.runtime ? (() => {
-                                  const startDate = new Date(showtime.startTime);
-                                  const endDate = new Date(startDate.getTime() + movie.runtime * 60 * 1000);
-                                  return format(endDate, 'HH:mm');
-                                })() : 'N/A'}
+                                {format(new Date(showtime.endTime), 'HH:mm')}
                               </div>
 
                               <div className="flex items-center justify-between">
                                 <Badge className={getStatusColor(showtime.status)}>
                                   {showtime.status}
                                 </Badge>
+                                <Badge variant="outline">{showtime.dayType}</Badge>
                               </div>
 
-                              {showtime.availableSeats !== undefined && (
-                                <div className="text-sm text-gray-500">
-                                  {showtime.availableSeats} ghế còn trống
-                                </div>
-                              )}
+                              <div className="text-sm text-gray-500">
+                                {showtime.availableSeats}/{showtime.totalSeats} seats available
+                              </div>
 
                               <div className="flex flex-wrap gap-2">
                                 <Badge variant="outline">{showtime.format}</Badge>
@@ -360,7 +361,7 @@ export default function ShowtimesPage() {
                                     th: 'Thai'
                                   }[showtime.language] || showtime.language}
                                 </Badge>
-                                {showtime.subtitles && showtime.subtitles.length > 0 && (
+                                {showtime.subtitles.length > 0 && (
                                   <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
                                     📝 {showtime.subtitles.map(s => ({
                                       vi: 'Phụ đề Việt',
@@ -395,12 +396,12 @@ export default function ShowtimesPage() {
             setEditingShowtime(null);
           }
         }}
-        movies={moviesAdmin}
-        cinemas={cinemasAdmin}
+        movies={movies}
+        cinemas={cinemas}
         halls={halls}
         editingShowtime={editingShowtime}
         onSuccess={() => {
-          refetchShowtimes();
+          fetchData();
         }}
       />
     </div>

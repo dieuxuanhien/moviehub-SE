@@ -1,9 +1,7 @@
 // src/app/(dashboard)/cinemas/page.tsx
 'use client';
 
-export const dynamic = 'force-dynamic';
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Search, MoreVertical, Edit, Trash2, MapPin, Phone, Mail, Star, Clock, Users } from 'lucide-react';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import { Input } from '@movie-hub/shacdn-ui/input';
@@ -28,12 +26,13 @@ import {
 } from '@movie-hub/shacdn-ui/dialog';
 import { Label } from '@movie-hub/shacdn-ui/label';
 import { Textarea } from '@movie-hub/shacdn-ui/textarea';
-// removed unused toast import
-import { useCinemas, useCreateCinema, useUpdateCinema, useDeleteCinema, useHallsGroupedByCinema } from '@/libs/api';
-import type { CreateCinemaRequest as ApiCreateCinemaRequest } from '@/libs/api';
-import type { Cinema, CreateCinemaRequest } from '@/libs/api/types';
+import { useToast } from '../_libs/use-toast';
+import { mockCinemas, mockHalls } from '../_libs/mockData';
+import type { Cinema, CinemaStatus, CreateCinemaRequest } from '../_libs/types';
 
 export default function CinemasPage() {
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -45,32 +44,39 @@ export default function CinemasPage() {
     district: '',
     phone: '',
     email: '',
-    website: '',
-    latitude: undefined,
-    longitude: undefined,
     description: '',
-    amenities: [],
-    facilities: {},
-    images: [],
-    virtualTour360Url: '',
-    operatingHours: { open: '', close: '' } as any,
-    socialMedia: { facebook: '', instagram: '', twitter: '' } as any,
     timezone: 'Asia/Ho_Chi_Minh',
+    amenities: [],
+    images: [],
   });
-  // toast not used in this page
+  const { toast } = useToast();
 
-  // API hooks
-  const { data: cinemasData = [], isLoading: loading } = useCinemas();
-  const cinemas = cinemasData || [];
-  const { data: hallsByCinema = {} } = useHallsGroupedByCinema();
-  const createCinema = useCreateCinema();
-  const updateCinema = useUpdateCinema();
-  const deleteCinema = useDeleteCinema();
+  const fetchCinemas = async () => {
+    try {
+      setLoading(true);
+      // ⭐️ PHẦN THAY THẾ: Dùng dữ liệu giả
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setCinemas(mockCinemas);
+      // ⭐️ KẾT THÚC PHẦN THAY THẾ
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch cinemas',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Calculate halls count for each cinema - using actual API data
+  useEffect(() => {
+    fetchCinemas();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Calculate halls count for each cinema
   const getHallsCount = (cinemaId: string) => {
-    const hallsForCinema = hallsByCinema[cinemaId]?.halls || [];
-    return hallsForCinema.length;
+    return mockHalls.filter((hall) => hall.cinemaId === cinemaId).length;
   };
 
   // Parse operating hours to display format
@@ -104,74 +110,40 @@ export default function CinemasPage() {
     return '24/7';
   };
 
-  // Normalize operating hours from DB format to form format (open/close time inputs)
-  const normalizeOperatingHours = (hours: any) => {
-    if (!hours) return { open: '', close: '' };
-    
-    const h = hours as Record<string, any>;
-    
-    // Already in open/close format
-    if (h.open && h.close) {
-      return { open: h.open, close: h.close };
-    }
-    
-    // Parse from mon_sun format (e.g., "9:00 - 24:00")
-    if (h.mon_sun && typeof h.mon_sun === 'string') {
-      const parts = h.mon_sun.split(' - ');
-      if (parts.length === 2) {
-        return {
-          open: parts[0].trim(),
-          close: parts[1].trim(),
-        };
-      }
-    }
-    
-    // Parse from day format (e.g., "9:00-24:00")
-    const firstValue = Object.values(h)[0];
-    if (typeof firstValue === 'string' && firstValue.includes('-')) {
-      const parts = firstValue.split('-');
-      if (parts.length === 2) {
-        return {
-          open: parts[0].trim(),
-          close: parts[1].trim(),
-        };
-      }
-    }
-    
-    return { open: '', close: '' };
-  };
-
   const handleSubmit = async () => {
     try {
-      // Normalize operatingHours back to mon_sun format for API
-      const submitData = { ...formData };
-      if (formData.operatingHours?.open && formData.operatingHours?.close) {
-        submitData.operatingHours = {
-          mon_sun: `${formData.operatingHours.open} - ${formData.operatingHours.close}`,
-        };
-      }
-      
       if (selectedCinema) {
-        await updateCinema.mutateAsync({ id: selectedCinema.id, data: submitData });
+        // Mock update
+        toast({ title: 'Success', description: 'Cinema updated successfully' });
       } else {
-        // ensure API-required fields have defaults
-        const apiPayload = { ...submitData, district: submitData?.district ?? '' } as ApiCreateCinemaRequest;
-        await createCinema.mutateAsync(apiPayload);
+        // Mock create
+        toast({ title: 'Success', description: 'Cinema created successfully' });
       }
       setDialogOpen(false);
+      fetchCinemas();
       resetForm();
     } catch {
-      // Error toast already shown by mutation hooks
+      toast({
+        title: 'Error',
+        description: 'Failed to save cinema',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleDelete = async () => {
     if (!selectedCinema) return;
     try {
-      await deleteCinema.mutateAsync(selectedCinema.id);
+      // Mock delete
+      toast({ title: 'Success', description: 'Cinema deleted successfully' });
       setDeleteDialogOpen(false);
+      fetchCinemas();
     } catch {
-      // Error toast already shown by mutation hook
+      toast({
+        title: 'Error',
+        description: 'Failed to delete cinema',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -183,25 +155,16 @@ export default function CinemasPage() {
       district: '',
       phone: '',
       email: '',
-      website: '',
-      latitude: undefined,
-      longitude: undefined,
       description: '',
-      amenities: [],
-      facilities: {},
-      images: [],
-      virtualTour360Url: '',
-      operatingHours: {},
-      socialMedia: {},
       timezone: 'Asia/Ho_Chi_Minh',
+      amenities: [],
+      images: [],
     });
     setSelectedCinema(null);
   };
 
   const openEditDialog = (cinema: Cinema) => {
     setSelectedCinema(cinema);
-    // Normalize operatingHours to open/close format for the form
-    const normalizedHours = normalizeOperatingHours(cinema.operatingHours);
     setFormData({
       name: cinema.name,
       address: cinema.address,
@@ -214,12 +177,12 @@ export default function CinemasPage() {
       longitude: cinema.longitude,
       description: cinema.description || '',
       amenities: cinema.amenities || [],
-      facilities: cinema.facilities || {},
+      facilities: cinema.facilities,
       images: cinema.images || [],
       virtualTour360Url: cinema.virtualTour360Url || '',
-      operatingHours: normalizedHours,
-      socialMedia: cinema.socialMedia || {},
-      timezone: cinema.timezone || 'Asia/Ho_Chi_Minh',
+      operatingHours: cinema.operatingHours,
+      socialMedia: cinema.socialMedia,
+      timezone: cinema.timezone,
     });
     setDialogOpen(true);
   };
@@ -229,7 +192,7 @@ export default function CinemasPage() {
     cinema.city.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getStatusColor = (status: string | undefined) => {
+  const getStatusColor = (status: CinemaStatus) => {
     switch (status) {
       case 'ACTIVE':
         return 'bg-green-100 text-green-700 hover:bg-green-200';
@@ -248,9 +211,9 @@ export default function CinemasPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Rạp Chiếu Phim
+            Cinemas
           </h1>
-          <p className="text-gray-500 mt-1">Quản lý các vị trí rạp chiếu phim của bạn trên toàn hệ thống</p>
+          <p className="text-gray-500 mt-1">Manage your cinema locations across the system</p>
         </div>
         <Button
           onClick={() => {
@@ -260,7 +223,7 @@ export default function CinemasPage() {
           className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Thêm Rạp
+          Add Cinema
         </Button>
       </div>
 
@@ -271,7 +234,7 @@ export default function CinemasPage() {
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Tìm kiếm rạp theo tên hoặc thành phố..."
+                placeholder="Search cinemas by name or city..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 border-purple-200 focus:border-purple-400"
@@ -283,7 +246,7 @@ export default function CinemasPage() {
         <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-600 to-pink-600 text-white">
           <CardContent className="pt-6 text-center">
             <div className="text-3xl font-bold mb-1">{filteredCinemas.length}</div>
-            <p className="text-sm text-white/80">Tổng số Rạp</p>
+            <p className="text-sm text-white/80">Total Cinemas</p>
           </CardContent>
         </Card>
       </div>
@@ -293,13 +256,13 @@ export default function CinemasPage() {
         {loading ? (
           <Card className="col-span-full">
             <CardContent className="py-12 text-center">
-              <div className="animate-pulse text-gray-400">Đang tải rạp...</div>
+              <div className="animate-pulse text-gray-400">Loading cinemas...</div>
             </CardContent>
           </Card>
         ) : filteredCinemas.length === 0 ? (
           <Card className="col-span-full">
             <CardContent className="py-12 text-center text-gray-500">
-              Không tìm thấy rạp
+              No cinemas found
             </CardContent>
           </Card>
         ) : (
@@ -332,7 +295,7 @@ export default function CinemasPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => openEditDialog(cinema)}>
                           <Edit className="mr-2 h-4 w-4" />
-                          Chỉnh Sửa
+                          Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
@@ -342,7 +305,7 @@ export default function CinemasPage() {
                           className="text-red-600"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
-                          Xóa
+                          Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -395,11 +358,11 @@ export default function CinemasPage() {
                     <div className="flex items-center justify-center gap-1 mb-1">
                       <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
                       <span className="font-bold text-lg text-purple-900">
-                        {cinema.rating?.toFixed(1) || '-'}
+                        {cinema.rating?.toFixed(1) || 'N/A'}
                       </span>
                     </div>
                     <p className="text-xs text-gray-600">
-                      {cinema.totalReviews === 0 ? 'No reviews' : `${cinema.totalReviews} reviews`}
+                      {cinema.totalReviews} reviews
                     </p>
                   </div>
 
@@ -465,16 +428,16 @@ export default function CinemasPage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedCinema ? 'Chỉnh sửa Rạp' : 'Thêm Rạp Mới'}
+              {selectedCinema ? 'Edit Cinema' : 'Add New Cinema'}
             </DialogTitle>
             <DialogDescription>
-              Điền thông tin chi tiết rạp chiếu phim bên dưới
+              Fill in the cinema details below
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Tên Rạp *</Label>
+                <Label htmlFor="name">Cinema Name *</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -487,7 +450,7 @@ export default function CinemasPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="address">Địa Chỉ *</Label>
+              <Label htmlFor="address">Address *</Label>
               <Input
                 id="address"
                 value={formData.address}
@@ -500,32 +463,32 @@ export default function CinemasPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="city">Thành Phố *</Label>
+                <Label htmlFor="city">City *</Label>
                 <Input
                   id="city"
                   value={formData.city}
                   onChange={(e) =>
                     setFormData({ ...formData, city: e.target.value })
                   }
-                  placeholder="Thành phố Hồ Chí Minh"
+                  placeholder="Ho Chi Minh City"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="district">Quận/Huyện</Label>
+                <Label htmlFor="district">District</Label>
                 <Input
                   id="district"
                   value={formData.district}
                   onChange={(e) =>
                     setFormData({ ...formData, district: e.target.value })
                   }
-                  placeholder="Quận 1"
+                  placeholder="District 1"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="phone">Điện Thoại</Label>
+                <Label htmlFor="phone">Phone</Label>
                 <Input
                   id="phone"
                   value={formData.phone}
@@ -550,60 +513,7 @@ export default function CinemasPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="website">Website</Label>
-              <Input
-                id="website"
-                value={formData.website}
-                onChange={(e) =>
-                  setFormData({ ...formData, website: e.target.value })
-                }
-                placeholder="https://cinema.example.com"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="latitude">Vĩ Độ</Label>
-                <Input
-                  id="latitude"
-                  type="number"
-                  step="any"
-                  value={formData.latitude || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, latitude: e.target.value ? parseFloat(e.target.value) : undefined })
-                  }
-                  placeholder="10.762622"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="longitude">Kinh Độ</Label>
-                <Input
-                  id="longitude"
-                  type="number"
-                  step="any"
-                  value={formData.longitude || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, longitude: e.target.value ? parseFloat(e.target.value) : undefined })
-                  }
-                  placeholder="106.660172"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="timezone">Múi Giờ</Label>
-              <Input
-                id="timezone"
-                value={formData.timezone}
-                onChange={(e) =>
-                  setFormData({ ...formData, timezone: e.target.value })
-                }
-                placeholder="Asia/Ho_Chi_Minh"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Mô Tả</Label>
+              <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -614,168 +524,6 @@ export default function CinemasPage() {
                 rows={4}
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="virtualTour360Url">URL Tour 360 Ảo</Label>
-              <Input
-                id="virtualTour360Url"
-                value={formData.virtualTour360Url}
-                onChange={(e) =>
-                  setFormData({ ...formData, virtualTour360Url: e.target.value })
-                }
-                placeholder="https://example.com/virtual-tour"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="amenities">Tiện Nghi (phân tách bằng dấu phẩy)</Label>
-                <Input
-                  id="amenities"
-                  value={formData.amenities?.join(', ') || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, amenities: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })
-                  }
-                  placeholder="WiFi, Parking, Food Court"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="images">Hình Ảnh (URL phân tách bằng dấu phẩy)</Label>
-                <Input
-                  id="images"
-                  value={formData.images?.join(', ') || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, images: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })
-                  }
-                  placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              {/* Facilities: dynamic key/value list */}
-              <div className="space-y-2 flex flex-col">
-                <Label>Cơ Sở Vật Chất</Label>
-                <div className="space-y-2 flex-1">
-                  {(Object.entries(formData.facilities || {}) as [string, any][]).map(([key, value], idx) => (
-                    <div key={key || idx} className="flex gap-2">
-                      <Input
-                        value={key}
-                        placeholder="key"
-                        onChange={(e) => {
-                          const newKey = e.target.value;
-                          const fac = { ...(formData.facilities || {}) } as Record<string, any>;
-                          // rename key
-                          const val = fac[key];
-                          delete fac[key];
-                          fac[newKey] = val;
-                          setFormData({ ...formData, facilities: fac });
-                        }}
-                      />
-                      <Input
-                        value={value === undefined || value === null ? '' : String(value)}
-                        placeholder="value"
-                        onChange={(e) => {
-                          const fac = { ...(formData.facilities || {}) } as Record<string, any>;
-                          const parsed = (() => {
-                            const v = e.target.value.trim();
-                            if (v === 'true') return true;
-                            if (v === 'false') return false;
-                            const n = Number(v);
-                            return Number.isNaN(n) ? v : n;
-                          })();
-                          fac[key || `key_${idx}`] = parsed;
-                          setFormData({ ...formData, facilities: fac });
-                        }}
-                      />
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          const fac = { ...(formData.facilities || {}) } as Record<string, any>;
-                          delete fac[key];
-                          setFormData({ ...formData, facilities: fac });
-                        }}
-                      >
-                        Xóa
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                <Button
-                  onClick={() => {
-                    const fac = { ...(formData.facilities || {}) } as Record<string, any>;
-                    const newKey = `facility_${Date.now()}`;
-                    fac[newKey] = '';
-                    setFormData({ ...formData, facilities: fac });
-                  }}
-                  className="mt-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Thêm Cơ Sở Vật Chất
-                </Button>
-              </div>
-
-              {/* Operating hours: open/close times */}
-              <div className="space-y-2">
-                <Label>Giờ Hoạt Động</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-sm">Mở Cửa</Label>
-                    <Input
-                      type="time"
-                      value={(formData.operatingHours?.open as string) || ''}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          operatingHours: { ...(formData.operatingHours || {}), open: e.target.value },
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm">Đóng Cửa</Label>
-                    <Input
-                      type="time"
-                      value={(formData.operatingHours?.close as string) || ''}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          operatingHours: { ...(formData.operatingHours || {}), close: e.target.value },
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Social media: common fields */}
-              <div className="space-y-2">
-                <Label>Mạng Xã Hội</Label>
-                <div className="space-y-2">
-                  <Input
-                    placeholder="URL Facebook"
-                    value={(formData.socialMedia?.facebook as string) || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, socialMedia: { ...(formData.socialMedia || {}), facebook: e.target.value } })
-                    }
-                  />
-                  <Input
-                    placeholder="URL Instagram"
-                    value={(formData.socialMedia?.instagram as string) || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, socialMedia: { ...(formData.socialMedia || {}), instagram: e.target.value } })
-                    }
-                  />
-                  <Input
-                    placeholder="URL Twitter / X"
-                    value={(formData.socialMedia?.twitter as string) || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, socialMedia: { ...(formData.socialMedia || {}), twitter: e.target.value } })
-                    }
-                  />
-                </div>
-              </div>
-            </div>
           </div>
           <DialogFooter>
             <Button
@@ -785,13 +533,13 @@ export default function CinemasPage() {
                 resetForm();
               }}
             >
-              Hủy bỏ
+              Cancel
             </Button>
             <Button
               onClick={handleSubmit}
               className="bg-gradient-to-r from-purple-600 to-pink-600"
             >
-              {selectedCinema ? 'Cập nhật' : 'Tạo'}
+              {selectedCinema ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -801,9 +549,9 @@ export default function CinemasPage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Xóa Rạp</DialogTitle>
+            <DialogTitle>Delete Cinema</DialogTitle>
             <DialogDescription>
-              Bạn có chắc chắn muốn xóa {selectedCinema?.name}? Hành động này không thể hoàn tác.
+              Are you sure you want to delete {selectedCinema?.name}? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -811,13 +559,13 @@ export default function CinemasPage() {
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
             >
-              Hủy bỏ
+              Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
             >
-              Xóa
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>
