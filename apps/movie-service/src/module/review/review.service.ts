@@ -32,30 +32,12 @@ export class ReviewService {
         skip,
         take: limit,
         orderBy,
-        include: {
-          movie: {
-            select: {
-              id: true,
-              title: true,
-            },
-          },
-        },
       }),
       this.prisma.review.count({ where }),
     ]);
 
     return {
-      data: data.map((review) => ({
-        id: review.id,
-        movieId: review.movieId,
-        userId: review.userId,
-        rating: review.rating,
-        content: review.content,
-        createdAt: review.createdAt,
-        movie: review.movie
-          ? { id: review.movie.id, title: review.movie.title }
-          : undefined,
-      })),
+      data: data as unknown as ReviewResponse[],
       message: 'Get reviews successfully',
       meta: {
         page,
