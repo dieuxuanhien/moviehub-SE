@@ -38,14 +38,14 @@ export const useCreateGenre = (data: CreateGenreRequest) => {
       return await createGenre(data, token);
     },
     onMutate() {
-      toast.loading('Đang tạo thể loại...');
+      toast.loading('Creating genre...');
     },
     onSuccess: () => {
-      toast.success('Tạo thể loại thành công');
+      toast.success('Genre created successfully');
       queryClient.invalidateQueries({ queryKey: ['genres'] });
     },
     onError: (error) => {
-      toast.error(error?.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+      toast.error(error?.message || 'Something went wrong. Please try again.');
     },
   });
 };
@@ -61,15 +61,15 @@ export const useUpdateGenre = (id: string, genreData: CreateGenreRequest) => {
       return await updateGenre(id, genreData, token);
     },
     onMutate() {
-      toast.loading('Đang cập nhật thể loại...');
+      toast.loading('Updating genre...');
     },
     onSuccess: () => {
-      toast.success('Cập nhật thể loại thành công');
+      toast.success('Genre updated successfully');
       queryClient.invalidateQueries({ queryKey: ['genres'] });
       queryClient.invalidateQueries({ queryKey: ['genres', id] });
     },
     onError: (error) => {
-      toast.error(error?.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+      toast.error(error?.message || 'Something went wrong. Please try again.');
     },
   });
 };
@@ -85,15 +85,15 @@ export const useDeleteGenre = (id: string) => {
       // return await deleteGenre(id, token);
     },
     onMutate() {
-      toast.loading('Đang xóa thể loại...');
+      toast.loading('Deleting genre...');
     },
     onSuccess: () => {
-      toast.success('Xóa thể loại thành công');
+      toast.success('Genre deleted successfully');
       queryClient.invalidateQueries({ queryKey: ['genres'] });
       queryClient.invalidateQueries({ queryKey: ['genres', id] });
     },
     onError: (error) => {
-      toast.error(error?.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+      toast.error(error?.message || 'Something went wrong. Please try again.');
     },
   });
 };

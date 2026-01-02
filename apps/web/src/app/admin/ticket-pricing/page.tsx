@@ -1,9 +1,7 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { useState, useEffect } from 'react';
-import { Building2, DoorOpen, DollarSign, Calendar, Sparkles, Edit2, Check, X, AlertCircle } from 'lucide-react';
+import { Building2, DoorOpen, DollarSign, Calendar, Sparkles, Edit2, Check, X } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -18,15 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@movie-hub/shacdn-ui/select';
-import { Alert, AlertDescription } from '@movie-hub/shacdn-ui/alert';
 import { Badge } from '@movie-hub/shacdn-ui/badge';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import { Input } from '@movie-hub/shacdn-ui/input';
 import { useToast } from '../_libs/use-toast';
-import { useCinemas, useHallsByCinema, useTicketPricing, useUpdateTicketPricing } from '@/libs/api';
-import type { SeatType, DayType } from '@/libs/api/types';
-import { SeatTypeEnum, DayTypeEnum } from '@movie-hub/shared-types/cinema/enum';
-import type { TicketPricingFiltersParams } from '@/libs/api';
+import type { Cinema, Hall, SeatType, DayType } from '../_libs/types';
+import { mockCinemas, mockHalls } from '../_libs/mockData';
 
 interface TicketPricing {
   id: string;
@@ -37,33 +32,95 @@ interface TicketPricing {
 }
 
 export default function TicketPricingPage() {
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
+  const [halls, setHalls] = useState<Hall[]>([]);
   const [selectedCinemaId, setSelectedCinemaId] = useState('');
   const [selectedHallId, setSelectedHallId] = useState('');
+  const [pricings, setPricings] = useState<TicketPricing[]>([]);
+  const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState('');
   const { toast } = useToast();
 
-  // API hooks
-  const { data: cinemasData = [], isError: cinemasError } = useCinemas();
-  const cinemas = cinemasData || [];
-  const { data: hallsData = [], isLoading: hallsLoading, isError: hallsError } = useHallsByCinema(selectedCinemaId);
-  const halls = hallsData || [];
-  const { data: pricingsData = [], isLoading: loading, isError: pricingsError } = useTicketPricing(selectedHallId ? { hallId: selectedHallId } as TicketPricingFiltersParams & { hallId: string } : undefined);
-  const pricings = pricingsData || [];
-  const updatePricing = useUpdateTicketPricing();
-
-  // Reset hall ID when cinema changes
   useEffect(() => {
-    setSelectedHallId('');
-  }, [selectedCinemaId]);
+    fetchCinemas();
+  }, []);
 
-  const handleCinemaChange = (cinemaId: string) => {
-    setSelectedCinemaId(cinemaId);
+  const fetchCinemas = async () => {
+    try {
+      setCinemas(mockCinemas);
+      setHalls(mockHalls);
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch cinemas',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const fetchPricings = async (hallId: string) => {
+    try {
+      setLoading(true);
+      // Mock data
+      const seatTypes: SeatType[] = ['STANDARD', 'VIP', 'COUPLE', 'PREMIUM', 'WHEELCHAIR'];
+      const dayTypes: DayType[] = ['WEEKDAY', 'WEEKEND', 'HOLIDAY'];
+      
+      // Each combination has its own price
+      const mockPrices: Record<string, number> = {
+        // STANDARD
+        'STANDARD_WEEKDAY': 75000,
+        'STANDARD_WEEKEND': 90000,
+        'STANDARD_HOLIDAY': 110000,
+        // VIP
+        'VIP_WEEKDAY': 120000,
+        'VIP_WEEKEND': 150000,
+        'VIP_HOLIDAY': 180000,
+        // COUPLE
+        'COUPLE_WEEKDAY': 200000,
+        'COUPLE_WEEKEND': 250000,
+        'COUPLE_HOLIDAY': 300000,
+        // PREMIUM
+        'PREMIUM_WEEKDAY': 150000,
+        'PREMIUM_WEEKEND': 180000,
+        'PREMIUM_HOLIDAY': 220000,
+        // WHEELCHAIR
+        'WHEELCHAIR_WEEKDAY': 75000,
+        'WHEELCHAIR_WEEKEND': 90000,
+        'WHEELCHAIR_HOLIDAY': 110000,
+      };
+
+      const mockPricings: TicketPricing[] = [];
+      let idCounter = 1;
+
+      seatTypes.forEach(seatType => {
+        dayTypes.forEach(dayType => {
+          const key = `${seatType}_${dayType}`;
+          mockPricings.push({
+            id: `pricing_${idCounter++}`,
+            hallId: hallId,
+            seatType: seatType,
+            dayType: dayType,
+            price: mockPrices[key] || 75000,
+          });
+        });
+      });
+
+      setPricings(mockPricings);
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch ticket pricings',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleHallChange = (hallId: string) => {
     setSelectedHallId(hallId);
-    // Pricings will automatically fetch via React Query when selectedHallId changes
+    fetchPricings(hallId);
   };
 
   const startEdit = (pricing: TicketPricing) => {
@@ -81,25 +138,27 @@ export default function TicketPricingPage() {
       const newPrice = parseInt(editPrice);
       if (isNaN(newPrice) || newPrice <= 0) {
         toast({
-          title: 'Giá Không Hợp Lệ',
-          description: 'Vui lòng nhập giá hợp lệ lớn hơn 0',
+          title: 'Error',
+          description: 'Please enter a valid price',
           variant: 'destructive',
         });
         return;
       }
 
-      await updatePricing.mutateAsync({ id: pricingId, data: { price: newPrice } });
+      setPricings(prev =>
+        prev.map(p => (p.id === pricingId ? { ...p, price: newPrice } : p))
+      );
 
       toast({
-        title: 'Thành Công',
-        description: `Giá vé đã được cập nhật thành ${formatPrice(newPrice)}`,
+        title: 'Success',
+        description: 'Ticket pricing updated successfully',
       });
 
       cancelEdit();
-    } catch (error) {
+    } catch {
       toast({
-        title: 'Cập Nhật Thất Bại',
-        description: error instanceof Error ? error.message : 'Không thể cập nhật giá vé. Vui lòng thử lại.',
+        title: 'Error',
+        description: 'Failed to update ticket pricing',
         variant: 'destructive',
       });
     }
@@ -114,13 +173,13 @@ export default function TicketPricingPage() {
 
   const getSeatTypeIcon = (type: SeatType) => {
     switch (type) {
-      case SeatTypeEnum.VIP:
+      case 'VIP':
         return '👑';
-      case SeatTypeEnum.COUPLE:
+      case 'COUPLE':
         return '💑';
-      case SeatTypeEnum.PREMIUM:
+      case 'PREMIUM':
         return '⭐';
-      case SeatTypeEnum.WHEELCHAIR:
+      case 'WHEELCHAIR':
         return '♿';
       default:
         return '🪑';
@@ -129,22 +188,22 @@ export default function TicketPricingPage() {
 
   const getDayTypeColor = (type: DayType) => {
     switch (type) {
-      case DayTypeEnum.WEEKDAY:
+      case 'WEEKDAY':
         return 'bg-blue-100 text-blue-700 border-blue-200';
-      case DayTypeEnum.WEEKEND:
+      case 'WEEKEND':
         return 'bg-purple-100 text-purple-700 border-purple-200';
-      case DayTypeEnum.HOLIDAY:
+      case 'HOLIDAY':
         return 'bg-amber-100 text-amber-700 border-amber-200';
     }
   };
 
   const getDayTypeIcon = (type: DayType) => {
     switch (type) {
-      case DayTypeEnum.WEEKDAY:
+      case 'WEEKDAY':
         return '📅';
-      case DayTypeEnum.WEEKEND:
+      case 'WEEKEND':
         return '🎉';
-      case DayTypeEnum.HOLIDAY:
+      case 'HOLIDAY':
         return '✨';
     }
   };
@@ -161,8 +220,8 @@ export default function TicketPricingPage() {
     return acc;
   }, {} as Record<SeatType, TicketPricing[]>);
 
-  const seatTypeOrder: SeatType[] = [SeatTypeEnum.STANDARD, SeatTypeEnum.VIP, SeatTypeEnum.COUPLE, SeatTypeEnum.PREMIUM, SeatTypeEnum.WHEELCHAIR];
-  const dayTypeOrder: DayType[] = [DayTypeEnum.WEEKDAY, DayTypeEnum.WEEKEND, DayTypeEnum.HOLIDAY];
+  const seatTypeOrder: SeatType[] = ['STANDARD', 'VIP', 'COUPLE', 'PREMIUM', 'WHEELCHAIR'];
+  const dayTypeOrder: DayType[] = ['WEEKDAY', 'WEEKEND', 'HOLIDAY'];
 
   return (
     <div className="space-y-6">
@@ -170,124 +229,65 @@ export default function TicketPricingPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
             <DollarSign className="h-8 w-8 text-emerald-600" />
-            Quản Lý Giá Vé
+            Ticket Pricing Management
           </h1>
-          <p className="text-gray-500 mt-1">Quản lý giá vé theo loại ghế và loại ngày</p>
+          <p className="text-gray-500 mt-1">Manage ticket prices by seat type and day type</p>
         </div>
       </div>
 
       {/* Selectors */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Chọn Phòng</CardTitle>
-          <CardDescription>Chọn rạp và phòng để quản lý giá vé</CardDescription>
+          <CardTitle className="text-lg">Select Hall</CardTitle>
+          <CardDescription>Choose a cinema and hall to manage ticket pricing</CardDescription>
         </CardHeader>
         <CardContent>
-          {cinemasError && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>Không thể tải rạp. Vui lòng làm mới trang.</AlertDescription>
-            </Alert>
-          )}
-          {/* Modern Filter Container */}
-          <div className="p-4 bg-gradient-to-r from-purple-50 via-blue-50 to-pink-50 rounded-lg border border-purple-200/50 shadow-sm">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Cinema Selector */}
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">🏢 Rạp</label>
-                <Select value={selectedCinemaId} onValueChange={handleCinemaChange}>
-                  <SelectTrigger className="h-11 border-purple-200 focus:ring-purple-500">
-                    <SelectValue placeholder="Chọn rạp" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cinemas.map((cinema) => (
-                      <SelectItem key={cinema.id} value={cinema.id}>
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4" />
-                          {cinema.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Hall Selector */}
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">🚪 Phòng</label>
-                <Select
-                  value={selectedHallId}
-                  onValueChange={handleHallChange}
-                  disabled={!selectedCinemaId || hallsLoading}
-                >
-                  <SelectTrigger className="h-11 border-purple-200 focus:ring-purple-500 disabled:opacity-50">
-                    <SelectValue placeholder={hallsLoading ? "Đang tải phòng..." : "Chọn phòng"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {halls.length === 0 && !hallsLoading && (
-                      <div className="px-2 py-1.5 text-sm text-gray-500">
-                        Không có phòng nào cho rạp này
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Cinema Selector */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Cinema</label>
+              <Select value={selectedCinemaId} onValueChange={setSelectedCinemaId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select cinema" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cinemas.map((cinema) => (
+                    <SelectItem key={cinema.id} value={cinema.id}>
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4" />
+                        {cinema.name}
                       </div>
-                    )}
-                    {halls.map((hall) => (
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Hall Selector */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Hall</label>
+              <Select
+                value={selectedHallId}
+                onValueChange={handleHallChange}
+                disabled={!selectedCinemaId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select hall" />
+                </SelectTrigger>
+                <SelectContent>
+                  {halls
+                    .filter(h => h.cinemaId === selectedCinemaId)
+                    .map((hall) => (
                       <SelectItem key={hall.id} value={hall.id}>
                         <div className="flex items-center gap-2">
                           <DoorOpen className="h-4 w-4" />
-                          {hall.name} - {hall.capacity} ghế
+                          {hall.name} - {hall.capacity} seats
                         </div>
                       </SelectItem>
                     ))}
-                  </SelectContent>
-                </Select>
-                {hallsError && (
-                  <p className="text-sm text-red-500 mt-1">Không thể tải phòng cho rạp này</p>
-                )}
-              </div>
+                </SelectContent>
+              </Select>
             </div>
-
-            {/* Active Filter Chips */}
-            {(selectedCinemaId || selectedHallId) && (
-              <div className="flex flex-wrap gap-2 pt-3 border-t border-purple-200/50">
-                {selectedCinemaId && (
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-full border border-purple-200 shadow-sm">
-                    <span className="text-xs font-medium text-gray-700">
-                      🏢 {cinemas.find(c => c.id === selectedCinemaId)?.name}
-                    </span>
-                    <button
-                      onClick={() => {
-                        setSelectedCinemaId('');
-                        setSelectedHallId('');
-                      }}
-                      className="text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                )}
-                {selectedHallId && (
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-full border border-purple-200 shadow-sm">
-                    <span className="text-xs font-medium text-gray-700">
-                      🚪 {halls.find(h => h.id === selectedHallId)?.name}
-                    </span>
-                    <button
-                      onClick={() => setSelectedHallId('')}
-                      className="text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                )}
-                <button
-                  onClick={() => {
-                    setSelectedCinemaId('');
-                    setSelectedHallId('');
-                  }}
-                  className="text-xs font-medium text-purple-600 hover:text-purple-700 transition-colors ml-auto"
-                >
-                  Clear All
-                </button>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -295,13 +295,8 @@ export default function TicketPricingPage() {
       {loading ? (
         <div className="text-center py-12">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-emerald-600 border-r-transparent"></div>
-          <p className="mt-4 text-gray-500">Đang tải dữ liệu giá vé...</p>
+          <p className="mt-4 text-gray-500">Loading pricing data...</p>
         </div>
-      ) : pricingsError ? (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>Không thể tải dữ liệu giá vé. Vui lòng thử chọn phòng khác.</AlertDescription>
-        </Alert>
       ) : selectedHallId && pricings.length > 0 ? (
         <>
           {/* Hall Info */}
@@ -315,12 +310,12 @@ export default function TicketPricingPage() {
                   <div>
                     <h3 className="font-bold text-lg">{selectedHall?.name}</h3>
                     <p className="text-sm text-gray-600">
-                      {selectedCinema?.name} • {selectedHall?.capacity} ghế • {selectedHall?.type}
+                      {selectedCinema?.name} • {selectedHall?.capacity} seats • {selectedHall?.type}
                     </p>
                   </div>
                 </div>
                 <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
-                  {pricings.length} Luật Giá
+                  {pricings.length} Pricing Rules
                 </Badge>
               </div>
             </CardContent>
@@ -345,7 +340,7 @@ export default function TicketPricingPage() {
                       <div>
                         <CardTitle className="text-lg">{seatType}</CardTitle>
                         <CardDescription>
-                          Định giá cho ghế {seatType.toLowerCase()}
+                          Pricing for {seatType.toLowerCase()} seats
                         </CardDescription>
                       </div>
                     </div>
@@ -363,51 +358,31 @@ export default function TicketPricingPage() {
 
                             {editingId === pricing.id ? (
                               <div className="space-y-3">
-                                <div>
-                                  <label className="text-sm text-gray-600 mb-1 block">Giá (VND)</label>
-                                  <Input
-                                    type="number"
-                                    value={editPrice}
-                                    onChange={(e) => setEditPrice(e.target.value)}
-                                    placeholder="Nhập giá"
-                                    className="text-lg font-bold"
-                                    autoFocus
-                                    min="1"
-                                  />
-                                  {editPrice && parseInt(editPrice) > 0 && (
-                                    <p className="text-xs text-gray-500 mt-1">
-                                      = {formatPrice(parseInt(editPrice))}
-                                    </p>
-                                  )}
-                                </div>
+                                <Input
+                                  type="number"
+                                  value={editPrice}
+                                  onChange={(e) => setEditPrice(e.target.value)}
+                                  placeholder="Enter price"
+                                  className="text-lg font-bold"
+                                  autoFocus
+                                />
                                 <div className="flex gap-2">
                                   <Button
                                     size="sm"
                                     onClick={() => saveEdit(pricing.id)}
                                     className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-                                    disabled={updatePricing.isPending}
                                   >
-                                    {updatePricing.isPending ? (
-                                      <>
-                                        <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-r-transparent mr-1"></div>
-                                        Đang lưu...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Check className="h-4 w-4 mr-1" />
-                                        Lưu
-                                      </>
-                                    )}
+                                    <Check className="h-4 w-4 mr-1" />
+                                    Save
                                   </Button>
                                   <Button
                                     size="sm"
                                     variant="outline"
                                     onClick={cancelEdit}
                                     className="flex-1"
-                                    disabled={updatePricing.isPending}
                                   >
                                     <X className="h-4 w-4 mr-1" />
-                                    Hủy Bỏ
+                                    Cancel
                                   </Button>
                                 </div>
                               </div>
@@ -423,7 +398,7 @@ export default function TicketPricingPage() {
                                   className="w-full"
                                 >
                                   <Edit2 className="h-3 w-3 mr-1" />
-                                  Chỉnh Sửa Giá
+                                  Edit Price
                                 </Button>
                               </div>
                             )}
@@ -437,54 +412,46 @@ export default function TicketPricingPage() {
             })}
           </div>
 
-          {/* Chú Thích */}
+          {/* Legend */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Thông Tin Loại Ngày</CardTitle>
+              <CardTitle className="text-lg">Day Type Information</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <Calendar className="h-8 w-8 text-blue-600" />
                   <div>
-                    <p className="font-semibold text-blue-900">📅 Thứ Hai - Thứ Sáu</p>
-                    <p className="text-sm text-blue-700">Thứ Hai đến Thứ Sáu</p>
+                    <p className="font-semibold text-blue-900">📅 WEEKDAY</p>
+                    <p className="text-sm text-blue-700">Monday - Friday</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
                   <Calendar className="h-8 w-8 text-purple-600" />
                   <div>
-                    <p className="font-semibold text-purple-900">🎉 Thứ Bảy - Chủ Nhật</p>
-                    <p className="text-sm text-purple-700">Thứ Bảy và Chủ Nhật</p>
+                    <p className="font-semibold text-purple-900">🎉 WEEKEND</p>
+                    <p className="text-sm text-purple-700">Saturday - Sunday</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
                   <Sparkles className="h-8 w-8 text-amber-600" />
                   <div>
-                    <p className="font-semibold text-amber-900">✨ Ngày Lễ Công Cộng</p>
-                    <p className="text-sm text-amber-700">Các ngày lễ công cộng</p>
+                    <p className="font-semibold text-amber-900">✨ HOLIDAY</p>
+                    <p className="text-sm text-amber-700">Public holidays</p>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </>
-      ) : selectedHallId && pricings.length === 0 && !loading ? (
+      ) : (
         <Card>
           <CardContent className="py-16 text-center">
             <DollarSign className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Không tìm thấy quy tắc giá vé nào cho phòng này</p>
-            <p className="text-sm text-gray-400 mt-2">Liên hệ hỗ trợ để thiết lập giá vé cho phòng này</p>
+            <p className="text-gray-500">Select a cinema and hall to manage ticket pricing</p>
           </CardContent>
         </Card>
-      ) : !selectedHallId ? (
-        <Card>
-          <CardContent className="py-16 text-center">
-            <DollarSign className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Chọn rạp và phòng để quản lý giá vé</p>
-          </CardContent>
-        </Card>
-      ) : null}
+      )}
     </div>
   );
 }

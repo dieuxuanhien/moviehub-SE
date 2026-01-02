@@ -78,7 +78,7 @@ export default function DashboardPage() {
 
   const statCards = [
     { 
-      title: 'Tổng số phim', 
+      title: 'Total Movies', 
       value: stats.totalMovies, 
       icon: Film, 
       change: '+12.5%', 
@@ -87,7 +87,7 @@ export default function DashboardPage() {
       href: '/admin/movies'
     },
     { 
-      title: 'Tổng số rạp', 
+      title: 'Total Cinemas', 
       value: stats.totalCinemas, 
       icon: Building2, 
       change: '+8.2%', 
@@ -96,16 +96,16 @@ export default function DashboardPage() {
       href: '/admin/cinemas'
     },
     { 
-      title: 'Suất chiếu hôm nay', 
+      title: "Today's Showtimes", 
       value: stats.todayShowtimes, 
       icon: Calendar, 
-      change: 'Hoạt động hôm nay', 
+      change: 'Active today', 
       changeType: 'neutral' as const,
       color: 'from-emerald-500 to-emerald-600',
       href: '/admin/showtimes'
     },
     { 
-      title: 'Doanh thu tuần', 
+      title: 'Week Revenue', 
       value: `₫${(stats.weekRevenue / 1000000).toFixed(1)}M`, 
       icon: DollarSign, 
       change: '+18.7%', 
@@ -114,7 +114,7 @@ export default function DashboardPage() {
       href: '/admin/reports'
     },
     { 
-      title: 'Tổng đặt chỗ', 
+      title: 'Total Bookings', 
       value: stats.totalBookings, 
       icon: Ticket, 
       change: '+24.3%', 
@@ -123,10 +123,10 @@ export default function DashboardPage() {
       href: '/admin/reservations'
     },
     { 
-      title: 'Đánh giá trung bình', 
+      title: 'Average Rating', 
       value: stats.averageRating.toFixed(1), 
       icon: Star, 
-      change: 'Tuyệt vời', 
+      change: 'Excellent', 
       changeType: 'positive' as const,
       color: 'from-yellow-500 to-yellow-600',
       href: '/admin/reviews'
@@ -138,7 +138,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-200 border-t-purple-600"></div>
-          <p className="mt-4 text-gray-600 font-medium">Đang tải bảng điều khiển...</p>
+          <p className="mt-4 text-gray-600 font-medium">Loading Dashboard...</p>
         </div>
       </div>
     );
@@ -451,25 +451,25 @@ export default function DashboardPage() {
             <Link href="/admin/movies">
               <Button variant="outline" className="w-full h-24 flex flex-col gap-2 hover:bg-purple-50 hover:border-purple-300 transition-all">
                 <Plus className="h-6 w-6" />
-                <span>Thêm phim</span>
+                <span>Add Movie</span>
               </Button>
             </Link>
             <Link href="/admin/showtimes">
               <Button variant="outline" className="w-full h-24 flex flex-col gap-2 hover:bg-blue-50 hover:border-blue-300 transition-all">
                 <Plus className="h-6 w-6" />
-                <span>Thêm suất chiếu</span>
+                <span>Add Showtime</span>
               </Button>
             </Link>
             <Link href="/admin/cinemas">
               <Button variant="outline" className="w-full h-24 flex flex-col gap-2 hover:bg-emerald-50 hover:border-emerald-300 transition-all">
                 <Plus className="h-6 w-6" />
-                <span>Thêm rạp</span>
+                <span>Add Cinema</span>
               </Button>
             </Link>
             <Link href="/admin/reports">
               <Button variant="outline" className="w-full h-24 flex flex-col gap-2 hover:bg-pink-50 hover:border-pink-300 transition-all">
                 <TrendingUp className="h-6 w-6" />
-                <span>Xem báo cáo</span>
+                <span>View Reports</span>
               </Button>
             </Link>
           </div>
