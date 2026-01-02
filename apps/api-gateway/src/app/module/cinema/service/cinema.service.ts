@@ -1,7 +1,6 @@
 import {
   AdminGetShowtimesQuery,
   CinemaMessage,
-  CinemaStatusEnum,
   CreateCinemaRequest,
   GetShowtimesQuery,
   SERVICE_NAME,
@@ -19,10 +18,8 @@ export class CinemaService {
     @Inject(SERVICE_NAME.CINEMA) private readonly cinemaClient: ClientProxy
   ) {}
 
-  async getCinemas(status: CinemaStatusEnum) {
-    return lastValueFrom(
-      this.cinemaClient.send(CinemaMessage.GET_CINEMAS, status)
-    );
+  async getCinemas() {
+    return lastValueFrom(this.cinemaClient.send(CinemaMessage.GET_CINEMAS, {}));
   }
 
   async createCinema(createCinemaDto: CreateCinemaRequest) {

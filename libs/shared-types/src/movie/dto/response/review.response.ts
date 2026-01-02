@@ -1,12 +1,6 @@
 export interface ReviewResponse {
   id: string;
-  movieId: string;
-  userId: string;
-  rating: number;
-  content: string;
+  rating: Date;
+  content: Date;
   createdAt: Date;
-  movie?: {
-    id: string;
-    title: string;
-  };
 }

@@ -17,7 +17,7 @@ export default function PromoBanner() {
         <p className="text-gray-300 font-bold text-lg">Khuyến mãi</p>
 
         <Link
-          href="/promotions"
+          href="/discounts"
           className="relative z-10 group flex items-center gap-2 text-sm text-gray-300 cursor-pointer"
         >
           Xem tất cả

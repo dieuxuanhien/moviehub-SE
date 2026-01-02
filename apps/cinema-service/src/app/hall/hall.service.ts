@@ -3,7 +3,6 @@ import { PrismaService } from '../prisma.service';
 import {
   CreateHallRequest,
   HallDetailResponse,
-  HallStatusEnum,
   HallSummaryResponse,
   ResourceNotFoundException,
   UpdateHallRequest,
@@ -12,9 +11,7 @@ import {
 import { ServiceResult } from '@movie-hub/shared-types/common';
 import { HallMapper } from './hall.mapper';
 import { AutoPricingGenerator } from './pricing-ticket-template';
-import { CinemaStatus, SeatStatus } from '../../../generated/prisma';
-import { RpcException } from '@nestjs/microservices';
-import { PrismaClientKnownRequestError } from '../../../generated/prisma/runtime/library';
+import { SeatStatus } from '../../../generated/prisma';
 
 @Injectable()
 export class HallService {
@@ -35,11 +32,10 @@ export class HallService {
   }
 
   async getHallsOfCinema(
-    cinemaId: string,
-    status: HallStatusEnum
+    cinemaId: string
   ): Promise<ServiceResult<HallSummaryResponse[]>> {
     const halls = await this.prisma.halls.findMany({
-      where: { cinema_id: cinemaId, status: status },
+      where: { cinema_id: cinemaId },
       include: { seats: true },
     });
     return {
@@ -51,59 +47,30 @@ export class HallService {
   async createHall(
     createHallDto: CreateHallRequest
   ): Promise<ServiceResult<HallDetailResponse>> {
-    try {
-      const hall = await this.prisma.$transaction(async (db) => {
-        const cinema = await this.prisma.cinemas.findUnique({
-          where: { id: createHallDto.cinemaId },
-          select: { status: true },
-        });
-
-        if (!cinema) {
-          throw new ResourceNotFoundException(
-            'Cinema',
-            'id',
-            createHallDto.cinemaId
-          );
-        }
-
-        if (cinema.status !== CinemaStatus.ACTIVE) {
-          throw new RpcException({
-            summary: 'Cinema inactive',
-            statusCode: 409,
-            code: 'CINEMA_INACTIVE',
-            message: 'Cinema is not active',
-          });
-        }
-
-        const newHall = await db.halls.create({
-          data: HallMapper.toHallCreate(createHallDto),
-          include: { seats: true },
-        });
-
-        // Lấy seatTypes unique từ seats đã sinh
-        const seatTypes = [...new Set(newHall.seats.map((s) => s.type))];
-
-        // Tạo bảng giá mặc định
-        const pricingItems = AutoPricingGenerator.generate(
-          newHall.id,
-          seatTypes
-        );
-
-        // Insert pricing
-        await db.ticketPricing.createMany({
-          data: pricingItems,
-        });
-
-        return newHall;
+    const hall = await this.prisma.$transaction(async (db) => {
+      const newHall = await db.halls.create({
+        data: HallMapper.toHallCreate(createHallDto),
+        include: { seats: true },
       });
 
-      return {
-        data: HallMapper.toDetailResponse(hall),
-        message: 'Create hall successfully!',
-      };
-    } catch (e) {
-      throw new RpcException(e);
-    }
+      // Lấy seatTypes unique từ seats đã sinh
+      const seatTypes = [...new Set(newHall.seats.map((s) => s.type))];
+
+      // Tạo bảng giá mặc định
+      const pricingItems = AutoPricingGenerator.generate(newHall.id, seatTypes);
+
+      // Insert pricing
+      await db.ticketPricing.createMany({
+        data: pricingItems,
+      });
+
+      return newHall;
+    });
+
+    return {
+      data: HallMapper.toDetailResponse(hall),
+      message: 'Create hall successfully!',
+    };
   }
 
   async updateHall(
@@ -134,47 +101,13 @@ export class HallService {
   }
 
   async deleteHall(id: string): Promise<ServiceResult<void>> {
-    try {
-      await this.prisma.halls.delete({
-        where: { id },
-      });
-
-      return {
-        data: undefined,
-        message: 'Delete hall successfully!',
-      };
-    } catch (e) {
-      if (e instanceof PrismaClientKnownRequestError) {
-        // Hall không tồn tại
-        if (e.code === 'P2025') {
-          throw new RpcException({
-            summary: 'Delete hall failed',
-            statusCode: 404,
-            code: 'HALL_NOT_FOUND',
-            message: 'Hall does not exist',
-          });
-        }
-
-        // Hall đang được dùng (showtime / seat / pricing ...)
-        if (e.code === 'P2003') {
-          throw new RpcException({
-            summary: 'Delete hall failed',
-            statusCode: 400,
-            code: 'HALL_IN_USE',
-            message:
-              'Hall cannot be deleted because it is referenced by other entities',
-          });
-        }
-      }
-
-      // Fallback
-      throw new RpcException({
-        summary: 'Delete hall failed',
-        statusCode: 500,
-        code: 'DELETE_HALL_FAILED',
-        message: 'Unexpected error occurred while deleting hall',
-      });
-    }
+    await this.prisma.halls.delete({
+      where: { id },
+    });
+    return {
+      data: undefined,
+      message: 'Delete hall successfully!',
+    };
   }
 
   async updateSeatStatus(
