@@ -1,6 +1,8 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+export const dynamic = 'force-dynamic';
+
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Calendar as CalendarIcon, Clock, Film, Building2, Zap, History, ExternalLink } from 'lucide-react';
 import { Button } from '@movie-hub/shacdn-ui/button';
@@ -23,17 +25,46 @@ import {
 import { Badge } from '@movie-hub/shacdn-ui/badge';
 import { Checkbox } from '@movie-hub/shacdn-ui/checkbox';
 import { useToast } from '../_libs/use-toast';
-import type { Movie, Cinema, Hall, MovieRelease, BatchCreateShowtimesInput, BatchCreateResponse } from '../_libs/types';
-import { mockMovies, mockCinemas, mockHalls, mockReleases } from '../_libs/mockData';
+import type { BatchCreateShowtimesRequest as ApiBatchCreateRequest, Showtime as ApiShowtime, Hall as ApiHall, ShowtimeFormat as ApiShowtimeFormat } from '@/libs/api/types';
+
+// Frontend-specific types for batch showtimes form
+interface BatchCreateShowtimesInput {
+  movieId: string;
+  movieReleaseId: string;
+  cinemaId: string;
+  hallId: string;
+  startDate: string;
+  endDate: string;
+  timeSlots: string[];
+  repeatType: 'DAILY' | 'WEEKLY' | 'CUSTOM_WEEKDAYS';
+  weekdays?: number[];
+  format: string;
+  language: string;
+  subtitles: string[];
+}
+
+interface BatchCreateResponse {
+  createdCount: number;
+  skippedCount: number;
+  created: Array<{
+    id: string;
+    startTime: string;
+  }>;
+  skipped: Array<{
+    start: string;
+    reason: string;
+  }>;
+}
+import { useMovies, useCinemas, useHallsGroupedByCinema, useMovieReleases, useBatchCreateShowtimes } from '@/libs/api';
 
 const WEEKDAYS = [
-  { value: 1, label: 'Monday' },
-  { value: 2, label: 'Tuesday' },
-  { value: 3, label: 'Wednesday' },
-  { value: 4, label: 'Thursday' },
-  { value: 5, label: 'Friday' },
-  { value: 6, label: 'Saturday' },
-  { value: 0, label: 'Sunday' },
+  { value: 1, label: 'Thứ Hai' },
+  { value: 2, label: 'Thứ Ba' },
+  { value: 3, label: 'Thứ Tư' },
+  { value: 4, label: 'Thứ Năm' },
+  { value: 5, label: 'Thứ Sáu' },
+  { value: 6, label: 'Thứ Bảy' },
+  { value: 0, label: 'Chủ Nhật' },
 ];
 
 const TIME_SLOTS = [
@@ -43,15 +74,22 @@ const TIME_SLOTS = [
   '23:00',
 ];
 
-function BatchShowtimesContent() {
+export default function BatchShowtimesPage() {
   const searchParams = useSearchParams();
   const preSelectedMovieId = searchParams.get('movieId');
   const preSelectedReleaseId = searchParams.get('releaseId');
   
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [cinemas, setCinemas] = useState<Cinema[]>([]);
-  const [halls, setHalls] = useState<Hall[]>([]);
-  const [releases, setReleases] = useState<MovieRelease[]>([]);
+  // API hooks
+  const { data: moviesData = [] } = useMovies();
+  const movies = moviesData || [];
+  const { data: cinemasData = [] } = useCinemas();
+  const cinemas = cinemasData || [];
+  const { data: hallsByCinema = {} } = useHallsGroupedByCinema();
+  const halls: ApiHall[] = Object.values(hallsByCinema).flatMap((g: { halls?: ApiHall[] }) => g.halls || []);
+  const { data: movieReleasesData = [] } = useMovieReleases();
+  const movieReleases = movieReleasesData || [];
+  const batchCreateMutation = useBatchCreateShowtimes();
+
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<BatchCreateResponse | null>(null);
   const [history, setHistory] = useState<Array<{
@@ -62,67 +100,7 @@ function BatchShowtimesContent() {
     hall: string;
     period: string;
     result: BatchCreateResponse;
-  }>>([
-    {
-      id: '1',
-      timestamp: '2025-12-02T14:30:00Z',
-      movie: 'The Conjuring',
-      cinema: 'CGV Vincom Center',
-      hall: 'Hall 1',
-      period: '2025-12-05 → 2025-12-20',
-      result: {
-        createdCount: 48,
-        skippedCount: 2,
-        created: [
-          { id: 'st_001', startTime: '2025-12-05T14:00:00Z' },
-          { id: 'st_002', startTime: '2025-12-05T18:00:00Z' },
-        ],
-        skipped: [
-          { start: '2025-12-10T14:00:00Z', reason: 'TIME_CONFLICT' },
-          { start: '2025-12-15T21:00:00Z', reason: 'HALL_MAINTENANCE' },
-        ],
-      },
-    },
-    {
-      id: '2',
-      timestamp: '2025-12-02T10:15:00Z',
-      movie: 'Oppenheimer',
-      cinema: 'Lotte Cinema Diamond Plaza',
-      hall: 'IMAX Hall',
-      period: '2025-12-01 → 2025-12-31',
-      result: {
-        createdCount: 90,
-        skippedCount: 0,
-        created: [
-          { id: 'st_101', startTime: '2025-12-01T10:00:00Z' },
-          { id: 'st_102', startTime: '2025-12-01T14:30:00Z' },
-        ],
-        skipped: [],
-      },
-    },
-    {
-      id: '3',
-      timestamp: '2025-12-01T16:45:00Z',
-      movie: 'Spider-Man: No Way Home',
-      cinema: 'Galaxy Cinema Nguyen Du',
-      hall: 'Hall 3',
-      period: '2025-12-03 → 2025-12-10',
-      result: {
-        createdCount: 24,
-        skippedCount: 5,
-        created: [
-          { id: 'st_201', startTime: '2025-12-03T09:00:00Z' },
-        ],
-        skipped: [
-          { start: '2025-12-05T20:00:00Z', reason: 'TIME_CONFLICT' },
-          { start: '2025-12-06T20:00:00Z', reason: 'TIME_CONFLICT' },
-          { start: '2025-12-07T14:00:00Z', reason: 'HOLIDAY_PRICING_REQUIRED' },
-          { start: '2025-12-08T21:00:00Z', reason: 'HALL_UNAVAILABLE' },
-          { start: '2025-12-09T18:00:00Z', reason: 'TIME_CONFLICT' },
-        ],
-      },
-    },
-  ]);
+  }>>([]);
   
   const [formData, setFormData] = useState<BatchCreateShowtimesInput>({
     movieId: '',
@@ -142,53 +120,17 @@ function BatchShowtimesContent() {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  useEffect(() => {
     if (preSelectedMovieId && preSelectedReleaseId) {
       setFormData(prev => ({
         ...prev,
         movieId: preSelectedMovieId,
         movieReleaseId: preSelectedReleaseId,
       }));
-      fetchReleases(preSelectedMovieId);
     }
   }, [preSelectedMovieId, preSelectedReleaseId]);
 
-  const fetchData = async () => {
-    try {
-      setMovies(mockMovies);
-      setCinemas(mockCinemas);
-      setHalls(mockHalls);
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch data',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const fetchReleases = async (movieId: string) => {
-    try {
-      const filtered = mockReleases.filter(r => 
-        r.movieId === movieId && 
-        (r.status === 'ACTIVE' || r.status === 'UPCOMING')
-      );
-      setReleases(filtered);
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch movie releases',
-        variant: 'destructive',
-      });
-    }
-  };
-
   const handleMovieChange = (movieId: string) => {
     setFormData({ ...formData, movieId, movieReleaseId: '' });
-    fetchReleases(movieId);
   };
 
   const handleTimeSlotToggle = (time: string) => {
@@ -210,8 +152,8 @@ function BatchShowtimesContent() {
         !formData.hallId || !formData.startDate || !formData.endDate || 
         formData.timeSlots.length === 0) {
       toast({
-        title: 'Error',
-        description: 'Please fill all required fields',
+        title: 'Lỗi',
+        description: 'Vui lòng điền tất cả các trường bắt buộc',
         variant: 'destructive',
       });
       return;
@@ -219,8 +161,53 @@ function BatchShowtimesContent() {
 
     if (formData.repeatType === 'CUSTOM_WEEKDAYS' && (!formData.weekdays || formData.weekdays.length === 0)) {
       toast({
-        title: 'Error',
-        description: 'Please select at least one weekday',
+        title: 'Lỗi',
+        description: 'Vui lòng chọn ít nhất một ngày trong tuần',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate date format (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(formData.startDate)) {
+      toast({
+        title: 'Lỗi Xác Thực',
+        description: 'Ngày bắt đầu phải ở định dạng YYYY-MM-DD',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!dateRegex.test(formData.endDate)) {
+      toast({
+        title: 'Lỗi Xác Thực',
+        description: 'Ngày kết thúc phải ở định dạng YYYY-MM-DD',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate time format (HH:mm)
+    const timeRegex = /^\d{2}:\d{2}$/;
+    for (const time of formData.timeSlots) {
+      if (!timeRegex.test(time)) {
+        toast({
+          title: 'Lỗi Xác Thực',
+          description: `Định dạng giờ không hợp lệ: ${time}. Phải là HH:mm`,
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
+    // Validate date range
+    const startDate = new Date(formData.startDate);
+    const endDate = new Date(formData.endDate);
+    if (startDate > endDate) {
+      toast({
+        title: 'Lỗi Xác Thực',
+        description: 'Ngày bắt đầu không thể sau ngày kết thúc',
         variant: 'destructive',
       });
       return;
@@ -228,37 +215,102 @@ function BatchShowtimesContent() {
 
     try {
       setLoading(true);
-      // Mock batch create - in real app, call API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const mockResponse: BatchCreateResponse = {
-        createdCount: formData.timeSlots.length * 7,
-        skippedCount: Math.floor(Math.random() * 3),
-        created: formData.timeSlots.map((time, idx) => ({
-          id: `st_${Date.now()}_${idx}`,
-          startTime: `${formData.startDate}T${time}:00Z`,
-        })),
-        skipped: [],
+      
+      // Convert admin form shape to API request shape
+      // BE expects startDate/endDate at root level, not in dateRange wrapper
+      const apiRequest = {
+        movieId: formData.movieId,
+        movieReleaseId: formData.movieReleaseId,
+        cinemaId: formData.cinemaId,
+        hallId: formData.hallId,
+        startDate: formData.startDate,      // String in YYYY-MM-DD format
+        endDate: formData.endDate,          // String in YYYY-MM-DD format
+        timeSlots: formData.timeSlots,      // Array of HH:mm strings
+        repeatType: formData.repeatType,    // Add required field for BE
+        weekdays: formData.weekdays || [],  // Add required field for BE
+        format: formData.format as unknown as ApiShowtimeFormat,
+        language: formData.language,
+        subtitles: formData.subtitles || [],
       };
-      setResult(mockResponse);
+
+      console.log('[BatchShowtimes] Submitting request with data:', apiRequest);
+
+      const response = await batchCreateMutation.mutateAsync(apiRequest as ApiBatchCreateRequest);
+      // The backend returns an array of created showtimes (Showtime[]). Normalize to BatchCreateResponse
+      let normalized: BatchCreateResponse;
+      if (Array.isArray(response)) {
+        const created = (response as ApiShowtime[]).map(s => ({ id: s.id, startTime: s.startTime }));
+        normalized = {
+          createdCount: created.length,
+          skippedCount: 0,
+          created,
+          skipped: [],
+        };
+      } else {
+        // Fallback if API returns BatchCreateResponse directly
+        normalized = response as unknown as BatchCreateResponse;
+      }
+      setResult(normalized);
+
+      const selectedMovie = movies.find(m => m.id === formData.movieId);
+      const selectedCinema = cinemas.find(c => c.id === formData.cinemaId);
+      const selectedHall = halls.find(h => h.id === formData.hallId);
       
       setHistory(prev => [{
         id: Date.now().toString(),
         timestamp: new Date().toISOString(),
-        movie: selectedMovie?.title || 'Unknown',
-        cinema: selectedCinema?.name || 'Unknown',
-        hall: selectedHall?.name || 'Unknown',
+        movie: selectedMovie?.title || 'Không Xác Định',
+        cinema: selectedCinema?.name || 'Không Xác Định',
+        hall: selectedHall?.name || 'Không Xác Định',
         period: `${formData.startDate} → ${formData.endDate}`,
-        result: mockResponse,
-      }, ...prev].slice(0, 10));
+        result: normalized,
+      }, ...prev]);
+
+      toast({
+        title: 'Thành Công',
+        description: `Đã tạo ${normalized.createdCount} suất chiếu`,
+      });
+    } catch (error) {
+      console.error('[BatchShowtimes] Submission error:', error);
+      
+      // Extract error message from different error formats
+      let errorMessage = 'Không tạo được suất chiếu';
+      let statusCode: number | undefined;
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        const err = error as any;
+        
+        // Check for API response error
+        if (err.response?.data?.message) {
+          errorMessage = err.response.data.message;
+          statusCode = err.response?.status;
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
+        
+        // Log detailed error info for debugging
+        console.error('[BatchShowtimes] Detailed error info:', {
+          statusCode: err.response?.status,
+          errorCode: err.code,
+          message: err.message,
+          responseData: err.response?.data,
+          requestData: formData,
+        });
+      }
+      
+      // Show detailed error to user
+      let displayMessage = errorMessage;
+      if (statusCode === 400) {
+        displayMessage = `Lỗi xác thực: ${errorMessage}`;
+      } else if (statusCode === 500) {
+        displayMessage = `Lỗi máy chủ (500): ${errorMessage}. Kiểm tra bảng điều khiển trình duyệt để biết thêm chi tiết.`;
+      }
       
       toast({
-        title: 'Success',
-        description: `Created ${mockResponse.createdCount} showtimes successfully`,
-      });
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to create showtimes',
+        title: 'Lỗi',
+        description: displayMessage,
         variant: 'destructive',
       });
     } finally {
@@ -266,19 +318,15 @@ function BatchShowtimesContent() {
     }
   };
 
-  const selectedMovie = movies.find(m => m.id === formData.movieId);
-  const selectedCinema = cinemas.find(c => c.id === formData.cinemaId);
-  const selectedHall = halls.find(h => h.id === formData.hallId);
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
             <Zap className="h-8 w-8 text-yellow-500" />
-            Batch Create Showtimes
+            Tạo suất chiếu hàng loạt
           </h1>
-          <p className="text-gray-500 mt-1">Create multiple showtimes at once with smart scheduling</p>
+          <p className="text-gray-500 mt-1">Tạo nhiều suất chiếu cùng lúc với lịch trình thông minh</p>
         </div>
       </div>
 
@@ -288,13 +336,13 @@ function BatchShowtimesContent() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Film className="h-5 w-5 text-purple-600" />
-                Movie & Release
+                Phim & Phát Hành
               </CardTitle>
-              <CardDescription>Select the movie and its release period</CardDescription>
+              <CardDescription>Chọn phim và khoảng thời gian phát hành</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="movieId">Movie *</Label>
+                <Label htmlFor="movieId">Phim *</Label>
                 {preSelectedMovieId ? (
                   <Input
                     value={movies.find(m => m.id === formData.movieId)?.title || ''}
@@ -304,12 +352,12 @@ function BatchShowtimesContent() {
                 ) : (
                   <Select value={formData.movieId} onValueChange={handleMovieChange}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select movie" />
+                    <SelectValue placeholder="Chọn phim" />
                     </SelectTrigger>
                     <SelectContent>
                       {movies.map((movie) => (
                         <SelectItem key={movie.id} value={movie.id}>
-                          {movie.title} ({movie.runtime} mins)
+                          {movie.title}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -318,13 +366,13 @@ function BatchShowtimesContent() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="movieReleaseId">Release Period *</Label>
+                <Label htmlFor="movieReleaseId">Khoảng Thời Gian Phát Hành *</Label>
                 {preSelectedReleaseId ? (
                   <Input
                     value={
-                      releases.find(r => r.id === formData.movieReleaseId)
-                        ? `${releases.find(r => r.id === formData.movieReleaseId)?.startDate} → ${releases.find(r => r.id === formData.movieReleaseId)?.endDate}`
-                        : 'Loading...'
+                      movieReleases.find((r: typeof movieReleases[0]) => r.id === formData.movieReleaseId)
+                        ? `${new Date(movieReleases.find((r: typeof movieReleases[0]) => r.id === formData.movieReleaseId)?.startDate).toLocaleDateString()} → ${new Date(movieReleases.find((r: typeof movieReleases[0]) => r.id === formData.movieReleaseId)?.endDate).toLocaleDateString()}`
+                        : 'Đang tải...'
                     }
                     disabled
                     className="bg-gray-50"
@@ -336,14 +384,16 @@ function BatchShowtimesContent() {
                     disabled={!formData.movieId}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select release period" />
+                    <SelectValue placeholder="Chọn khoảng thời gian" />
                     </SelectTrigger>
                     <SelectContent>
-                      {releases.map((release) => (
-                        <SelectItem key={release.id} value={release.id}>
-                          {release.startDate} → {release.endDate} ({release.note})
-                        </SelectItem>
-                      ))}
+                      {movieReleases
+                        .filter((r: typeof movieReleases[0]) => r.movieId === formData.movieId)
+                        .map((release: typeof movieReleases[0]) => (
+                          <SelectItem key={release.id} value={release.id}>
+                            {new Date(release.startDate).toLocaleDateString()} → {new Date(release.endDate).toLocaleDateString()}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 )}
@@ -355,19 +405,19 @@ function BatchShowtimesContent() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-blue-600" />
-                Cinema & Hall
+                Rạp & Phòng
               </CardTitle>
-              <CardDescription>Choose where the movies will be shown</CardDescription>
+              <CardDescription>Chọn nơi các bộ phim sẽ được chiếu</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="cinemaId">Cinema *</Label>
+                <Label htmlFor="cinemaId">Rạp Chiếu *</Label>
                 <Select
                   value={formData.cinemaId}
                   onValueChange={(value) => setFormData({ ...formData, cinemaId: value, hallId: '' })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select cinema" />
+                    <SelectValue placeholder="Chọn rạp" />
                   </SelectTrigger>
                   <SelectContent>
                     {cinemas.map((cinema) => (
@@ -380,21 +430,21 @@ function BatchShowtimesContent() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="hallId">Hall *</Label>
+                <Label htmlFor="hallId">Phòng Chiếu *</Label>
                 <Select
                   value={formData.hallId}
                   onValueChange={(value) => setFormData({ ...formData, hallId: value })}
                   disabled={!formData.cinemaId}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={formData.cinemaId ? "Select hall" : "Select cinema first"} />
+                    <SelectValue placeholder={formData.cinemaId ? "Chọn phòng" : "Chọn rạp trước"} />
                   </SelectTrigger>
                   <SelectContent>
                     {halls
                       .filter(hall => hall.cinemaId === formData.cinemaId)
                       .map((hall) => (
                         <SelectItem key={hall.id} value={hall.id}>
-                          {hall.name} ({hall.capacity} seats)
+                          {hall.name} ({hall.capacity} ghế)
                         </SelectItem>
                       ))}
                   </SelectContent>
@@ -407,14 +457,14 @@ function BatchShowtimesContent() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CalendarIcon className="h-5 w-5 text-green-600" />
-                Schedule Period
+                Khoảng Thời Gian
               </CardTitle>
-              <CardDescription>Define the date range and repeat pattern</CardDescription>
+              <CardDescription>Xác định phạm vi ngày và mô hình lặp lại</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="startDate">Start Date *</Label>
+                  <Label htmlFor="startDate">Ngày Bắt Đầu *</Label>
                   <div className="relative">
                     <Input
                       id="startDate"
@@ -426,7 +476,7 @@ function BatchShowtimesContent() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="endDate">End Date *</Label>
+                  <Label htmlFor="endDate">Ngày Kết Thúc *</Label>
                   <div className="relative">
                     <Input
                       id="endDate"
@@ -440,7 +490,7 @@ function BatchShowtimesContent() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="repeatType">Repeat Pattern *</Label>
+                <Label htmlFor="repeatType">Mô Hình Lặp Lại *</Label>
                 <Select
                   value={formData.repeatType}
                   onValueChange={(value: 'DAILY' | 'WEEKLY' | 'CUSTOM_WEEKDAYS') => setFormData({ ...formData, repeatType: value })}
@@ -449,16 +499,16 @@ function BatchShowtimesContent() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="DAILY">🌞 Daily - Every single day</SelectItem>
-                    <SelectItem value="WEEKLY">📅 Weekly - Once per week (same weekday)</SelectItem>
-                    <SelectItem value="CUSTOM_WEEKDAYS">🎯 Custom - Specific weekdays only</SelectItem>
+                    <SelectItem value="DAILY">🌞 Hằng ngày - Mỗi ngày</SelectItem>
+                    <SelectItem value="WEEKLY">📅 Hàng tuần - Một lần mỗi tuần (cùng ngày)</SelectItem>
+                    <SelectItem value="CUSTOM_WEEKDAYS">🎯 Tùy chỉnh - Ngày cụ thể</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {formData.repeatType === 'CUSTOM_WEEKDAYS' && (
                 <div className="space-y-3">
-                  <Label>Select Weekdays *</Label>
+                  <Label>Chọn ngày trong tuần *</Label>
                   <div className="flex flex-wrap gap-2">
                     {WEEKDAYS.map((day) => (
                       <div key={day.value} className="flex items-center">
@@ -483,9 +533,9 @@ function BatchShowtimesContent() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5 text-orange-600" />
-                Time Slots
+                Khung giờ suất chiếu
               </CardTitle>
-              <CardDescription>Select showtime hours (multiple selection allowed)</CardDescription>
+              <CardDescription>Chọn khung giờ suất chiếu (cho phép chọn nhiều)</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
@@ -514,13 +564,13 @@ function BatchShowtimesContent() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Format & Language</CardTitle>
-              <CardDescription>Configure showtime format and audio settings</CardDescription>
+              <CardTitle>Định dạng & Ngôn ngữ</CardTitle>
+              <CardDescription>Cấu hình định dạng và cài đặt âm thanh của suất chiếu</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="format">Format *</Label>
+                  <Label htmlFor="format">Định Dạng *</Label>
                   <Select
                     value={formData.format}
                     onValueChange={(value) => setFormData({ ...formData, format: value })}
@@ -538,7 +588,7 @@ function BatchShowtimesContent() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="language">Language *</Label>
+                  <Label htmlFor="language">Ngôn Ngữ *</Label>
                   <Select
                     value={formData.language}
                     onValueChange={(value) => setFormData({ ...formData, language: value })}
@@ -547,19 +597,19 @@ function BatchShowtimesContent() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="vi">Vietnamese</SelectItem>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="ko">Korean</SelectItem>
-                      <SelectItem value="zh">Chinese</SelectItem>
-                      <SelectItem value="ja">Japanese</SelectItem>
-                      <SelectItem value="th">Thai</SelectItem>
+                      <SelectItem value="vi">Tiếng Việt</SelectItem>
+                      <SelectItem value="en">Tiếng Anh</SelectItem>
+                      <SelectItem value="ko">Tiếng Hàn</SelectItem>
+                      <SelectItem value="zh">Tiếng Trung</SelectItem>
+                      <SelectItem value="ja">Tiếng Nhật</SelectItem>
+                      <SelectItem value="th">Tiếng Thái</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Subtitles</Label>
+                <Label>Phụ Đề</Label>
                 <div className="flex flex-wrap gap-2">
                   {['vi', 'en', 'ko', 'zh', 'ja', 'th'].map((sub) => (
                     <div key={sub} className="flex items-center space-x-2">
@@ -580,8 +630,7 @@ function BatchShowtimesContent() {
                     </div>
                   ))}
                 </div>
-              </div>
-            </CardContent>
+              </div>            </CardContent>
           </Card>
 
           <Button
@@ -592,12 +641,12 @@ function BatchShowtimesContent() {
             {loading ? (
               <>
                 <div className="h-5 w-5 animate-spin rounded-full border-4 border-white border-r-transparent mr-2" />
-                Creating Showtimes...
+                Đang tạo suất chiếu...
               </>
             ) : (
               <>
                 <Zap className="mr-2 h-5 w-5" />
-                Create Showtimes
+                Tạo suất chiếu
               </>
             )}
           </Button>
@@ -606,33 +655,33 @@ function BatchShowtimesContent() {
         <div className="lg:col-span-1 space-y-6">
           <Card className="sticky top-6">
             <CardHeader>
-              <CardTitle className="text-lg">📋 Summary</CardTitle>
+              <CardTitle className="text-lg">📋 Tóm Tắt</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {selectedMovie && (
+              {formData.movieId && (
                 <div className="space-y-1">
-                  <p className="text-xs text-gray-500">Movie</p>
-                  <p className="font-semibold text-sm">{selectedMovie.title}</p>
+                  <p className="text-xs text-gray-500">Phim</p>
+                  <p className="font-semibold text-sm">{movies.find(m => m.id === formData.movieId)?.title || 'Không Xác Định'}</p>
                 </div>
               )}
 
-              {selectedCinema && (
+              {formData.cinemaId && (
                 <div className="space-y-1">
-                  <p className="text-xs text-gray-500">Cinema</p>
-                  <p className="font-semibold text-sm">{selectedCinema.name}</p>
+                  <p className="text-xs text-gray-500">Rạp</p>
+                  <p className="font-semibold text-sm">{cinemas.find(c => c.id === formData.cinemaId)?.name || 'Không Xác Định'}</p>
                 </div>
               )}
 
-              {selectedHall && (
+              {formData.hallId && (
                 <div className="space-y-1">
-                  <p className="text-xs text-gray-500">Hall</p>
-                  <p className="font-semibold text-sm">{selectedHall.name}</p>
+                  <p className="text-xs text-gray-500">Phòng</p>
+                  <p className="font-semibold text-sm">{halls.find(h => h.id === formData.hallId)?.name || 'Không Xác Định'}</p>
                 </div>
               )}
 
               {formData.startDate && formData.endDate && (
                 <div className="space-y-1">
-                  <p className="text-xs text-gray-500">Period</p>
+                  <p className="text-xs text-gray-500">Khoảng Thời Gian</p>
                   <p className="font-semibold text-sm">
                     {formData.startDate} → {formData.endDate}
                   </p>
@@ -641,7 +690,7 @@ function BatchShowtimesContent() {
 
               {formData.timeSlots.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-xs text-gray-500">Time Slots</p>
+                  <p className="text-xs text-gray-500">Khung Giờ</p>
                   <div className="flex flex-wrap gap-1">
                     {formData.timeSlots.map(time => (
                       <Badge key={time} variant="secondary" className="text-xs">
@@ -654,17 +703,17 @@ function BatchShowtimesContent() {
 
               <div className="pt-3 border-t space-y-3">
                 <div className="space-y-1">
-                  <p className="text-xs text-gray-500 mb-2">Format & Audio</p>
+                  <p className="text-xs text-gray-500 mb-2">Định Dạng & Âm Thanh</p>
                   
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-gray-600">Format:</span>
+                    <span className="text-xs font-medium text-gray-600">Định Dạng:</span>
                     <Badge className="bg-purple-100 text-purple-700 border-purple-200">
                       🎬 {formData.format}
                     </Badge>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-gray-600">Language:</span>
+                    <span className="text-xs font-medium text-gray-600">Ngôn Ngữ:</span>
                     <Badge className="bg-blue-100 text-blue-700 border-blue-200">
                       🎙️ {formData.language.toUpperCase()}
                     </Badge>
@@ -672,7 +721,7 @@ function BatchShowtimesContent() {
 
                   {formData.subtitles.length > 0 && (
                     <div className="flex items-start gap-2">
-                      <span className="text-xs font-medium text-gray-600 mt-1">Subtitles:</span>
+                      <span className="text-xs font-medium text-gray-600 mt-1">Phụ Đề:</span>
                       <div className="flex flex-wrap gap-1">
                         {formData.subtitles.map(sub => (
                           <Badge key={sub} className="bg-green-100 text-green-700 border-green-200 text-xs">
@@ -690,24 +739,24 @@ function BatchShowtimesContent() {
           {result && (
             <Card className="border-green-200 bg-green-50">
               <CardHeader>
-                <CardTitle className="text-lg text-green-900">✅ Results</CardTitle>
+                <CardTitle className="text-lg text-green-900">✅ Kết Quả</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between items-center p-3 bg-white rounded-lg">
-                  <span className="text-sm font-medium">Created</span>
+                  <span className="text-sm font-medium">Đã Tạo</span>
                   <span className="text-2xl font-bold text-green-600">{result.createdCount}</span>
                 </div>
                 
                 {result.skippedCount > 0 && (
                   <div className="flex justify-between items-center p-3 bg-white rounded-lg">
-                    <span className="text-sm font-medium">Skipped</span>
+                    <span className="text-sm font-medium">Bỏ Qua</span>
                     <span className="text-2xl font-bold text-orange-600">{result.skippedCount}</span>
                   </div>
                 )}
 
                 {result.skipped && result.skipped.length > 0 && (
                   <div className="mt-3 space-y-2">
-                    <p className="text-xs font-medium text-gray-700">Skipped Items:</p>
+                    <p className="text-xs font-medium text-gray-700">Các Mục Bỏ Qua:</p>
                     <div className="space-y-1 max-h-40 overflow-y-auto">
                       {result.skipped.map((item, idx) => (
                         <div key={idx} className="text-xs p-2 bg-white rounded">
@@ -729,9 +778,9 @@ function BatchShowtimesContent() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <History className="h-5 w-5 text-purple-600" />
-              Batch Creation History
+              Lịch Sử Tạo Hàng Loạt
             </CardTitle>
-            <CardDescription>Recent batch operations in this session</CardDescription>
+            <CardDescription>Các hoạt động tạo hàng loạt gần đây trong phiên này</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -752,11 +801,11 @@ function BatchShowtimesContent() {
                       <div className="text-right">
                         <div className="flex items-center gap-2">
                           <Badge className="bg-green-100 text-green-700">
-                            ✅ {item.result.createdCount} created
+                            ✅ {item.result.createdCount} suất đã được tạo
                           </Badge>
                           {item.result.skippedCount > 0 && (
                             <Badge className="bg-orange-100 text-orange-700">
-                              ⚠️ {item.result.skippedCount} skipped
+                              ⚠️ {item.result.skippedCount} bỏ qua
                             </Badge>
                           )}
                         </div>
@@ -771,7 +820,7 @@ function BatchShowtimesContent() {
                     <div className="mt-3 pt-3 border-t">
                       <div className="flex items-center justify-between">
                         <p className="text-xs text-gray-600">
-                          {item.result.created.length} showtimes created
+                          {item.result.created.length} suất chiếu đã được tạo
                         </p>
                         <Button
                           size="sm"
@@ -779,7 +828,7 @@ function BatchShowtimesContent() {
                           className="text-xs h-7"
                           onClick={() => window.location.href = '/admin/showtimes'}
                         >
-                          View in Showtimes
+                          Xem Trong Suất Chiếu
                           <ExternalLink className="ml-1 h-3 w-3" />
                         </Button>
                       </div>
@@ -792,13 +841,5 @@ function BatchShowtimesContent() {
         </Card>
       )}
     </div>
-  );
-}
-
-export default function BatchShowtimesPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <BatchShowtimesContent />
-    </Suspense>
   );
 }
