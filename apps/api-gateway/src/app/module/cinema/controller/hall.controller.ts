@@ -6,7 +6,6 @@ import {
   Param,
   Patch,
   Post,
-  Query,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -14,7 +13,6 @@ import { TransformInterceptor } from '../../../common/interceptor/transform.inte
 import { ClerkAuthGuard } from '../../../common/guard/clerk-auth.guard';
 import {
   CreateHallRequest,
-  HallStatusEnum,
   UpdateHallRequest,
   UpdateSeatStatusRequest,
 } from '@movie-hub/shared-types';
@@ -38,12 +36,8 @@ export class HallController {
 
   @Get('cinema/:cinemaId')
   @UseGuards(ClerkAuthGuard)
-  getHallsOfCinema(
-    @Param('cinemaId') cinemaId: string,
-    @Query('status') status: HallStatusEnum
-  ) {
-    const hallStatus = status ?? HallStatusEnum.ACTIVE;
-    return this.hallService.getHallsOfCinema(cinemaId, hallStatus);
+  getHallsOfCinema(@Param('cinemaId') cinemaId: string) {
+    return this.hallService.getHallsOfCinema(cinemaId);
   }
 
   /**

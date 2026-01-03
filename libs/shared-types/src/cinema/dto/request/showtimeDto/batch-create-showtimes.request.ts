@@ -16,9 +16,13 @@ export const batchCreateShowtimesSchema = z.object({
   // yyyy-MM-dd → Date
   startDate: z
     .string()
-    .regex(DATE_REGEX, 'startDate phải theo format yyyy-MM-dd'),
+    .regex(DATE_REGEX, 'startDate phải theo format yyyy-MM-dd')
+    .transform((v) => new Date(`${v}T00:00:00`)),
 
-  endDate: z.string().regex(DATE_REGEX, 'endDate phải theo format yyyy-MM-dd'), // cho dễ tính range
+  endDate: z
+    .string()
+    .regex(DATE_REGEX, 'endDate phải theo format yyyy-MM-dd')
+    .transform((v) => new Date(`${v}T23:59:59`)), // cho dễ tính range
 
   // danh sách giờ trong ngày ["10:00", "13:30", ...]
   timeSlots: z.array(

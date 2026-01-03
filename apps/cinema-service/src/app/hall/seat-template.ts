@@ -34,7 +34,7 @@ export const StandardLayoutTemplate = {
 };
 
 export const DualAisleLayoutTemplate = {
-  capacity: 88,
+  capacity: 96,
   rows: 8, // A → H
   seats: [
     ...['A', 'B', 'E', 'F', 'G', 'H'].flatMap((row) =>
@@ -83,6 +83,7 @@ stadiumRows.forEach((row, idx) => {
         row === 'F' || row === 'G' || row === 'H'
           ? SeatType.VIP // 3 hàng VIP chính giữa
           : SeatType.STANDARD,
+      tier: idx + 1, // mô phỏng bậc stadium
     });
   }
 });

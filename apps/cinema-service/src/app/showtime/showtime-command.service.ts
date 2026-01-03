@@ -1,5 +1,10 @@
 // cinema.service.ts
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  Inject,
+} from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { PrismaService } from '../prisma.service';
 import {
@@ -8,19 +13,18 @@ import {
   CreateShowtimeRequest,
   MovieServiceMessage,
   ShowtimeDetailResponse,
+  ShowtimeInfoDto,
   UpdateShowtimeRequest,
 } from '@movie-hub/shared-types';
 import { DayType, Format, ShowtimeStatus } from '../../../generated/prisma';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { ClientProxy } from '@nestjs/microservices';
 import { ServiceResult } from '@movie-hub/shared-types/common';
 import { ShowtimeMapper } from './showtime.mapper';
-import { RealtimeService } from '../realtime/realtime.service';
 
 @Injectable()
 export class ShowtimeCommandService {
   constructor(
     private prisma: PrismaService,
-    private readonly realtimeService: RealtimeService,
     @Inject('MOVIE_SERVICE') private readonly movieClient: ClientProxy
   ) {}
 
@@ -30,65 +34,146 @@ export class ShowtimeCommandService {
   async createShowtime(
     dto: CreateShowtimeRequest
   ): Promise<ServiceResult<ShowtimeDetailResponse>> {
-    try {
-      const {
-        movieId,
-        movieReleaseId,
-        cinemaId,
-        hallId,
-        startTime,
-        format,
+    const {
+      movieId,
+      movieReleaseId,
+      cinemaId,
+      hallId,
+      startTime,
+      format,
+      language,
+      subtitles,
+    } = dto;
+
+    const { movie, release } = await this.fetchMovieAndRelease(
+      movieId,
+      movieReleaseId
+    );
+
+    const start = new Date(startTime);
+    const end = new Date(start.getTime() + movie.runtime * 60000 + 15 * 60000);
+
+    await this.checkHallConflict(hallId, start, end);
+
+    const totalSeats = await this.getTotalSeats(hallId);
+    const dayType = this.getDayType(start);
+
+    const showtime = await this.prisma.showtimes.create({
+      data: {
+        movie_id: movie.id,
+        movie_release_id: release?.id ?? null,
+        cinema_id: cinemaId,
+        hall_id: hallId,
+        start_time: start,
+        end_time: end,
+        format: format as Format,
         language,
         subtitles,
-      } = dto;
+        total_seats: totalSeats,
+        available_seats: totalSeats,
+        day_type: dayType,
+      },
+    });
+    return {
+      data: ShowtimeMapper.toShowtimDetailResponse(showtime),
+      message: 'Showtime created successfully',
+    };
+  }
 
-      await this.checkCinemaAndHallStatus(cinemaId, hallId);
+  // ===========================
+  // BATCH CREATE SHOWTIME
+  // ===========================
+  async batchCreateShowtimes(
+    input: BatchCreateShowtimesInput
+  ): Promise<ServiceResult<BatchCreateShowtimeResponse>> {
+    const {
+      movieId,
+      movieReleaseId,
+      cinemaId,
+      hallId,
+      startDate,
+      endDate,
+      timeSlots,
+      repeatType,
+      weekdays,
+      format,
+      language,
+      subtitles,
+    } = input;
 
-      const { movie, release } = await this.fetchMovieAndRelease(
-        movieId,
-        movieReleaseId
-      );
+    const { movie, release } = await this.fetchMovieAndRelease(
+      movieId,
+      movieReleaseId
+    );
 
-      if (!release) {
-        throw new RpcException({
-          summary: 'Movie release is required',
-          statusCode: 409,
-          code: 'MOVIE_RELEASE_REQUIRED',
-          message: 'Movie release is required',
-        });
+    if (release) {
+      if (
+        new Date(startDate) < release.startDate ||
+        new Date(endDate) > release.endDate
+      ) {
+        throw new BadRequestException(
+          'Showtimes must be within the movie release period'
+        );
       }
+    }
 
-      // startTime: "2025-12-15 18:30:00"
-      const start = new Date(startTime.replace(' ', 'T') + 'Z');
-      const end = new Date(
-        start.getTime() + movie.runtime * 60000 + 15 * 60000
-      );
+    const runtime = movie.runtime;
+    const bufferMin = 15;
 
-      // ===========================
-      // CHECK RELEASE PERIOD
-      // ===========================
-      if (start < release.startDate || end > release.endDate) {
-        throw new RpcException({
-          summary: 'Movie release period violation',
-          statusCode: 409,
-          code: 'MOVIE_RELEASE_PERIOD_VIOLATION',
-          message: 'Showtime must be within the movie release period',
-        });
+    const days: Date[] = [];
+    // eslint-disable-next-line prefer-const
+    let d = new Date(startDate);
+    while (d <= new Date(endDate)) {
+      const dow = d.getDay();
+      if (
+        repeatType === 'DAILY' ||
+        (repeatType === 'WEEKLY' && true) ||
+        (repeatType === 'CUSTOM_WEEKDAYS' && weekdays.includes(dow))
+      ) {
+        days.push(new Date(d));
       }
+      d.setDate(d.getDate() + 1);
+    }
 
-      await this.checkHallConflict(hallId, start, end);
+    const candidateShowtimes = [];
+    for (const day of days) {
+      for (const slot of timeSlots) {
+        const [hh, mm] = slot.split(':').map(Number);
+        const start = new Date(day);
+        start.setHours(hh, mm, 0, 0);
+        const end = new Date(start.getTime() + (runtime + bufferMin) * 60000);
+        candidateShowtimes.push({ start, end });
+      }
+    }
+
+    const created: any[] = [];
+    const skipped: any[] = [];
+
+    for (const c of candidateShowtimes) {
+      const conflict = await this.prisma.showtimes.findFirst({
+        where: {
+          hall_id: hallId,
+          start_time: { lt: c.end },
+          end_time: { gt: c.start },
+        },
+      });
+
+      if (conflict) {
+        skipped.push({ start: c.start, reason: 'TIME_CONFLICT' });
+        continue;
+      }
 
       const totalSeats = await this.getTotalSeats(hallId);
-      const dayType = this.getDayType(start);
+      const dayType = this.getDayType(c.start);
 
-      const showtime = await this.prisma.showtimes.create({
+      const st = await this.prisma.showtimes.create({
         data: {
           movie_id: movie.id,
-          movie_release_id: release.id,
+          movie_release_id: release?.id ?? null,
           cinema_id: cinemaId,
           hall_id: hallId,
-          start_time: start,
-          end_time: end,
+          start_time: c.start,
+          end_time: c.end,
           format: format as Format,
           language,
           subtitles,
@@ -97,167 +182,19 @@ export class ShowtimeCommandService {
           day_type: dayType,
         },
       });
-      return {
-        data: ShowtimeMapper.toShowtimDetailResponse(showtime),
-        message: 'Showtime created successfully',
-      };
-    } catch (exception) {
-      throw new RpcException(exception);
+
+      created.push(st);
     }
-  }
 
-  // ===========================
-  // BATCH CREATE SHOWTIME (UTC LOGIC TIME)
-  // ===========================
-  async batchCreateShowtimes(
-    input: BatchCreateShowtimesInput
-  ): Promise<ServiceResult<BatchCreateShowtimeResponse>> {
-    try {
-      const {
-        movieId,
-        movieReleaseId,
-        cinemaId,
-        hallId,
-        startDate, // "yyyy-MM-dd"
-        endDate, // "yyyy-MM-dd"
-        timeSlots, // ["HH:mm", ...]
-        repeatType,
-        weekdays,
-        format,
-        language,
-        subtitles,
-      } = input;
-
-      await this.checkCinemaAndHallStatus(cinemaId, hallId);
-
-      const { movie, release } = await this.fetchMovieAndRelease(
-        movieId,
-        movieReleaseId
-      );
-
-      if (!release) {
-        throw new RpcException({
-          summary: 'Movie release is required',
-          statusCode: 409,
-          code: 'MOVIE_RELEASE_REQUIRED',
-          message: 'Movie release is required',
-        });
-      }
-
-      // ===========================
-      // PARSE DATE RANGE AS UTC
-      // ===========================
-      const rangeStart = new Date(`${startDate}T00:00:00Z`);
-      const rangeEnd = new Date(`${endDate}T23:59:59Z`);
-
-      if (rangeStart < release.startDate || rangeEnd > release.endDate) {
-        throw new RpcException({
-          summary: 'Movie release period violation',
-          statusCode: 409,
-          code: 'MOVIE_RELEASE_PERIOD_VIOLATION',
-          message: 'Showtimes must be within the movie release period',
-        });
-      }
-
-      const runtime = movie.runtime;
-      const bufferMin = 15;
-
-      // ===========================
-      // BUILD VALID DAYS (UTC)
-      // ===========================
-      const days: Date[] = [];
-      const cursor = new Date(rangeStart);
-
-      while (cursor <= rangeEnd) {
-        const dow = cursor.getUTCDay();
-
-        if (
-          repeatType === 'DAILY' ||
-          repeatType === 'WEEKLY' ||
-          (repeatType === 'CUSTOM_WEEKDAYS' && weekdays.includes(dow))
-        ) {
-          days.push(new Date(cursor));
-        }
-
-        cursor.setUTCDate(cursor.getUTCDate() + 1);
-      }
-
-      // ===========================
-      // BUILD CANDIDATE SHOWTIMES
-      // ===========================
-      const candidateShowtimes: { start: Date; end: Date }[] = [];
-
-      for (const day of days) {
-        for (const slot of timeSlots) {
-          const [hh, mm] = slot.split(':').map(Number);
-
-          const start = new Date(day);
-          start.setUTCHours(hh, mm, 0, 0);
-
-          const end = new Date(start.getTime() + (runtime + bufferMin) * 60000);
-
-          candidateShowtimes.push({ start, end });
-        }
-      }
-
-      // ===========================
-      // CREATE SHOWTIMES
-      // ===========================
-      const created: any[] = [];
-      const skipped: any[] = [];
-
-      for (const c of candidateShowtimes) {
-        const conflict = await this.prisma.showtimes.findFirst({
-          where: {
-            hall_id: hallId,
-            start_time: { lt: c.end },
-            end_time: { gt: c.start },
-          },
-        });
-
-        if (conflict) {
-          skipped.push({ start: c.start, reason: 'TIME_CONFLICT' });
-          continue;
-        }
-
-        const totalSeats = await this.getTotalSeats(hallId);
-        const dayType = this.getDayType(c.start);
-
-        const showtime = await this.prisma.showtimes.create({
-          data: {
-            movie_id: movie.id,
-            movie_release_id: release.id,
-            cinema_id: cinemaId,
-            hall_id: hallId,
-            start_time: c.start,
-            end_time: c.end,
-            format: format as Format,
-            language,
-            subtitles,
-            total_seats: totalSeats,
-            available_seats: totalSeats,
-            day_type: dayType,
-          },
-        });
-
-        created.push(showtime);
-      }
-
-      // ===========================
-      // RESPONSE
-      // ===========================
-      return {
-        data: {
-          createdCount: created.length,
-          skippedCount: skipped.length,
-          created: ShowtimeMapper.toShowtimeDetailList(created),
-          skipped,
-        },
-        message: 'Batch create showtimes completed',
-      };
-    } catch (e) {
-      throw new RpcException(e);
-    }
+    return {
+      data: {
+        createdCount: created.length,
+        skippedCount: skipped.length,
+        created: ShowtimeMapper.toShowtimeDetailList(created),
+        skipped,
+      },
+      message: 'Batch create showtimes completed',
+    };
   }
 
   // ===========================
@@ -275,12 +212,9 @@ export class ShowtimeCommandService {
       where: { showtime_id: id },
     });
     if (hasReservation > 0 && (dto.startTime || dto.hallId)) {
-      throw new RpcException({
-        summary: 'Cannot update showtime with reservations',
-        statusCode: 409,
-        code: 'SHOWTIME_WITH_RESERVATIONS',
-        message: 'Cannot update showtime with existing reservations',
-      });
+      throw new BadRequestException(
+        'Cannot update time or hall because reservations exist'
+      );
     }
 
     // lấy runtime
@@ -308,21 +242,14 @@ export class ShowtimeCommandService {
         },
       });
       if (conflict)
-        throw new RpcException({
-          summary: `Conflict with showtime ${conflict.id}`,
-          statusCode: 409,
-          code: 'SHOWTIME_CONFLICT',
-          message: `Conflict with showtime ${conflict.id}`,
-        });
+        throw new BadRequestException(`Conflict with showtime ${conflict.id}`);
     }
 
     const updatedShowtime = await this.prisma.showtimes.update({
       where: { id },
       data: {
         movie_id: dto.movieId ?? showtime.movie_id,
-        movie_release_id: dto.movieReleaseId ?? showtime.movie_release_id,
         hall_id: dto.hallId ?? showtime.hall_id,
-        cinema_id: dto.cinemaId ?? showtime.cinema_id,
         start_time: start,
         end_time: end,
         format: dto.format ? (dto.format as Format) : showtime.format,
@@ -342,32 +269,13 @@ export class ShowtimeCommandService {
     const showtime = await this.prisma.showtimes.findUnique({
       where: { id },
     });
+    if (!showtime) throw new NotFoundException('Showtime not found');
 
-    if (!showtime) {
-      throw new RpcException({
-        statusCode: 404,
-        code: 'SHOWTIME_NOT_FOUND',
-        message: 'Showtime not found',
-      });
-    }
-
-    // 1️⃣ Check booking (DB)
     const hasReservation = await this.prisma.seatReservations.count({
       where: { showtime_id: id },
     });
 
-    // 2️⃣ Check hold seat (Redis)
-    const hasHeldSeats = await this.realtimeService.hasHeldSeats(id);
-
-    if (hasHeldSeats) {
-      throw new RpcException({
-        statusCode: 409,
-        code: 'SHOWTIME_HAS_HELD_SEATS',
-        message: 'Cannot cancel showtime while seats are being held',
-      });
-    }
-
-    // 3️⃣ Có booking → chỉ cancel
+    // Nếu có người đặt → chuyển trạng thái
     if (hasReservation > 0) {
       await this.prisma.showtimes.update({
         where: { id },
@@ -376,21 +284,15 @@ export class ShowtimeCommandService {
           updated_at: new Date(),
         },
       });
-
-      return {
-        data: undefined,
-        message: 'Showtime cancelled successfully',
-      };
     }
 
-    // 4️⃣ Không booking, không hold → xoá cứng
+    // Nếu không ai đặt → xoá cứng hoặc soft delete
     await this.prisma.showtimes.delete({
       where: { id },
     });
-
     return {
       data: undefined,
-      message: 'Showtime deleted successfully',
+      message: 'Showtime cancelled successfully',
     };
   }
 
@@ -410,12 +312,9 @@ export class ShowtimeCommandService {
       },
     });
     if (overlap)
-      throw new RpcException({
-        summary: `Conflict with showtime ${overlap.id}`,
-        statusCode: 409,
-        code: 'SHOWTIME_CONFLICT',
-        message: `Conflict with showtime ${overlap.id}`,
-      });
+      throw new BadRequestException(
+        'This hall already has a showtime in that time range'
+      );
   }
 
   private async fetchMovieAndRelease(movieId: string, movieReleaseId?: string) {
@@ -438,29 +337,13 @@ export class ShowtimeCommandService {
       const release = releases.find((r) => r.id === movieReleaseId);
 
       // validate movie status / formats nếu muốn
-      if (!movie)
-        throw new RpcException({
-          summary: 'Movie not found',
-          statusCode: 404,
-          code: 'MOVIE_NOT_FOUND',
-          message: 'Movie not found',
-        });
+      if (!movie) throw new NotFoundException('Movie not found');
       if (movieReleaseId && !release)
-        throw new RpcException({
-          summary: 'Movie release not found',
-          statusCode: 404,
-          code: 'MOVIE_RELEASE_NOT_FOUND',
-          message: 'Movie release not found',
-        });
+        throw new NotFoundException('Movie release not found');
 
       return { movie, release };
     } catch {
-      throw new RpcException({
-        summary: 'Failed to fetch movie or release',
-        statusCode: 500,
-        code: 'FETCH_MOVIE_RELEASE_FAILED',
-        message: 'Could not fetch movie or movie release information',
-      });
+      throw new BadRequestException('Cannot fetch movie or release');
     }
   }
 
@@ -468,54 +351,5 @@ export class ShowtimeCommandService {
     return date.getDay() === 0 || date.getDay() === 6
       ? DayType.WEEKEND
       : DayType.WEEKDAY;
-  }
-
-  private async checkCinemaAndHallStatus(cinemaId: string, hallId: string) {
-    const [cinema, hall] = await Promise.all([
-      this.prisma.cinemas.findUnique({
-        where: { id: cinemaId },
-        select: { status: true },
-      }),
-      this.prisma.halls.findUnique({
-        where: { id: hallId },
-        select: { status: true },
-      }),
-    ]);
-
-    if (!cinema) {
-      throw new RpcException({
-        summary: 'Cinema not found',
-        statusCode: 404,
-        code: 'CINEMA_NOT_FOUND',
-        message: 'Cinema not found',
-      });
-    }
-
-    if (!hall) {
-      throw new RpcException({
-        summary: 'Hall not found',
-        statusCode: 404,
-        code: 'HALL_NOT_FOUND',
-        message: 'Hall not found',
-      });
-    }
-
-    if (cinema.status !== 'ACTIVE') {
-      throw new RpcException({
-        summary: 'Cinema inactive',
-        statusCode: 409,
-        code: 'CINEMA_INACTIVE',
-        message: 'Cinema is not active',
-      });
-    }
-
-    if (hall.status !== 'ACTIVE') {
-      throw new RpcException({
-        summary: 'Hall inactive',
-        statusCode: 409,
-        code: 'HALL_INACTIVE',
-        message: 'Hall is not active',
-      });
-    }
   }
 }

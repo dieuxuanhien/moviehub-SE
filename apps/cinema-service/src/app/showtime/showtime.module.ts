@@ -6,17 +6,16 @@ import { ShowtimeMapper } from './showtime.mapper';
 import { ShowtimeSeatMapper } from './showtime-seat.mapper';
 import { MovieClientModule } from '../client/movie-client.module';
 import { ShowtimeCommandService } from './showtime-command.service';
-import { RealtimeModule } from '../realtime/realtime.module';
 
 @Module({
-  imports: [MovieClientModule, RealtimeModule],
+  imports: [MovieClientModule],
   controllers: [ShowtimeController],
   providers: [
     ShowtimeService,
     PrismaService,
     ShowtimeMapper,
     ShowtimeSeatMapper,
-    ShowtimeCommandService,
+    ShowtimeCommandService
   ],
 })
 export class ShowtimeModule {}

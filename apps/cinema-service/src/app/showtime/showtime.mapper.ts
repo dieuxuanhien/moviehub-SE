@@ -5,7 +5,7 @@ import {
   ShowtimeStatusEnum,
   ShowtimeSummaryResponse,
 } from '@movie-hub/shared-types';
-import { Showtimes } from '../../../generated/prisma/client';
+import { $Enums, DayType, Showtimes } from '../../../generated/prisma/client';
 
 export class ShowtimeMapper {
   static toShowtimeSummaryResponse(entity: Showtimes): ShowtimeSummaryResponse {
