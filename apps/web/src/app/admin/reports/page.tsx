@@ -1,7 +1,5 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import {
@@ -61,7 +59,7 @@ import {
   TabsTrigger,
 } from '@movie-hub/shacdn-ui/tabs';
 import { Badge } from '@movie-hub/shacdn-ui/badge';
-import type { Cinema, Movie } from '@/libs/api/types';
+import type { Cinema, Movie } from '../_libs/types';
 import { mockCinemas, mockMovies } from '../_libs/mockData';
 
 // Mock data for reports
@@ -77,9 +75,9 @@ const revenueData = [
 
 const revenueBySource = [
   { name: 'Website', value: 45, color: '#8b5cf6' },
-  { name: 'Ứng Dụng Mobil', value: 35, color: '#06b6d4' },
-  { name: 'Quầy Bán', value: 15, color: '#f59e0b' },
-  { name: 'Đối Tác', value: 5, color: '#10b981' },
+  { name: 'Mobile App', value: 35, color: '#06b6d4' },
+  { name: 'Counter', value: 15, color: '#f59e0b' },
+  { name: 'Partners', value: 5, color: '#10b981' },
 ];
 
 const moviePerformance = [
@@ -91,12 +89,12 @@ const moviePerformance = [
 ];
 
 const genreBreakdown = [
-  { genre: 'Hành Động', revenue: 520000000, percentage: 28 },
-  { genre: 'Kinh Dị', revenue: 380000000, percentage: 20 },
-  { genre: 'Chính Kịch', revenue: 340000000, percentage: 18 },
-  { genre: 'Hài Kịch', revenue: 290000000, percentage: 15 },
-  { genre: 'Khoa Học Viễn Tưởng', revenue: 220000000, percentage: 12 },
-  { genre: 'Lãng Mạn', revenue: 130000000, percentage: 7 },
+  { genre: 'Action', revenue: 520000000, percentage: 28 },
+  { genre: 'Horror', revenue: 380000000, percentage: 20 },
+  { genre: 'Drama', revenue: 340000000, percentage: 18 },
+  { genre: 'Comedy', revenue: 290000000, percentage: 15 },
+  { genre: 'Sci-Fi', revenue: 220000000, percentage: 12 },
+  { genre: 'Romance', revenue: 130000000, percentage: 7 },
 ];
 
 const cinemaPerformance = [
@@ -124,10 +122,10 @@ const hourlyDistribution = [
 ];
 
 const customerSegments = [
-  { segment: 'Khách Hàng Mới', count: 2450, percentage: 35 },
-  { segment: 'Thường Xuyên', count: 2100, percentage: 30 },
-  { segment: 'Hội Viên VIP', count: 1750, percentage: 25 },
-  { segment: 'Không Hoạt Động (Quay Lại)', count: 700, percentage: 10 },
+  { segment: 'New Customers', count: 2450, percentage: 35 },
+  { segment: 'Regular', count: 2100, percentage: 30 },
+  { segment: 'VIP Members', count: 1750, percentage: 25 },
+  { segment: 'Inactive (Returning)', count: 700, percentage: 10 },
 ];
 
 const COLORS = ['#8b5cf6', '#06b6d4', '#f59e0b', '#10b981', '#ef4444', '#ec4899'];
@@ -176,20 +174,20 @@ export default function ReportsPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
             <TrendingUp className="h-8 w-8 text-green-600" />
-            Báo Cáo & Phân Tích
+            Reports & Analytics
           </h1>
           <p className="text-gray-500 mt-1">
-            Thông tin chi tiết về hoạt động của rạp chiếu phim
+            Comprehensive insights into your cinema operations
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Làm Mới
+            Refresh
           </Button>
           <Button variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
-            Tải Xuống
+            Export
           </Button>
         </div>
       </div>
@@ -202,10 +200,10 @@ export default function ReportsPage() {
               <Building2 className="h-4 w-4 text-gray-500" />
               <Select value={selectedCinema} onValueChange={setSelectedCinema}>
                 <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Chọn rạp" />
+                  <SelectValue placeholder="Select cinema" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tất Cả Rạp</SelectItem>
+                  <SelectItem value="all">All Cinemas</SelectItem>
                   {cinemas.map((cinema) => (
                     <SelectItem key={cinema.id} value={cinema.id}>
                       {cinema.name}
@@ -227,7 +225,7 @@ export default function ReportsPage() {
                         {format(dateRange.to, 'dd/MM/yyyy')}
                       </>
                     ) : (
-                      <span>Chọn khoảng thời gian</span>
+                      <span>Pick a date range</span>
                     )}
                   </Button>
                 </PopoverTrigger>
@@ -253,55 +251,55 @@ export default function ReportsPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tổng Doanh Thu</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
             <div className="flex items-center text-xs text-green-600">
               <ArrowUpRight className="h-4 w-4 mr-1" />
-              +{revenueGrowth}% từ tuần trước
+              +{revenueGrowth}% from last week
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Vé Đã Bán</CardTitle>
+            <CardTitle className="text-sm font-medium">Tickets Sold</CardTitle>
             <Users className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatNumber(totalTickets)}</div>
             <div className="flex items-center text-xs text-green-600">
               <ArrowUpRight className="h-4 w-4 mr-1" />
-              +8.2% từ tuần trước
+              +8.2% from last week
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Lượng Lấp Đầy Trung Bình</CardTitle>
+            <CardTitle className="text-sm font-medium">Avg. Occupancy</CardTitle>
             <Building2 className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{avgOccupancy}%</div>
             <div className="flex items-center text-xs text-red-600">
               <ArrowDownRight className="h-4 w-4 mr-1" />
-              -2.3% từ tuần trước
+              -2.3% from last week
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Phim Đang Chiếu</CardTitle>
+            <CardTitle className="text-sm font-medium">Active Movies</CardTitle>
             <Film className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{movies.length}</div>
             <div className="flex items-center text-xs text-gray-500">
-              Đang chiếu hiện tại
+              Currently showing
             </div>
           </CardContent>
         </Card>
@@ -310,10 +308,10 @@ export default function ReportsPage() {
       {/* Main Reports Tabs */}
       <Tabs defaultValue="revenue" className="space-y-4">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="revenue">Doanh Thu</TabsTrigger>
-          <TabsTrigger value="movies">Phim</TabsTrigger>
-          <TabsTrigger value="cinemas">Rạp</TabsTrigger>
-          <TabsTrigger value="customers">Khách Hàng</TabsTrigger>
+          <TabsTrigger value="revenue">Revenue</TabsTrigger>
+          <TabsTrigger value="movies">Movies</TabsTrigger>
+          <TabsTrigger value="cinemas">Cinemas</TabsTrigger>
+          <TabsTrigger value="customers">Customers</TabsTrigger>
         </TabsList>
 
         {/* Revenue Tab */}
@@ -321,8 +319,8 @@ export default function ReportsPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Xu Hướng Doanh Thu</CardTitle>
-                <CardDescription>Doanh thu hàng ngày trong khoảng thời gian đã chọn</CardDescription>
+                <CardTitle>Revenue Trend</CardTitle>
+                <CardDescription>Daily revenue over the selected period</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="h-80">
@@ -339,7 +337,7 @@ export default function ReportsPage() {
                       <YAxis tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`} />
                       <Tooltip
                         formatter={(value: number) => formatCurrency(value)}
-                        labelFormatter={(label) => `Ngày: ${label}`}
+                        labelFormatter={(label) => `Date: ${label}`}
                       />
                       <Area
                         type="monotone"
@@ -356,8 +354,8 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Doanh Thu Theo Nguồn</CardTitle>
-                <CardDescription>Phân chia theo kênh đặt vé</CardDescription>
+                <CardTitle>Revenue by Source</CardTitle>
+                <CardDescription>Breakdown by booking channel</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="h-80">
@@ -387,8 +385,8 @@ export default function ReportsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Hiệu Suất Thể Loại</CardTitle>
-              <CardDescription>Phân chia doanh thu theo thể loại phim</CardDescription>
+              <CardTitle>Genre Performance</CardTitle>
+              <CardDescription>Revenue breakdown by movie genre</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-80">
@@ -410,8 +408,8 @@ export default function ReportsPage() {
         <TabsContent value="movies" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Phim Có Hiệu Suất Tốt Nhất</CardTitle>
-              <CardDescription>Xếp hạng theo doanh thu trong khoảng thời gian đã chọn</CardDescription>
+              <CardTitle>Top Performing Movies</CardTitle>
+              <CardDescription>Ranked by revenue in the selected period</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -437,7 +435,7 @@ export default function ReportsPage() {
                       <div>
                         <h4 className="font-semibold">{movie.name}</h4>
                         <p className="text-sm text-gray-500">
-                          {formatNumber(movie.tickets)} vé đã bán
+                          {formatNumber(movie.tickets)} tickets sold
                         </p>
                       </div>
                     </div>
@@ -461,8 +459,8 @@ export default function ReportsPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Hiệu Suất Rạp</CardTitle>
-                <CardDescription>Doanh thu và lượng lấp đầy theo vị trí</CardDescription>
+                <CardTitle>Cinema Performance</CardTitle>
+                <CardDescription>Revenue and occupancy by location</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -474,16 +472,16 @@ export default function ReportsPage() {
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-semibold">{cinema.name}</h4>
                         <Badge className="bg-green-100 text-green-700">
-                          {cinema.occupancy}% lấp đầy
+                          {cinema.occupancy}% occupancy
                         </Badge>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div>
-                          <span className="text-gray-500">Doanh thu:</span>{' '}
+                          <span className="text-gray-500">Revenue:</span>{' '}
                           <span className="font-medium">{formatCurrency(cinema.revenue)}</span>
                         </div>
                         <div>
-                          <span className="text-gray-500">Suất chiếu:</span>{' '}
+                          <span className="text-gray-500">Shows:</span>{' '}
                           <span className="font-medium">{cinema.shows}</span>
                         </div>
                       </div>
@@ -501,8 +499,8 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Phân Phối Đặt Vé Theo Giờ</CardTitle>
-                <CardDescription>Phân tích giờ đặt vé cao điểm</CardDescription>
+                <CardTitle>Hourly Booking Distribution</CardTitle>
+                <CardDescription>Peak booking hours analysis</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="h-80">
@@ -533,8 +531,8 @@ export default function ReportsPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Phân Khúc Khách Hàng</CardTitle>
-                <CardDescription>Phân chia theo loại khách hàng</CardDescription>
+                <CardTitle>Customer Segments</CardTitle>
+                <CardDescription>Breakdown by customer type</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="h-80">
@@ -562,8 +560,8 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Chỉ Số Khách Hàng</CardTitle>
-                <CardDescription>Số liệu thống kê khách hàng chính</CardDescription>
+                <CardTitle>Customer Metrics</CardTitle>
+                <CardDescription>Key customer statistics</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">

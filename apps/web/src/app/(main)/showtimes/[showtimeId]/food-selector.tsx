@@ -12,8 +12,10 @@ import {
   SelectValue,
 } from '@movie-hub/shacdn-ui/select';
 import { useGetConcessions } from '@/hooks/concession-hooks';
-import { ConcessionDto } from '@/libs/types/concession.type';
-import { ConcessionCategory } from '@movie-hub/shared-types';
+import {
+  ConcessionCategory,
+  ConcessionDto,
+} from '@/libs/types/concession.type';
 import { Loader } from '@/components/loader';
 import { toast } from 'sonner';
 
@@ -78,11 +80,11 @@ export const FoodSelector = ({ cinemaId }: { cinemaId?: string }) => {
 
         <SelectContent className="bg-zinc-900 text-white border-zinc-700">
           <SelectItem value={ConcessionCategory.FOOD}>🍔 Đồ ăn</SelectItem>
-          <SelectItem value={ConcessionCategory.BEVERAGE}>
-            🥤 Nước uống
-          </SelectItem>
+          <SelectItem value={ConcessionCategory.DRINK}>🥤 Nước uống</SelectItem>
           <SelectItem value={ConcessionCategory.COMBO}>🍿 Combo</SelectItem>
-          <SelectItem value={ConcessionCategory.SNACK}>🛍️ Ăn nhẹ</SelectItem>
+          <SelectItem value={ConcessionCategory.MERCHANDISE}>
+            🛍️ Đồ lưu niệm
+          </SelectItem>
         </SelectContent>
       </Select>
 

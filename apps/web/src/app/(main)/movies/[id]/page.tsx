@@ -1,19 +1,15 @@
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
-export const dynamic = 'force-dynamic';
 import { getMovieDetail } from '@/libs/actions/movies/movie-action';
 import { DateSelect } from './_components/date-select';
 import { MovieCast } from './_components/movie-cast';
 import { MovieHeader } from './_components/movie-header';
 import { getQueryClient } from '@/libs/get-query-client';
-import {
-  getAvailableCities,
-  getCinemaDetail,
-} from '@/libs/actions/cinemas/cinema-action';
+import { getAvailableCities, getCinemaDetail } from '@/libs/actions/cinemas/cinema-action';
 import { TrailerModal } from '@/components/modal/trailer-modal';
 
 export default async function MovieDetailsPage({
   params,
-  searchParams,
+  searchParams
 }: {
   params: Promise<{ id: string }>;
   searchParams?: Promise<{ cinemaId?: string }>;
@@ -47,13 +43,10 @@ export default async function MovieDetailsPage({
           <MovieCast movieId={id} />
         </section>
 
-        <DateSelect
-          movieId={id}
-          cinemaId={cinemaId}
-          availableCities={availableCities.data}
-        />
-        <TrailerModal />
+        <DateSelect movieId={id} cinemaId={cinemaId}  availableCities={availableCities.data}/>
+        <TrailerModal/>
       </div>
     </HydrationBoundary>
   );
 }
+

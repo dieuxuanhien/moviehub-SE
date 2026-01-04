@@ -1,5 +1,4 @@
 import { ClerkProvider } from '@clerk/nextjs';
-export const dynamic = 'force-dynamic';
 import { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
@@ -24,20 +23,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html>
       <body className={inter.className}>
         <QueryClientProviders>
           <ClerkProvider
             appearance={{
+              theme: 'simple',
               variables: {
-                colorPrimary: '#E11D48',
+                colorPrimary: '#f43f5e',
               },
             }}
-            afterSignOutUrl="/admin/login"
+            afterSignOutUrl="/"
           >
             <PageWrapper>
+            
               <Toaster theme="light" richColors closeButton />
-
+              
               {children}
             </PageWrapper>
           </ClerkProvider>

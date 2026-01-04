@@ -21,13 +21,7 @@ export class ConcessionService {
     const normalizedCinemaId = this.optionalUuid(cinemaId, 'cinemaId');
     
     if (normalizedCinemaId) {
-      where.OR = [
-        { cinema_id: normalizedCinemaId },
-        { cinema_id: null }
-      ];
-    } else {
-       // When no cinema filter is provided, only show "all cinemas" items
-      where.cinema_id = null;
+      where.cinema_id = normalizedCinemaId;
     }
     
     if (category) {

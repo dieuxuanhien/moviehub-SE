@@ -50,12 +50,11 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copy the full root package.json for dependencies including Prisma
-COPY --chown=nestjs:nodejs --from=builder /app/package.json ./
-COPY --chown=nestjs:nodejs --from=builder /app/package-lock.json ./
+# Copy the Nx-generated package.json (minimal dependencies only!)
+COPY --chown=nestjs:nodejs --from=builder /app/dist/apps/user-service/package*.json ./
 
-# Install dependencies including Prisma for runtime
-RUN npm ci --legacy-peer-deps && \
+# Install ONLY the minimal dependencies from Nx-generated package.json
+RUN npm ci --omit=dev --legacy-peer-deps && \
     npm cache clean --force
 
 # Copy ONLY the built application and Prisma files

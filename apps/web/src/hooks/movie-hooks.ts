@@ -66,14 +66,14 @@ export const useCreateMovie = (data: CreateMovieRequest) => {
       return await createMovie(data, token);
     },
     onMutate() {
-      toast.loading('Đang tạo phim...');
+      toast.loading('Creating movie...');
     },
     onSuccess: () => {
-      toast.success('Tạo phim thành công');
+      toast.success('Movie created successfully');
       queryClient.invalidateQueries({ queryKey: ['movies'] });
     },
     onError: (error) => {
-      toast.error(error?.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+      toast.error(error?.message || 'Something went wrong. Please try again.');
     },
   });
 };
@@ -89,15 +89,15 @@ export const useUpdateMovie = (movieId: string, data: UpdateMovieRequest) => {
       return await updateMovie(movieId, data, token);
     },
     onMutate() {
-      toast.loading('Đang cập nhật phim...');
+      toast.loading('Updating movie...');
     },
     onSuccess: () => {
-      toast.success('Cập nhật phim thành công');
+      toast.success('Movie updated successfully');
       queryClient.invalidateQueries({ queryKey: ['movies'] });
       queryClient.invalidateQueries({ queryKey: ['movies', movieId] });
     },
     onError: (error) => {
-      toast.error(error?.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+      toast.error(error?.message || 'Something went wrong. Please try again.');
     },
   });
 };
@@ -113,15 +113,15 @@ export const useDeleteMovie = (movieId: string) => {
       return await deleteMovie(movieId, token);
     },
     onMutate() {
-      toast.loading('Đang xóa phim...');
+      toast.loading('Deleting movie...');
     },
     onSuccess: () => {
-      toast.success('Xóa phim thành công');
+      toast.success('Movie deleted successfully');
       queryClient.invalidateQueries({ queryKey: ['movies'] });
       queryClient.invalidateQueries({ queryKey: ['movies', movieId] });
     },
     onError: (error) => {
-      toast.error(error?.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+      toast.error(error?.message || 'Something went wrong. Please try again.');
     },
   });
 };
