@@ -433,6 +433,9 @@ export default function StaffPage() {
         .length,
       ticketClerk: staff.filter((s) => s.position === 'TICKET_CLERK').length,
     },
+    totalPositionsFilled: [
+      ...new Set(staff.map((s) => s.position).filter((p) => p)),
+    ].length,
     totalSalaryExpense: staff.reduce((sum, s) => {
       const salary =
         typeof s.salary === 'string' ? parseFloat(s.salary) : s.salary || 0;
@@ -494,15 +497,15 @@ export default function StaffPage() {
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200/60 shadow-md hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold text-blue-700 uppercase tracking-wider">
-              💼 Loại Lao Động
+              💼 Phân Bổ Vị Trí
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-blue-900">
-              {stats.fullTime}
+              {stats.totalPositionsFilled}
             </div>
             <p className="text-xs text-blue-600 mt-2 font-medium">
-              {stats.fullTime} toàn thời · {stats.partTime} bán thời
+              {stats.positions.manager} quản lý · {stats.positions.assistantManager} trợ lý · {stats.positions.ticketClerk} nhân viên
             </p>
           </CardContent>
         </Card>
