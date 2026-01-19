@@ -12,8 +12,6 @@ import {
   Star,
   MessageSquare,
   Plus,
-  ArrowUpRight,
-  ArrowDownRight,
 } from 'lucide-react';
 import {
   Card,
@@ -116,6 +114,13 @@ export default function DashboardPage() {
         // Fetch all dashboard data in parallel
         // For managers, selectedCinemaId is their assigned cinema
         // For admins, selectedCinemaId can be undefined (all) or a specific cinema
+        
+        // Calculate date range (last 7 days)
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+        
         const [
           statsData,
           revenueRes,
@@ -125,9 +130,14 @@ export default function DashboardPage() {
           reviewsData,
         ] = await Promise.all([
           getDashboardStats(selectedCinemaId),
-          getRevenueReport({ groupBy: 'day', cinemaId: selectedCinemaId }),
+          getRevenueReport({ 
+            groupBy: 'day', 
+            cinemaId: selectedCinemaId,
+            startDate: startDate.toISOString().split('T')[0], // YYYY-MM-DD format
+            endDate: endDate.toISOString().split('T')[0],
+          }),
           getTopMovies(5, selectedCinemaId),
-          getTopCinemas(5, selectedCinemaId),
+          getTopCinemas(5, undefined), // Don't filter - always show all cinemas for comparison
           getRecentBookings(10, selectedCinemaId),
           getRecentReviews(10, selectedCinemaId),
         ]);
@@ -176,8 +186,8 @@ export default function DashboardPage() {
       title: 'Tổng số phim',
       value: stats?.totalMovies ?? 0,
       icon: Film,
-      change: '+12.5%',
-      changeType: 'positive' as const,
+      change: 'Đang chiếu hiện tại',
+      changeType: 'neutral' as const,
       color: 'from-purple-500 to-purple-600',
       href: '/admin/movies',
     },
@@ -185,8 +195,8 @@ export default function DashboardPage() {
       title: 'Tổng số rạp',
       value: stats?.totalCinemas ?? 0,
       icon: Building2,
-      change: '+8.2%',
-      changeType: 'positive' as const,
+      change: 'Tổng cộng',
+      changeType: 'neutral' as const,
       color: 'from-blue-500 to-blue-600',
       href: '/admin/cinemas',
     },
@@ -203,8 +213,8 @@ export default function DashboardPage() {
       title: 'Doanh thu tuần',
       value: `₫${((stats?.weekRevenue ?? 0) / 1000000).toFixed(1)}M`,
       icon: DollarSign,
-      change: '+18.7%',
-      changeType: 'positive' as const,
+      change: '7 ngày qua',
+      changeType: 'neutral' as const,
       color: 'from-pink-500 to-pink-600',
       href: '/admin/reports',
     },
@@ -212,8 +222,8 @@ export default function DashboardPage() {
       title: 'Tổng đặt chỗ',
       value: stats?.totalBookings ?? 0,
       icon: Ticket,
-      change: '+24.3%',
-      changeType: 'positive' as const,
+      change: 'Tổng tất cả thời gian',
+      changeType: 'neutral' as const,
       color: 'from-amber-500 to-amber-600',
       href: '/admin/reservations',
     },
@@ -221,8 +231,8 @@ export default function DashboardPage() {
       title: 'Đánh giá trung bình',
       value: (stats?.averageRating ?? 0).toFixed(1),
       icon: Star,
-      change: 'Tuyệt vời',
-      changeType: 'positive' as const,
+      change: 'Trên 5 sao',
+      changeType: 'neutral' as const,
       color: 'from-yellow-500 to-yellow-600',
       href: '/admin/reviews',
     },
@@ -303,7 +313,6 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {statCards.map((stat) => {
           const Icon = stat.icon;
-          const isPositive = stat.changeType === 'positive';
           return (
             <Link key={stat.title} href={stat.href}>
               <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-2 hover:border-purple-200">
@@ -321,25 +330,9 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold mb-2">{stat.value}</div>
-                  <div className="flex items-center gap-1">
-                    {stat.changeType !== 'neutral' &&
-                      (isPositive ? (
-                        <ArrowUpRight className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <ArrowDownRight className="h-4 w-4 text-red-600" />
-                      ))}
-                    <p
-                      className={`text-sm font-medium ${
-                        stat.changeType === 'positive'
-                          ? 'text-green-600'
-                          : stat.changeType === 'neutral'
-                          ? 'text-gray-600'
-                          : 'text-red-600'
-                      }`}
-                    >
-                      {stat.change}
-                    </p>
-                  </div>
+                  <p className="text-sm font-medium text-gray-600">
+                    {stat.change}
+                  </p>
                 </CardContent>
               </Card>
             </Link>
@@ -356,7 +349,7 @@ export default function DashboardPage() {
               <TrendingUp className="h-5 w-5 text-purple-600" />
               Revenue Overview
             </CardTitle>
-            <CardDescription>Daily revenue and booking trends</CardDescription>
+            <CardDescription>Daily revenue and booking trends (Last 7 days)</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -400,7 +393,7 @@ export default function DashboardPage() {
               <Film className="h-5 w-5 text-pink-600" />
               Top 5 Movies
             </CardTitle>
-            <CardDescription>By total bookings today</CardDescription>
+            <CardDescription>By total bookings this week</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
