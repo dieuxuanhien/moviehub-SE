@@ -31,6 +31,13 @@ type SeatType = 'STANDARD' | 'VIP' | 'COUPLE' | 'PREMIUM' | 'WHEELCHAIR';
 export default function ShowtimeSeatsPage() {
   const [selectedShowtimeId, setSelectedShowtimeId] = useState('');
   const [filterStatus, setFilterStatus] = useState<ReservationStatus | 'ALL'>('ALL');
+  
+  // Advanced filters
+  const [selectedMovieId, setSelectedMovieId] = useState<string>('all');
+  const [selectedCinemaId, setSelectedCinemaId] = useState<string>('all');
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  
   useToast();
 
   // API hooks
@@ -53,6 +60,59 @@ export default function ShowtimeSeatsPage() {
     (halls || []).forEach((h: any) => { if (h?.id) m[h.id] = h.name || 'Phòng Không Xác Định'; });
     return m;
   }, [halls]);
+
+  // Extract unique cinemas from halls
+  const cinemas = useMemo(() => {
+    const cinemaMap = new Map();
+    Object.entries(hallsByCinema).forEach(([cinemaId, group]: [string, any]) => {
+      if (group?.cinema) {
+        cinemaMap.set(cinemaId, {
+          id: cinemaId,
+          name: group.cinema.name || 'Không Xác Định'
+        });
+      }
+    });
+    return Array.from(cinemaMap.values());
+  }, [hallsByCinema]);
+
+  // Filter showtimes based on selected filters
+  const filteredShowtimes = useMemo(() => {
+    return showtimes.filter((showtime: any) => {
+      // Filter by movie
+      if (selectedMovieId !== 'all' && showtime.movieId !== selectedMovieId) {
+        return false;
+      }
+
+      // Filter by cinema (via hall)
+      if (selectedCinemaId !== 'all') {
+        const hall = halls.find((h: any) => h.id === showtime.hallId);
+        if (!hall || hall.cinemaId !== selectedCinemaId) {
+          return false;
+        }
+      }
+
+      // Filter by date
+      if (selectedDate) {
+        const showtimeDate = new Date(showtime.startTime || showtime.start_time || showtime.start);
+        const filterDate = new Date(selectedDate);
+        if (showtimeDate.toDateString() !== filterDate.toDateString()) {
+          return false;
+        }
+      }
+
+      // Filter by search term
+      if (searchTerm) {
+        const movieTitle = (movieMap[showtime.movieId] || showtime.movieTitle || '').toLowerCase();
+        const hallName = (hallMap[showtime.hallId] || showtime.hallName || '').toLowerCase();
+        const search = searchTerm.toLowerCase();
+        if (!movieTitle.includes(search) && !hallName.includes(search)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [showtimes, selectedMovieId, selectedCinemaId, selectedDate, searchTerm, movieMap, hallMap, halls]);
 
   const handleShowtimeChange = (showtimeId: string) => {
     setSelectedShowtimeId(showtimeId);
@@ -129,41 +189,167 @@ export default function ShowtimeSeatsPage() {
         </div>
       </div>
 
-      {/* Showtime Selector */}
-      <Card>
+      {/* Advanced Filters */}
+      <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
         <CardHeader>
-          <CardTitle className="text-lg">Chọn Suất Chiếu</CardTitle>
-          <CardDescription>Chọn suất chiếu để xem tính sẵn có ghế</CardDescription>
+          <CardTitle className="text-lg flex items-center gap-2">
+            🔍 Bộ Lọc Nâng Cao
+          </CardTitle>
+          <CardDescription>Lọc suất chiếu để tìm kiếm nhanh hơn</CardDescription>
         </CardHeader>
         <CardContent>
-          <Select value={selectedShowtimeId} onValueChange={handleShowtimeChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Chọn suất chiếu" />
-            </SelectTrigger>
-            <SelectContent>
-              {showtimes.map((showtime: any) => {
-                // TIMEZONE WORKAROUND: BE adds +7h in mapper, we need to subtract it
-                const correctedStartTime = new Date(new Date(showtime.startTime || showtime.start_time || showtime.start).getTime() - 7 * 60 * 60 * 1000);
-                return (
-                  <SelectItem key={showtime.id} value={showtime.id}>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="font-semibold">{movieMap[showtime.movieId] || showtime.movieTitle || 'Không Xác Định'}</span>
-                      <span className="text-gray-400">•</span>
-                      <span className="text-gray-600">{hallMap[showtime.hallId] || showtime.hallName || 'Phòng Không Xác Định'}</span>
-                      <span className="text-gray-400">•</span>
-                      <span className="text-gray-600">{format(correctedStartTime, 'MMM dd, HH:mm')}</span>
-                      {showtime.format && (
-                        <>
-                          <span className="text-gray-400">•</span>
-                          <Badge variant="outline" className="text-xs">{showtime.format}</Badge>
-                        </>
-                      )}
-                    </div>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Search */}
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-2 block">Tìm Kiếm</label>
+              <input
+                type="text"
+                placeholder="Tên phim, phòng..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+              />
+            </div>
+
+            {/* Movie Filter */}
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-2 block">Phim</label>
+              <Select value={selectedMovieId} onValueChange={setSelectedMovieId}>
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="Tất cả phim" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất Cả Phim</SelectItem>
+                  {movies.map((movie: any) => (
+                    <SelectItem key={movie.id} value={movie.id}>
+                      {movie.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Cinema Filter */}
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-2 block">Rạp</label>
+              <Select value={selectedCinemaId} onValueChange={setSelectedCinemaId}>
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="Tất cả rạp" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất Cả Rạp</SelectItem>
+                  {cinemas.map((cinema: any) => (
+                    <SelectItem key={cinema.id} value={cinema.id}>
+                      {cinema.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Date Filter */}
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-2 block">Ngày Chiếu</label>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full h-10 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Active Filters & Clear Button */}
+          {(searchTerm || selectedMovieId !== 'all' || selectedCinemaId !== 'all' || selectedDate) && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-purple-200">
+              <div className="flex flex-wrap gap-2">
+                {searchTerm && (
+                  <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                    🔍 {searchTerm}
+                  </Badge>
+                )}
+                {selectedMovieId !== 'all' && (
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                    🎬 {movieMap[selectedMovieId]}
+                  </Badge>
+                )}
+                {selectedCinemaId !== 'all' && (
+                  <Badge variant="secondary" className="bg-green-100 text-green-700">
+                    🏢 {cinemas.find((c: any) => c.id === selectedCinemaId)?.name}
+                  </Badge>
+                )}
+                {selectedDate && (
+                  <Badge variant="secondary" className="bg-pink-100 text-pink-700">
+                    📅 {format(new Date(selectedDate), 'MMM dd, yyyy')}
+                  </Badge>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedMovieId('all');
+                  setSelectedCinemaId('all');
+                  setSelectedDate('');
+                }}
+                className="text-sm text-purple-600 hover:text-purple-800 font-medium"
+              >
+                ✕ Xóa Bộ Lọc
+              </button>
+            </div>
+          )}
+
+          {/* Results Count */}
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-600">
+              Hiển thị <span className="font-bold text-purple-600">{filteredShowtimes.length}</span> / {showtimes.length} suất chiếu
+            </p>
+          </div>
+
+          {/* Showtime Selector - Integrated */}
+          <div className="mt-6 pt-6 border-t border-purple-200">
+            <label className="text-sm font-semibold text-gray-700 mb-3 block">📺 Chọn Suất Chiếu</label>
+            <Select value={selectedShowtimeId} onValueChange={handleShowtimeChange}>
+              <SelectTrigger className="h-11 border-purple-300 focus:border-purple-500 focus:ring-purple-200">
+                <SelectValue placeholder="Chọn suất chiếu để xem ghế" />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredShowtimes.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    Không tìm thấy suất chiếu phù hợp
+                  </div>
+                ) : (
+                  filteredShowtimes.map((showtime: any) => {
+                  // Parse time string directly without timezone conversion
+                  const timeStr = (showtime.startTime || showtime.start_time || showtime.start || '').toString();
+                  const match = timeStr.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+                  let displayTime = '';
+                  if (match) {
+                    const [_, year, month, day, hour, min] = match;
+                    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    displayTime = `${monthNames[parseInt(month) - 1]} ${day}, ${hour}:${min}`;
+                  }
+                  return (
+                    <SelectItem key={showtime.id} value={showtime.id}>
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="font-semibold">{movieMap[showtime.movieId] || showtime.movieTitle || 'Không Xác Định'}</span>
+                        <span className="text-gray-400">•</span>
+                        <span className="text-gray-600">{hallMap[showtime.hallId] || showtime.hallName || 'Phòng Không Xác Định'}</span>
+                        <span className="text-gray-400">•</span>
+                        <span className="text-gray-600">{displayTime}</span>
+                        {showtime.format && (
+                          <>
+                            <span className="text-gray-400">•</span>
+                            <Badge variant="outline" className="text-xs">{showtime.format}</Badge>
+                          </>
+                        )}
+                      </div>
+                    </SelectItem>
+                  );
+                })
+                )}
+              </SelectContent>
+            </Select>
+          </div>
         </CardContent>
       </Card>
 
@@ -215,7 +401,17 @@ export default function ShowtimeSeatsPage() {
                   <div>
                     <p className="text-xs text-gray-500">Suất Chiếu</p>
                     <p className="font-semibold text-gray-900">
-                      {format(new Date(seatsResponse.showtime.start_time), 'HH:mm, MMM dd')}
+                      {(() => {
+                        // Parse time string directly without timezone conversion
+                        const timeStr = seatsResponse.showtime.start_time;
+                        const match = timeStr.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+                        if (match) {
+                          const [_, year, month, day, hour, min] = match;
+                          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                          return `${hour}:${min}, ${monthNames[parseInt(month) - 1]} ${day}, ${year}`;
+                        }
+                        return '';
+                      })()}
                     </p>
                   </div>
                 </div>
