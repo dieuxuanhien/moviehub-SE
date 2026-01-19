@@ -87,3 +87,64 @@ export const deleteMovie = async (
     throw error;
   }
 };
+
+// Similar Movies Response Type
+export interface SimilarMovie {
+  id: string;
+  title: string;
+  posterUrl: string;
+  similarity: number;
+}
+
+export interface SimilarMoviesResponse {
+  movies: SimilarMovie[];
+  total: number;
+  hasMore: boolean;
+}
+
+// Get similar movies for a given movie
+export const getSimilarMovies = async (
+  movieId: string,
+  limit = 20
+): Promise<ServiceResult<SimilarMoviesResponse>> => {
+  try {
+    const response = await api.get(`/movies/${movieId}/similar`, {
+      params: { limit },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Recommendations Response Type
+export interface RecommendedMovie {
+  id: string;
+  title: string;
+  posterUrl: string;
+  similarity: number; // Backend returns 'similarity', not 'score'
+  genres?: string[];
+}
+
+export interface RecommendationsResponse {
+  movies: RecommendedMovie[];
+  total: number;
+  query: string;
+}
+
+// Get personalized recommendations based on a query (genre, mood, etc.)
+export const getRecommendations = async (
+  query: string,
+  limit = 10
+): Promise<ServiceResult<RecommendationsResponse>> => {
+  try {
+    const response = await api.post('/movies/recommendations', {
+      query,
+      limit,
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+

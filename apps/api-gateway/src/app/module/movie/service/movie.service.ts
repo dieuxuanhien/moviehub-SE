@@ -215,4 +215,47 @@ export class MovieService {
       throw new RpcException(error);
     }
   }
+
+  // ============ Recommendations ============
+
+  async getSimilarMovies(movieId: string, limit: number = 20, offset: number = 0) {
+    try {
+      return await firstValueFrom(
+        this.client.send({ cmd: 'get_similar_movies' }, { movieId, limit, offset })
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
+  }
+
+  async getRecommendations(query: string, limit: number = 10) {
+    try {
+      return await firstValueFrom(
+        this.client.send({ cmd: 'get_recommendations' }, { query, limit })
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
+  }
+
+  async generateEmbedding(movieId: string) {
+    try {
+      return await firstValueFrom(
+        this.client.send({ cmd: 'generate_embedding' }, { movieId })
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
+  }
+
+  async batchGenerateEmbeddings() {
+    try {
+      return await firstValueFrom(
+        this.client.send({ cmd: 'batch_generate_embeddings' }, {})
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
+  }
 }
+

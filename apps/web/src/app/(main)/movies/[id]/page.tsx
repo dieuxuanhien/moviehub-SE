@@ -11,6 +11,7 @@ import {
 } from '@/libs/actions/cinemas/cinema-action';
 import { TrailerModal } from '@/components/modal/trailer-modal';
 import { MovieReviews } from './_components/movie-reviews';
+import { SimilarMovies } from './_components/similar-movies';
 
 export default async function MovieDetailsPage({
   params,
@@ -58,6 +59,9 @@ export default async function MovieDetailsPage({
           />
 
           <MovieReviews movieId={id} />
+          
+          {/* Similar Movies Section */}
+          <SimilarMovies movieId={id} limit={12} />
         </div>
 
         <TrailerModal />
@@ -65,3 +69,4 @@ export default async function MovieDetailsPage({
     </HydrationBoundary>
   );
 }
+

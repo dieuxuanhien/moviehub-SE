@@ -42,6 +42,7 @@
   "dependencies": {
     "@clerk/clerk-sdk-node": "^5.1.6",
     "@clerk/nextjs": "^6.33.5",
+    "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.2.2",
     "@nestjs/cache-manager": "^3.0.1",
     "@nestjs/common": "^11.0.0",

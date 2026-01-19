@@ -5,6 +5,7 @@ import MovieGrid from './_components/MovieGrid';
 import OtherServices from './_components/OtherServices';
 import HeroSection from './_components/HeroSection';
 import MembershipSection from './_components/MembershipSection';
+import RecommendationsSection from './_components/RecommendationsSection';
 
 import { CinemaListNearby } from './_components/cinema-near-list';
 import QuickBooking from './_components/QuickBooking';
@@ -65,6 +66,11 @@ export default async function MainPage() {
               href="upcoming"
               status="upcoming"
             />
+          </section>
+
+          {/* AI Recommendations Section */}
+          <section>
+            <RecommendationsSection />
           </section>
 
           <PromotionsSection />

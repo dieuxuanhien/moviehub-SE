@@ -60,7 +60,8 @@ model Movie {
 
   movieGenres   MovieGenre[]   @relation("MovieToGenre")
   movieReleases MovieRelease[] @relation("MovieToRelease")
-  reviews Review[]
+  reviews       Review[]
+  embedding     MovieEmbedding?
 
   @@map("movies")
 }
@@ -118,7 +119,32 @@ model Review {
 
   @@index([movieId])
   @@index([userId])
-  @@unique([movieId, userId]) // 1 user chỉ review 1 lần / movie
+  @@unique([movieId, userId]) // 1 user chỉ review 1 lần / movie       
 
   @@map("reviews")
+}
+
+// Movie Embedding for Recommendation System
+// Note: pgvector extension must be installed first
+// Run: CREATE EXTENSION IF NOT EXISTS vector;
+model MovieEmbedding {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  movieId   String   @unique @map("movie_id") @db.Uuid
+  
+  // Embedding vector - stored as float array, pgvector handles similarity
+  // Gemini embedding-001 uses 768 dimensions
+  embedding Unsupported("vector(768)")? @map("embedding")
+  
+  // Metadata
+  model     String   @default("gemini-embedding-001") @map("model")
+  textHash  String?  @map("text_hash") // Hash of input text to detect changes
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@index([movieId])
+  @@map("movie_embeddings")
 }

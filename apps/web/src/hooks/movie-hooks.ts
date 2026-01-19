@@ -125,3 +125,26 @@ export const useDeleteMovie = (movieId: string) => {
     },
   });
 };
+
+// Hook for fetching similar movies
+import { getSimilarMovies, SimilarMoviesResponse, getRecommendations, RecommendationsResponse } from '../libs/actions/movies/movie-action';
+
+export const useGetSimilarMovies = (movieId: string, limit = 20) => {
+  return useQuery<ServiceResult<SimilarMoviesResponse>>({
+    queryKey: ['similar-movies', movieId, limit],
+    queryFn: async () => getSimilarMovies(movieId, limit),
+    enabled: !!movieId,
+  });
+};
+
+// Hook for fetching recommendations based on a query
+export const useGetRecommendations = (query: string, limit = 10) => {
+  return useQuery<ServiceResult<RecommendationsResponse>>({
+    queryKey: ['recommendations', query, limit],
+    queryFn: async () => getRecommendations(query, limit),
+    enabled: !!query,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+};
+
+

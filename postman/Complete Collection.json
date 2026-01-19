@@ -3953,6 +3953,125 @@
 				}
 			],
 			"description": "Authentication flow using Clerk"
+		},
+		{
+			"name": "Movie Recommendations (AI)",
+			"item": [
+				{
+					"name": "Get AI Recommendations",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"query\": \"Phim hành động có nhịp độ nhanh với những cảnh rượt đuổi gay cấn\",\n  \"limit\": 10\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/movies/recommendations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"movies",
+								"recommendations"
+							]
+						},
+						"description": "Get AI-powered movie recommendations based on natural language query. Uses Gemini embeddings for semantic search."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Similar Movies",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/v1/movies/{{movieId}}/similar?limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"movies",
+								"{{movieId}}",
+								"similar"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get movies similar to a specific movie based on embedding similarity."
+					},
+					"response": []
+				},
+				{
+					"name": "Batch Generate Embeddings (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "__session={{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/movies/admin/embeddings/batch",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"movies",
+								"admin",
+								"embeddings",
+								"batch"
+							]
+						},
+						"description": "Generate embeddings for all movies that don't have embeddings yet. Admin only. Uses Gemini text-embedding-004 model."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Embedding Status (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "__session={{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/movies/admin/embeddings/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"movies",
+								"admin",
+								"embeddings",
+								"status"
+							]
+						},
+						"description": "Get statistics about movie embeddings: total movies, movies with embeddings, movies without embeddings."
+					},
+					"response": []
+				}
+			],
+			"description": "AI-powered movie recommendation endpoints using Gemini embeddings and pgvector similarity search."
 		}
 	],
 	"variable": [

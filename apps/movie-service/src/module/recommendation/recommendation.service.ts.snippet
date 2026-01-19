@@ -1,0 +1,62 @@
+  /**
+   * V2.1 Hybrid Scoring with Genre Boost for Similarity Endpoint
+   * 
+   * Applies same hybrid scoring but adds bonus for genre matches
+   * Formula: base_hybrid_score * (1 + genre_boost)
+   */
+  private applyHybridScoringWithGenreBoost(
+    candidates: RawMovieCandidate[],
+    sourceGenreIds: string[]
+  ): ScoredMovieCandidate[] {
+    if (candidates.length === 0) return [];
+
+    // Find max values for normalization
+    const maxRating = 5; // Reviews are 1-5
+
+    const scored = candidates.map(candidate => {
+      // Normalize each component to 0-1
+      const embeddingScore = Math.max(0, Math.min(1, candidate.embeddingSimilarity));
+      
+      // Cold-start fix: Default to neutral rating (0.5) for movies with no reviews
+      const ratingScore = candidate.reviewCount > 0 
+        ? candidate.avgRating / maxRating 
+        : 0.5;
+      
+      // Recency: 1 for today, 0 for 1+ years old
+      const daysSinceRelease = Math.max(0,
+        (Date.now() - new Date(candidate.releaseDate).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      const recencyScore = Math.max(0, 1 - daysSinceRelease / 365);
+
+      // New release boost: +10% for movies released within 30 days
+      const newReleaseBoost = NEW_RELEASE_BOOST.enabled && daysSinceRelease <= NEW_RELEASE_BOOST.days
+        ? NEW_RELEASE_BOOST.boost
+        : 0;
+
+      // Base hybrid score
+      const baseScore = 
+        HYBRID_WEIGHTS.embeddingSimilarity * embeddingScore +
+        HYBRID_WEIGHTS.rating * ratingScore +
+        HYBRID_WEIGHTS.recency * recencyScore +
+        newReleaseBoost;
+
+      // GENRE BOOST: Check how many genres overlap with source movie
+      const genreOverlap = candidate.genreIds.filter(id => sourceGenreIds.includes(id)).length;
+      const genreBoostMultiplier = genreOverlap > 0 
+        ? 1 + (genreOverlap * 0.15) // +15% per matching genre
+        : 1.0;
+
+      const finalScore = baseScore * genreBoostMultiplier;
+
+      return {
+        ...candidate,
+        similarity: finalScore,
+      };
+    });
+
+    // Re-sort by final score
+    scored.sort((a, b) => b.similarity - a.similarity);
+
+    this.logger.debug(`Genre-boosted hybrid scoring applied to ${candidates.length} candidates`);
+    return scored;
+  }
