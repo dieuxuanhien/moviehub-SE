@@ -3,9 +3,17 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Skeleton } from '@movie-hub/shacdn-ui/skeleton';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@movie-hub/shacdn-ui/carousel';
 import { useGetSimilarMovies } from '@/hooks/movie-hooks';
 import { ErrorFallback } from '@/components/error-fallback';
 import { Film, Sparkles } from 'lucide-react';
+import { SimilarMovie } from '@/libs/actions/movies/movie-action';
 
 interface SimilarMoviesProps {
   movieId: string;
@@ -14,7 +22,7 @@ interface SimilarMoviesProps {
 
 export const SimilarMovies = ({ movieId, limit = 10 }: SimilarMoviesProps) => {
   const { data, isLoading, isError, error } = useGetSimilarMovies(movieId, limit);
-  const movies = data?.data?.movies || [];
+  const movies = data?.movies || [];
 
   if (isLoading) {
     return (
@@ -23,16 +31,18 @@ export const SimilarMovies = ({ movieId, limit = 10 }: SimilarMoviesProps) => {
           <Sparkles className="w-8 h-8 text-yellow-400" />
           Phim tương tự
         </h2>
-        <div className="overflow-x-auto hide-scrollbar">
-          <div className="flex items-start gap-4 w-max">
+        <Carousel className="w-full">
+          <CarouselContent className="m-0">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex flex-col gap-3">
-                <Skeleton className="rounded-lg h-[280px] w-[180px]" />
-                <Skeleton className="h-4 w-32 rounded" />
-              </div>
+              <CarouselItem key={i} className="basis-1/2 md:basis-1/3 lg:basis-1/6 p-2">
+                <div className="flex flex-col gap-3">
+                  <Skeleton className="aspect-[2/3] rounded-lg" />
+                  <Skeleton className="h-4 w-3/4 rounded" />
+                </div>
+              </CarouselItem>
             ))}
-          </div>
-        </div>
+          </CarouselContent>
+        </Carousel>
       </section>
     );
   }
@@ -60,48 +70,54 @@ export const SimilarMovies = ({ movieId, limit = 10 }: SimilarMoviesProps) => {
         Phim tương tự
       </h2>
       
-      <div className="overflow-x-auto hide-scrollbar">
-        <div className="flex items-start gap-4 w-max">
-          {movies.map((movie) => (
-            <Link
+      <Carousel className="w-full">
+        <CarouselContent className="m-0">
+          {movies.map((movie: SimilarMovie) => (
+            <CarouselItem
               key={movie.id}
-              href={`/movies/${movie.id}`}
-              className="group flex flex-col gap-3 transition-transform hover:scale-105"
+              className="basis-1/2 md:basis-1/3 lg:basis-1/6 p-2"
             >
-              <div className="relative overflow-hidden rounded-lg shadow-lg">
-                <Image
-                  src={
-                    movie.posterUrl && !movie.posterUrl.includes('placeholder')
-                      ? movie.posterUrl
-                      : '/images/placeholder.png'
-                  }
-                  alt={movie.title}
-                  className="object-cover aspect-[2/3] group-hover:brightness-110 transition-all duration-300"
-                  height={280}
-                  width={180}
-                />
-                
-                {/* Similarity badge */}
-                <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
-                  {Math.round(movie.similarity * 100)}% match
-                </div>
-                
-                {/* Hover overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
-                  <div className="flex items-center gap-2 text-white text-sm">
-                    <Film className="w-4 h-4" />
-                    Xem chi tiết
+              <Link
+                href={`/movies/${movie.id}`}
+                className="group flex flex-col gap-3 transition-transform hover:scale-105"
+              >
+                <div className="relative overflow-hidden rounded-lg shadow-lg">
+                  <Image
+                    src={
+                      movie.posterUrl && !movie.posterUrl.includes('placeholder')
+                        ? movie.posterUrl
+                        : '/images/placeholder.png'
+                    }
+                    alt={movie.title}
+                    className="object-cover aspect-[2/3] group-hover:brightness-110 transition-all duration-300"
+                    height={280}
+                    width={180}
+                  />
+                  
+                  {/* Similarity badge */}
+                  <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
+                    {Math.round(movie.similarity * 100)}% match
+                  </div>
+                  
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                    <div className="flex items-center gap-2 text-white text-sm">
+                      <Film className="w-4 h-4" />
+                      Xem chi tiết
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <p className="text-neutral-300 font-medium text-sm max-w-[180px] line-clamp-2 group-hover:text-white transition-colors">
-                {movie.title}
-              </p>
-            </Link>
+                
+                <p className="text-neutral-300 font-medium text-sm line-clamp-2 group-hover:text-white transition-colors">
+                  {movie.title}
+                </p>
+              </Link>
+            </CarouselItem>
           ))}
-        </div>
-      </div>
+        </CarouselContent>
+        <CarouselPrevious />
+        <CarouselNext />
+      </Carousel>
     </section>
   );
 };

@@ -58,10 +58,10 @@ export default async function MovieDetailsPage({
             availableCities={availableCities.data}
           />
 
-          <MovieReviews movieId={id} />
-          
           {/* Similar Movies Section */}
           <SimilarMovies movieId={id} limit={12} />
+
+          <MovieReviews movieId={id} />
         </div>
 
         <TrailerModal />

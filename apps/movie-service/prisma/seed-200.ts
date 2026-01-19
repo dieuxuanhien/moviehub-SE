@@ -1,3 +1,4 @@
+import { getSeedPosterUrl, getSeedReleaseData } from './seed-helper';
 import { PrismaClient, AgeRating, LanguageOption } from '../generated/prisma';
 
 const prisma = new PrismaClient();
@@ -94,7 +95,7 @@ function generateMovie(index: number) {
     title,
     originalTitle: `Original ${title}`,
     overview: pickRandom(overviews),
-    posterUrl: `https://via.placeholder.com/500x750?text=${encodeURIComponent(title)}`,
+    posterUrl: getSeedPosterUrl(movieData.title, `https://via.placeholder.com/500x750?text=${encodeURIComponent(title))}`,
     trailerUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     backdropUrl: `https://via.placeholder.com/1920x1080?text=${encodeURIComponent(title)}`,
     runtime: 90 + Math.floor(Math.random() * 90),
@@ -174,15 +175,20 @@ async function main() {
       },
     });
 
-    await prisma.movieRelease.create({
-      data: {
-        id: movieData.releaseId,
-        movieId: movie.id,
-        startDate: new Date('2025-12-01'),
-        endDate: new Date('2026-03-01'),
-        note: 'Lịch chiếu mùa Tết 2026',
-      },
-    });
+    const releases = getSeedReleaseData(movieData.title, successCount, new Date(movieData.releaseDate));
+      for (const rel of releases) {
+        const releases = getSeedReleaseData(movieData.title, successCount, new Date(movieData.releaseDate));
+      for (const rel of releases) {
+        await prisma.movieRelease.create({
+          data: {
+            movieId: movie.id,
+            startDate: new Date(rel.startDate),
+            endDate: rel.endDate ? new Date(rel.endDate) : null,
+            note: rel.note,
+          },
+        });
+      }
+      }
 
     await Promise.all(
       movieData.genres.map((name) =>

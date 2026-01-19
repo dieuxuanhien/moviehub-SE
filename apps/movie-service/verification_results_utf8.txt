@@ -1,0 +1,125 @@
+﻿đŸ” Verifying existing poster URLs...
+
+Found 90 movies with poster URLs to verify
+
+âŒ A Nightmare on Elm Street - Ăc Má»™ng Phá»‘ Elm â†’ https://upload.wikimedia.org/wikipedia/en/a/a3/A_Nightmare_on_Elm_Street_%281984%29_theatrical_poster.jpg
+âŒ Annabelle â†’ https://upload.wikimedia.org/wikipedia/en/2/21/Annabelle_poster.jpg
+âœ… Ant-Man and the Wasp: Quantumania
+âœ… Aquaman
+âœ… Arrival - Cuá»™c Chiáº¿n NgoĂ i HĂ nh Tinh
+âŒ A Star Is Born - Má»™t NgĂ´i Sao Ra Äá»i â†’ https://upload.wikimedia.org/wikipedia/en/8/86/A_Star_Is_Born_%282018_film_poster%29.png
+âœ… A Tale of Two Sisters - CĂ¢u Chuyá»‡n Hai Chá»‹ Em
+âœ… Avatar
+âœ… Avatar: DĂ²ng Cháº£y Cá»§a NÆ°á»›c
+âœ… Avengers: Endgame
+âœ… Avengers: Infinity War
+âœ… Barbarian - Káº» Man Rá»£
+âœ… Barbie
+âŒ Birdman - NgÆ°á»i Chim â†’ https://upload.wikimedia.org/wikipedia/en/a/a3/Birdman_poster.jpg
+âœ… Black Panther
+âœ… Black Panther: Wakanda Forever
+âœ… Black Widow
+âœ… Blade Runner 2049
+âœ… Blue Beetle
+âœ… Blue Beetle
+âœ… Bohemian Rhapsody
+âœ… Captain Marvel
+âœ… Crazy Rich Asians - Con NhĂ  SiĂªu GiĂ u ChĂ¢u Ă
+âœ… Deadpool 3 & Wolverine
+âœ… Doctor Strange in the Multiverse of Madness
+âœ… Dune: HĂ nh Tinh CĂ¡t
+âœ… Dune: HĂ nh Tinh CĂ¡t - Pháº§n Hai
+âœ… Dunkirk
+âœ… Elemental - Nhá»¯ng Máº£nh GhĂ©p YĂªu ThÆ°Æ¡ng
+âœ… Everything Everywhere All at Once - Cuá»™c Chiáº¿n Äa VÅ© Trá»¥
+âŒ F9 - Fast & Furious 9 â†’ https://upload.wikimedia.org/wikipedia/en/3/30/F9_poster.jpg
+âœ… Fast X
+âœ… Fight Club
+âœ… Forrest Gump
+âŒ Friday the 13th - Thá»© SĂ¡u NgĂ y 13 â†’ https://upload.wikimedia.org/wikipedia/en/0/0b/Friday_the_13th_%281980%29_theatrical_poster.jpg
+âœ… Get Out - Láº¥y Máº¡ng
+âŒ Guardians of the Galaxy - Vá»‡ Binh Dáº£i NgĂ¢n HĂ  â†’ https://upload.wikimedia.org/wikipedia/en/b/ba/Guardians_of_the_Galaxy_poster.jpg
+âŒ Halloween (2018) â†’ https://upload.wikimedia.org/wikipedia/en/1/1d/Halloween_%282018%29_poster.jpg
+âœ… Inception - Giáº¥c MÆ¡ Trong MÆ¡
+âœ… Insidious - Quá»· Quyá»‡t
+âœ… Interstellar - Há»‘ Äen Tá»­ Tháº§n
+âœ… It - GĂ£ Há» Ma QuĂ¡i
+âœ… John Wick: Chapter 4
+âœ… Joker
+âœ… Ju-On: The Grudge - Lá»i Nguyá»n
+âœ… La La Land - Nhá»¯ng Káº» Má»™ng MÆ¡
+âŒ M3GAN - BĂºp BĂª SĂ¡t NhĂ¢n â†’ https://upload.wikimedia.org/wikipedia/en/f/f9/M3GAN_poster.jpg
+âœ… Ma Tráº­n
+âŒ Mission: Impossible â€“ Dead Reckoning Part One â†’ https://upload.wikimedia.org/wikipedia/en/e/ed/Mission_Impossible_%E2%80%93_Dead_Reckoning_Part_One_poster.jpg
+âŒ No Time to Die - KhĂ´ng Pháº£i LĂºc Cháº¿t â†’ https://upload.wikimedia.org/wikipedia/en/f/ff/No_Time_to_Die_poster.jpg
+âŒ Once Upon a Time in Hollywood â†’ https://upload.wikimedia.org/wikipedia/en/a/a5/Once_Upon_a_Time_in_Hollywood_poster.png
+âœ… Oppenheimer
+âœ… Parasite - KĂ½ Sinh TrĂ¹ng
+âœ… Pearl
+âŒ Pride and Prejudice - KiĂªu HĂ£nh VĂ  Äá»‹nh Kiáº¿n â†’ https://upload.wikimedia.org/wikipedia/en/8/86/PrideandPrejudicePoster.jpg
+âœ… Puss in Boots: The Last Wish
+âœ… Ringu - VĂ²ng TrĂ²n Äá»‹nh Má»‡nh
+âŒ Romeo + Juliet â†’ https://upload.wikimedia.org/wikipedia/en/b/bc/RomeoandJuliet1996.jpg
+âœ… Shang-Chi and the Legend of the Ten Rings
+âŒ Sinister - Äiá»m BĂ¡o Tá»­ Tháº§n â†’ https://upload.wikimedia.org/wikipedia/en/5/53/Sinister_film_poster.jpg
+âŒ Smile - CÆ°á»i â†’ https://upload.wikimedia.org/wikipedia/en/e/e5/Smile_2022_film_poster.jpg
+âœ… Spider-Man: Far From Home
+âœ… Spider-Man: No Way Home
+âœ… Talk to Me - NĂ³i Chuyá»‡n Vá»›i TĂ´i
+âœ… TENET
+âœ… The Batman
+âœ… The Black Phone - Äiá»‡n Thoáº¡i Äen
+âœ… The Dark Knight - Ká»µ SÄ© BĂ³ng ÄĂªm
+âŒ The Exorcist - Quá»· Ăm â†’ https://upload.wikimedia.org/wikipedia/en/e/e0/The_Exorcist_%281973%29_theatrical_poster.jpg
+âœ… The Flash
+âœ… The Little Mermaid - NĂ ng TiĂªn CĂ¡
+âœ… The Marvels
+âŒ The Notebook - Nháº­t KĂ½ TĂ¬nh YĂªu â†’ https://upload.wikimedia.org/wikipedia/en/4/49/Posternotebook.jpg
+âŒ The Nun - Ăc Quá»· Ma SÆ¡ â†’ https://upload.wikimedia.org/wikipedia/en/6/6f/TheNunPoster.jpg
+âŒ The Ring - VĂ²ng TrĂ²n Kinh HoĂ ng â†’ https://upload.wikimedia.org/wikipedia/en/9/9c/The_Ring_poster.jpg
+âŒ The Shape of Water - HĂ¬nh Dáº¡ng Cá»§a NÆ°á»›c â†’ https://upload.wikimedia.org/wikipedia/en/5/5b/The_Shape_of_Water_%28film%29.png
+âœ… The Shining - KhĂ¡ch Sáº¡n Ma QuĂ¡i
+âœ… The Super Mario Bros. Movie
+âŒ The Terminator - Káº» Há»§y Diá»‡t â†’ https://upload.wikimedia.org/wikipedia/en/7/70/Terminator1984movieposter.jpg
+âœ… Thor: Ragnarok
+âœ… Titanic
+âœ… Toy Story
+âœ… Train to Busan
+âœ… Train to Busan - Chuyáº¿n TĂ u Sinh Tá»­
+âœ… Transformers: Rise of the Beasts
+âŒ Us - ChĂºng Ta â†’ https://upload.wikimedia.org/wikipedia/en/1/1c/Us_%282019%29_theatrical_poster.png
+âŒ Wicked - PhĂ¹ Thá»§y Xanh â†’ https://upload.wikimedia.org/wikipedia/en/3/37/Wicked_%28film%29_poster.jpg
+âŒ Wonder Woman â†’ https://upload.wikimedia.org/wikipedia/en/e/ed/Wonder_Woman_%282017_film%29.jpg
+âœ… Wonka
+âœ… Your Name - TĂªn Cáº­u LĂ  GĂ¬
+
+đŸ‰ Verification Complete!
+âœ… Valid: 65
+âŒ Invalid: 25
+
+â ï¸  Broken URLs:
+  - A Nightmare on Elm Street - Ăc Má»™ng Phá»‘ Elm: https://upload.wikimedia.org/wikipedia/en/a/a3/A_Nightmare_on_Elm_Street_%281984%29_theatrical_poster.jpg
+  - Annabelle: https://upload.wikimedia.org/wikipedia/en/2/21/Annabelle_poster.jpg
+  - A Star Is Born - Má»™t NgĂ´i Sao Ra Äá»i: https://upload.wikimedia.org/wikipedia/en/8/86/A_Star_Is_Born_%282018_film_poster%29.png
+  - Birdman - NgÆ°á»i Chim: https://upload.wikimedia.org/wikipedia/en/a/a3/Birdman_poster.jpg
+  - F9 - Fast & Furious 9: https://upload.wikimedia.org/wikipedia/en/3/30/F9_poster.jpg
+  - Friday the 13th - Thá»© SĂ¡u NgĂ y 13: https://upload.wikimedia.org/wikipedia/en/0/0b/Friday_the_13th_%281980%29_theatrical_poster.jpg
+  - Guardians of the Galaxy - Vá»‡ Binh Dáº£i NgĂ¢n HĂ : https://upload.wikimedia.org/wikipedia/en/b/ba/Guardians_of_the_Galaxy_poster.jpg
+  - Halloween (2018): https://upload.wikimedia.org/wikipedia/en/1/1d/Halloween_%282018%29_poster.jpg
+  - M3GAN - BĂºp BĂª SĂ¡t NhĂ¢n: https://upload.wikimedia.org/wikipedia/en/f/f9/M3GAN_poster.jpg
+  - Mission: Impossible â€“ Dead Reckoning Part One: https://upload.wikimedia.org/wikipedia/en/e/ed/Mission_Impossible_%E2%80%93_Dead_Reckoning_Part_One_poster.jpg
+  - No Time to Die - KhĂ´ng Pháº£i LĂºc Cháº¿t: https://upload.wikimedia.org/wikipedia/en/f/ff/No_Time_to_Die_poster.jpg
+  - Once Upon a Time in Hollywood: https://upload.wikimedia.org/wikipedia/en/a/a5/Once_Upon_a_Time_in_Hollywood_poster.png
+  - Pride and Prejudice - KiĂªu HĂ£nh VĂ  Äá»‹nh Kiáº¿n: https://upload.wikimedia.org/wikipedia/en/8/86/PrideandPrejudicePoster.jpg
+  - Romeo + Juliet: https://upload.wikimedia.org/wikipedia/en/b/bc/RomeoandJuliet1996.jpg
+  - Sinister - Äiá»m BĂ¡o Tá»­ Tháº§n: https://upload.wikimedia.org/wikipedia/en/5/53/Sinister_film_poster.jpg
+  - Smile - CÆ°á»i: https://upload.wikimedia.org/wikipedia/en/e/e5/Smile_2022_film_poster.jpg
+  - The Exorcist - Quá»· Ăm: https://upload.wikimedia.org/wikipedia/en/e/e0/The_Exorcist_%281973%29_theatrical_poster.jpg
+  - The Notebook - Nháº­t KĂ½ TĂ¬nh YĂªu: https://upload.wikimedia.org/wikipedia/en/4/49/Posternotebook.jpg
+  - The Nun - Ăc Quá»· Ma SÆ¡: https://upload.wikimedia.org/wikipedia/en/6/6f/TheNunPoster.jpg
+  - The Ring - VĂ²ng TrĂ²n Kinh HoĂ ng: https://upload.wikimedia.org/wikipedia/en/9/9c/The_Ring_poster.jpg
+  - The Shape of Water - HĂ¬nh Dáº¡ng Cá»§a NÆ°á»›c: https://upload.wikimedia.org/wikipedia/en/5/5b/The_Shape_of_Water_%28film%29.png
+  - The Terminator - Káº» Há»§y Diá»‡t: https://upload.wikimedia.org/wikipedia/en/7/70/Terminator1984movieposter.jpg
+  - Us - ChĂºng Ta: https://upload.wikimedia.org/wikipedia/en/1/1c/Us_%282019%29_theatrical_poster.png
+  - Wicked - PhĂ¹ Thá»§y Xanh: https://upload.wikimedia.org/wikipedia/en/3/37/Wicked_%28film%29_poster.jpg
+  - Wonder Woman: https://upload.wikimedia.org/wikipedia/en/e/ed/Wonder_Woman_%282017_film%29.jpg

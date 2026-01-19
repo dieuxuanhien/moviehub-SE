@@ -185,6 +185,14 @@ export class RecommendationService {
         INNER JOIN movie_embeddings me ON m.id = me.movie_id
         WHERE m.id != ${movieId}::uuid
           AND me.embedding IS NOT NULL
+          AND EXISTS (
+            SELECT 1 FROM movie_releases mr 
+            WHERE mr.movie_id = m.id 
+            AND (
+              (mr.start_date <= CURRENT_DATE AND (mr.end_date >= CURRENT_DATE OR mr.end_date IS NULL)) -- Now Showing
+              OR (mr.start_date > CURRENT_DATE AND mr.start_date <= (CURRENT_DATE + interval '60 days')) -- Upcoming within 60 days
+            )
+          )
         ORDER BY "embeddingSimilarity" DESC
         LIMIT ${candidateLimit}
         OFFSET ${offset}
@@ -312,6 +320,14 @@ export class RecommendationService {
                 WHERE mg.movie_id = m.id 
                 AND mg.genre_id = ANY(${genreIds}::uuid[])
               )
+              AND EXISTS (
+                SELECT 1 FROM movie_releases mr 
+                WHERE mr.movie_id = m.id 
+                AND (
+                  (mr.start_date <= CURRENT_DATE AND (mr.end_date >= CURRENT_DATE OR mr.end_date IS NULL)) -- Now Showing
+                  OR (mr.start_date > CURRENT_DATE AND mr.start_date <= (CURRENT_DATE + interval '60 days')) -- Upcoming within 60 days
+                )
+              )
             ORDER BY "embeddingSimilarity" DESC
             LIMIT ${candidateLimit}
           `
@@ -337,6 +353,14 @@ export class RecommendationService {
             FROM movies m
             INNER JOIN movie_embeddings me ON m.id = me.movie_id
             WHERE me.embedding IS NOT NULL
+              AND EXISTS (
+                SELECT 1 FROM movie_releases mr 
+                WHERE mr.movie_id = m.id 
+                AND (
+                  (mr.start_date <= CURRENT_DATE AND (mr.end_date >= CURRENT_DATE OR mr.end_date IS NULL)) -- Now Showing
+                  OR (mr.start_date > CURRENT_DATE AND mr.start_date <= (CURRENT_DATE + interval '60 days')) -- Upcoming within 60 days
+                )
+              )
             ORDER BY "embeddingSimilarity" DESC
             LIMIT ${candidateLimit}
           `;

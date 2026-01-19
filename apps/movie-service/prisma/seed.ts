@@ -1,3 +1,4 @@
+import { getSeedPosterUrl, getSeedReleaseData } from './seed-helper';
 import { PrismaClient, AgeRating, LanguageOption } from '../generated/prisma';
 
 const prisma = new PrismaClient();
@@ -361,15 +362,20 @@ async function main() {
         ? new Date('2026-02-10') // Upcoming (Future)
         : new Date('2025-12-20'); // Now Showing (Past)
 
-    await prisma.movieRelease.create({
-      data: {
-        id: movieData.releaseId,
-        movieId: movie.id,
-        startDate: releaseStart,
-        endDate: new Date('2026-02-28'),
-        note: 'Lịch phát hành chiếu rạp dịp Tết 2026',
-      },
-    });
+    const releases = getSeedReleaseData(movieData.title, successCount, new Date(movieData.releaseDate));
+      for (const rel of releases) {
+        const releases = getSeedReleaseData(movieData.title, successCount, new Date(movieData.releaseDate));
+      for (const rel of releases) {
+        await prisma.movieRelease.create({
+          data: {
+            movieId: movie.id,
+            startDate: new Date(rel.startDate),
+            endDate: rel.endDate ? new Date(rel.endDate) : null,
+            note: rel.note,
+          },
+        });
+      }
+      }
 
     await Promise.all(
       movieData.genres.map((name) =>

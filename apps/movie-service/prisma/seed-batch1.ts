@@ -1,3 +1,4 @@
+import { getSeedPosterUrl, getSeedTrailerUrl, getSeedReleaseData } from './seed-helper';
 import { PrismaClient, AgeRating, LanguageOption } from '../generated/prisma';
 
 const prisma = new PrismaClient();
@@ -824,8 +825,8 @@ async function main() {
           title: movieData.title,
           originalTitle: movieData.originalTitle,
           overview: movieData.overview,
-          posterUrl: `https://via.placeholder.com/500x750?text=${encodeURIComponent(movieData.title.slice(0, 20))}`,
-          trailerUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          posterUrl: getSeedPosterUrl(movieData.title, `https://via.placeholder.com/500x750?text=${encodeURIComponent(movieData.title.slice(0, 20))}`),
+          trailerUrl: getSeedTrailerUrl(movieData.title, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'),
           backdropUrl: `https://via.placeholder.com/1920x1080?text=${encodeURIComponent(movieData.title.slice(0, 20))}`,
           runtime: movieData.runtime,
           releaseDate: new Date(movieData.releaseDate),
@@ -839,15 +840,20 @@ async function main() {
         },
       });
 
-      await prisma.movieRelease.create({
-        data: {
-          id: releaseId,
-          movieId: movie.id,
-          startDate: new Date('2025-12-01'),
-          endDate: new Date('2026-03-01'),
-          note: 'Lịch chiếu Tết 2026',
-        },
-      });
+      const releases = getSeedReleaseData(movieData.title, successCount, new Date(movieData.releaseDate));
+      for (const rel of releases) {
+        const releases = getSeedReleaseData(movieData.title, successCount, new Date(movieData.releaseDate));
+      for (const rel of releases) {
+        await prisma.movieRelease.create({
+          data: {
+            movieId: movie.id,
+            startDate: new Date(rel.startDate),
+            endDate: rel.endDate ? new Date(rel.endDate) : null,
+            note: rel.note,
+          },
+        });
+      }
+      }
 
       // Create genres
       for (const genreName of movieData.genres) {

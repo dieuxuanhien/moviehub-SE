@@ -35,7 +35,7 @@ export default function RecommendationsSection() {
     12
   );
 
-  const movies = data?.data?.movies || [];
+  const movies = data?.movies || [];
 
   return (
     <div className="px-6">

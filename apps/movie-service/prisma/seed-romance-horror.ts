@@ -1,3 +1,4 @@
+import { getSeedPosterUrl, getSeedTrailerUrl, getSeedReleaseData } from './seed-helper';
 import { PrismaClient, AgeRating, LanguageOption } from '../generated/prisma/index.js';
 
 const prisma = new PrismaClient();
@@ -548,8 +549,8 @@ async function main() {
           title: movieData.title,
           originalTitle: movieData.originalTitle,
           overview: movieData.overview,
-          posterUrl: `https://via.placeholder.com/500x750?text=${encodeURIComponent(movieData.title.slice(0, 20))}`,
-          trailerUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          posterUrl: getSeedPosterUrl(movieData.title, `https://via.placeholder.com/500x750?text=${encodeURIComponent(movieData.title.slice(0, 20))}`),
+          trailerUrl: getSeedTrailerUrl(movieData.title, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'),
           backdropUrl: `https://via.placeholder.com/1920x1080?text=${encodeURIComponent(movieData.title.slice(0, 20))}`,
           runtime: movieData.runtime,
           releaseDate: new Date(movieData.releaseDate),

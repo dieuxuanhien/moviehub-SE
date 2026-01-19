@@ -322,39 +322,39 @@ const TITLE_MAPPINGS = {
 // Known working poster URLs (manually verified from Wikipedia)
 const KNOWN_POSTERS = {
   // Christopher Nolan Films
-  'Oppenheimer': 'https://upload.wikimedia.org/wikipedia/en/4/4a/Oppenheimer_%28film%29.jpg',
-  'Inception - Giấc Mơ Trong Mơ': 'https://upload.wikimedia.org/wikipedia/en/2/2e/Inception_%282010%29_theatrical_poster.jpg',
-  'Interstellar - Hố Đen Tử Thần': 'https://upload.wikimedia.org/wikipedia/en/b/bc/Interstellar_film_poster.jpg',
-  'The Dark Knight - Kỵ Sĩ Bóng Đêm': 'https://upload.wikimedia.org/wikipedia/en/1/1c/The_Dark_Knight_%282008_film%29.jpg',
-  'TENET': 'https://upload.wikimedia.org/wikipedia/en/1/14/Tenet_movie_poster.jpg',
-  'Dunkirk': 'https://upload.wikimedia.org/wikipedia/en/1/15/Dunkirk_Film_poster.jpg',
+  'Oppenheimer': 'https://en.wikipedia.org/wiki/Special:FilePath/Oppenheimer_%28film%29.jpg',
+  'Inception - Giấc Mơ Trong Mơ': 'https://en.wikipedia.org/wiki/Special:FilePath/Inception_%282010%29_theatrical_poster.jpg',
+  'Interstellar - Hố Đen Tử Thần': 'https://en.wikipedia.org/wiki/Special:FilePath/Interstellar_film_poster.jpg',
+  'The Dark Knight - Kỵ Sĩ Bóng Đêm': 'https://en.wikipedia.org/wiki/Special:FilePath/The_Dark_Knight_%282008_film%29.jpg',
+  'TENET': 'https://en.wikipedia.org/wiki/Special:FilePath/Tenet_movie_poster.jpg',
+  'Dunkirk': 'https://en.wikipedia.org/wiki/Special:FilePath/Dunkirk_Film_poster.jpg',
   
   // Action/Adventure
-  'Avatar': 'https://upload.wikimedia.org/wikipedia/en/d/d6/Avatar_%282009_film%29_poster.jpg',
-  'Avatar: Dòng Chảy Của Nước': 'https://upload.wikimedia.org/wikipedia/vi/5/54/Avatar_The_Way_of_Water_poster.jpg',
-  'Fast X': 'https://upload.wikimedia.org/wikipedia/en/f/f2/Fast_X_poster.jpg',
-  'F9 - Fast & Furious 9': 'https://upload.wikimedia.org/wikipedia/en/3/30/F9_poster.jpg',
-  'John Wick: Chapter 4': 'https://upload.wikimedia.org/wikipedia/en/d/d0/John_Wick_-_Chapter_4_promotional_poster.jpg',
-  'Spider-Man: No Way Home': 'https://upload.wikimedia.org/wikipedia/en/0/00/Spider-Man_No_Way_Home_poster.jpg',
-  'Spider-Man: Far From Home': 'https://upload.wikimedia.org/wikipedia/en/b/bd/Spider-Man_Far_From_Home_poster.jpg',
-  'Avengers: Endgame': 'https://upload.wikimedia.org/wikipedia/en/0/0d/Avengers_Endgame_poster.jpg',
-  'Avengers: Infinity War': 'https://upload.wikimedia.org/wikipedia/en/4/4d/Avengers_Infinity_War_poster.jpg',
-  'The Avengers': 'https://upload.wikimedia.org/wikipedia/en/8/8a/The_Avengers_%282012_film%29_poster.jpg',
-  'Black Panther': 'https://upload.wikimedia.org/wikipedia/en/d/d6/Black_Panther_%28film%29_poster.jpg',
-  'Black Panther: Wakanda Forever': 'https://upload.wikimedia.org/wikipedia/en/3/3b/Black_Panther_Wakanda_Forever_poster.jpg',
-  'Top Gun: Maverick': 'https://upload.wikimedia.org/wikipedia/en/1/13/Top_Gun_Maverick_Poster.jpg',
-  'Guardians of the Galaxy - Vệ Binh Dải Ngân Hà': 'https://upload.wikimedia.org/wikipedia/en/b/ba/Guardians_of_the_Galaxy_poster.jpg',
-  'Wonder Woman': 'https://upload.wikimedia.org/wikipedia/en/e/ed/Wonder_Woman_%282017_film%29.jpg',
-  'Deadpool 3 & Wolverine': 'https://upload.wikimedia.org/wikipedia/en/4/4c/Deadpool_%26_Wolverine_poster.jpg',
-  'Godzilla x Kong: Đế Chế Mới': 'https://upload.wikimedia.org/wikipedia/en/b/be/Godzilla_x_kong_the_new_empire_poster.jpg',
-  'Venom: Kèo Cuối': 'https://upload.wikimedia.org/wikipedia/en/a/a3/Venom_The_Last_Dance_Poster.jpg',
-  'Extraction - Phi Vụ Giải Cứu': 'https://upload.wikimedia.org/wikipedia/en/8/89/Extraction_%282020_film%29.png',
-  'Bad Boys: Đường Cùng': 'https://upload.wikimedia.org/wikipedia/en/8/8b/Bad_Boys_Ride_or_Die_%282024%29_poster.jpg',
-  'Ambulance': 'https://upload.wikimedia.org/wikipedia/en/d/d2/Ambulance_film_poster.jpg',
-  'Red Notice - Lệnh Truy Nã Đỏ': 'https://upload.wikimedia.org/wikipedia/en/0/0c/Red_Notice_-_film_promotional_image.jpg',
-  'Violent Night - Đêm Bạo Tàn': 'https://upload.wikimedia.org/wikipedia/en/d/d2/Violent_Night_poster.jpg',
-  'Road House - Quán Bar Giang Hồ': 'https://upload.wikimedia.org/wikipedia/en/3/37/Road_House_2024_poster.jpg',
-  'Gladiator - Võ Sĩ Giác Đấu': 'https://upload.wikimedia.org/wikipedia/en/f/fb/Gladiator_%282000_film_poster%29.png',
+  'Avatar': 'https://en.wikipedia.org/wiki/Special:FilePath/Avatar_%282009_film%29_poster.jpg',
+  'Avatar: Dòng Chảy Của Nước': 'https://en.wikipedia.org/wiki/Special:FilePath/Avatar_The_Way_of_Water_poster.jpg',
+  'Fast X': 'https://en.wikipedia.org/wiki/Special:FilePath/Fast_X_poster.jpg',
+  'F9 - Fast & Furious 9': 'https://en.wikipedia.org/wiki/Special:FilePath/F9_poster.jpg',
+  'John Wick: Chapter 4': 'https://en.wikipedia.org/wiki/Special:FilePath/John_Wick_-_Chapter_4_promotional_poster.jpg',
+  'Spider-Man: No Way Home': 'https://en.wikipedia.org/wiki/Special:FilePath/Spider-Man_No_Way_Home_poster.jpg',
+  'Spider-Man: Far From Home': 'https://en.wikipedia.org/wiki/Special:FilePath/Spider-Man_Far_From_Home_poster.jpg',
+  'Avengers: Endgame': 'https://en.wikipedia.org/wiki/Special:FilePath/Avengers_Endgame_poster.jpg',
+  'Avengers: Infinity War': 'https://en.wikipedia.org/wiki/Special:FilePath/Avengers_Infinity_War_poster.jpg',
+  'The Avengers': 'https://en.wikipedia.org/wiki/Special:FilePath/The_Avengers_%282012_film%29_poster.jpg',
+  'Black Panther': 'https://en.wikipedia.org/wiki/Special:FilePath/Black_Panther_%28film%29_poster.jpg',
+  'Black Panther: Wakanda Forever': 'https://en.wikipedia.org/wiki/Special:FilePath/Black_Panther_Wakanda_Forever_poster.jpg',
+  'Top Gun: Maverick': 'https://en.wikipedia.org/wiki/Special:FilePath/Top_Gun_Maverick_Poster.jpg',
+  'Guardians of the Galaxy - Vệ Binh Dải Ngân Hà': 'https://en.wikipedia.org/wiki/Special:FilePath/Guardians_of_the_Galaxy_poster.jpg',
+  'Wonder Woman': 'https://en.wikipedia.org/wiki/Special:FilePath/Wonder_Woman_%282017_film%29.jpg',
+  'Deadpool 3 & Wolverine': 'https://en.wikipedia.org/wiki/Special:FilePath/Deadpool_%26_Wolverine_poster.jpg',
+  'Godzilla x Kong: Đế Chế Mới': 'https://en.wikipedia.org/wiki/Special:FilePath/Godzilla_x_kong_the_new_empire_poster.jpg',
+  'Venom: Kèo Cuối': 'https://en.wikipedia.org/wiki/Special:FilePath/Venom_The_Last_Dance_Poster.jpg',
+  'Extraction - Phi Vụ Giải Cứu': 'https://en.wikipedia.org/wiki/Special:FilePath/Extraction_%282020_film%29.png',
+  'Bad Boys: Đường Cùng': 'https://en.wikipedia.org/wiki/Special:FilePath/Bad_Boys_Ride_or_Die_%282024%29_poster.jpg',
+  'Ambulance': 'https://en.wikipedia.org/wiki/Special:FilePath/Ambulance_film_poster.jpg',
+  'Red Notice - Lệnh Truy Nã Đỏ': 'https://en.wikipedia.org/wiki/Special:FilePath/Red_Notice_-_film_promotional_image.jpg',
+  'Violent Night - Đêm Bạo Tàn': 'https://en.wikipedia.org/wiki/Special:FilePath/Violent_Night_poster.jpg',
+  'Road House - Quán Bar Giang Hồ': 'https://en.wikipedia.org/wiki/Special:FilePath/Road_House_2024_poster.jpg',
+  'Gladiator - Võ Sĩ Giác Đấu': 'https://en.wikipedia.org/wiki/Special:FilePath/Gladiator_%282000_film_poster%29.png',
   
   // Romance
   'Titanic': 'https://upload.wikimedia.org/wikipedia/en/1/18/Titanic_%281997_film%29_poster.png',
@@ -378,7 +378,7 @@ const KNOWN_POSTERS = {
   'Us - Chúng Ta': 'https://upload.wikimedia.org/wikipedia/en/1/1c/Us_%282019%29_theatrical_poster.png',
   'Annabelle': 'https://upload.wikimedia.org/wikipedia/en/2/21/Annabelle_poster.jpg',
   'The Conjuring - Ám Ảnh Kinh Hoàng': 'https://upload.wikimedia.org/wikipedia/en/1/1f/Conjuring_poster.jpg',
-  'A Nightmare on Elm Street - Ác Mộng Phố Elm': 'https://upload.wikimedia.org/wikipedia/en/a/a3/A_Nightmare_on_Elm_Street_%281984%29_theatrical_poster.jpg',
+  'A Nightmare on Elm Street - Ác Mộng Phố Elm': 'https://upload.wikimedia.org/wikipedia/en/f/fa/A_Nightmare_on_Elm_Street_%281984%29_theatrical_poster.jpg',
   'Friday the 13th - Thứ Sáu Ngày 13': 'https://upload.wikimedia.org/wikipedia/en/0/0b/Friday_the_13th_%281980%29_theatrical_poster.jpg',
   'The Nun - Ác Quỷ Ma Sơ': 'https://upload.wikimedia.org/wikipedia/en/6/6f/TheNunPoster.jpg',
   'Sinister - Điềm Báo Tử Thần': 'https://upload.wikimedia.org/wikipedia/en/5/53/Sinister_film_poster.jpg',
@@ -421,63 +421,92 @@ const KNOWN_POSTERS = {
   'Schindler\'s List - Bản Danh Sách Schindler': 'https://upload.wikimedia.org/wikipedia/en/3/38/Schindler%27s_List_movie.jpg',
   
   // Browser automation batch 2
-  'Aquaman': 'https://upload.wikimedia.org/wikipedia/en/e/ed/Aquaman_%28film%29_poster.jpg',
-  'The Batman': 'https://upload.wikimedia.org/wikipedia/en/f/ff/The_Batman_%28film%29_poster.jpg',
-  'Thor: Ragnarok': 'https://upload.wikimedia.org/wikipedia/en/7/7d/Thor_Ragnarok_poster.jpg',
-  'Captain Marvel': 'https://upload.wikimedia.org/wikipedia/en/4/4e/Captain_Marvel_%28film%29_poster.jpg',
-  'Black Widow': 'https://upload.wikimedia.org/wikipedia/en/e/e9/Black_Widow_%282021_film%29_poster.jpg',
-  'Shang-Chi and the Legend of the Ten Rings': 'https://upload.wikimedia.org/wikipedia/en/7/74/Shang-Chi_and_the_Legend_of_the_Ten_Rings_poster.jpeg',
-  'Doctor Strange in the Multiverse of Madness': 'https://upload.wikimedia.org/wikipedia/en/1/17/Doctor_Strange_in_the_Multiverse_of_Madness_poster.jpg',
-  'Ant-Man and the Wasp: Quantumania': 'https://upload.wikimedia.org/wikipedia/en/3/30/Ant-Man_and_the_Wasp_Quantumania_poster.jpg',
-  'Bohemian Rhapsody': 'https://upload.wikimedia.org/wikipedia/en/2/2e/Bohemian_Rhapsody_poster.png',
-  'Puss in Boots: The Last Wish': 'https://upload.wikimedia.org/wikipedia/en/7/78/Puss_in_Boots_The_Last_Wish_poster.jpg',
-  'Wonka': 'https://upload.wikimedia.org/wikipedia/en/9/90/Wonka_2023_film_poster.jpg',
-  'Train to Busan': 'https://upload.wikimedia.org/wikipedia/en/9/95/Train_to_Busan.jpg',
-  'Train to Busan - Chuyến Tàu Sinh Tử': 'https://upload.wikimedia.org/wikipedia/en/9/95/Train_to_Busan.jpg',
+  'Aquaman': 'https://en.wikipedia.org/wiki/Special:FilePath/Aquaman_%28film%29_poster.jpg',
+  'The Batman': 'https://en.wikipedia.org/wiki/Special:FilePath/The_Batman_%28film%29_poster.jpg',
+  'Thor: Ragnarok': 'https://en.wikipedia.org/wiki/Special:FilePath/Thor_Ragnarok_poster.jpg',
+  'Captain Marvel': 'https://en.wikipedia.org/wiki/Special:FilePath/Captain_Marvel_%28film%29_poster.jpg',
+  'Black Widow': 'https://en.wikipedia.org/wiki/Special:FilePath/Black_Widow_%282021_film%29_poster.jpg',
+  'Shang-Chi and the Legend of the Ten Rings': 'https://en.wikipedia.org/wiki/Special:FilePath/Shang-Chi_and_the_Legend_of_the_Ten_Rings_poster.jpeg',
+  'Doctor Strange in the Multiverse of Madness': 'https://en.wikipedia.org/wiki/Special:FilePath/Doctor_Strange_in_the_Multiverse_of_Madness_poster.jpg',
+  'Ant-Man and the Wasp: Quantumania': 'https://en.wikipedia.org/wiki/Special:FilePath/Ant-Man_and_the_Wasp_Quantumania_poster.jpg',
+  'Bohemian Rhapsody': 'https://en.wikipedia.org/wiki/Special:FilePath/Bohemian_Rhapsody_poster.png',
+  'Puss in Boots: The Last Wish': 'https://en.wikipedia.org/wiki/Special:FilePath/Puss_in_Boots_The_Last_Wish_poster.jpg',
+  'Wonka': 'https://en.wikipedia.org/wiki/Special:FilePath/Wonka_2023_film_poster.jpg',
+  'Train to Busan': 'https://en.wikipedia.org/wiki/Special:FilePath/Train_to_Busan.jpg',
+  'Train to Busan - Chuyến Tàu Sinh Tử': 'https://en.wikipedia.org/wiki/Special:FilePath/Train_to_Busan.jpg',
   
   // Browser automation batch 3
-  'Transformers: Rise of the Beasts': 'https://upload.wikimedia.org/wikipedia/en/1/1c/Transformers-_Rise_of_the_Beasts.jpg',
-  'The Marvels': 'https://upload.wikimedia.org/wikipedia/en/7/7a/The_Marvels_poster.jpg',
-  'The Flash': 'https://upload.wikimedia.org/wikipedia/en/e/ed/The_Flash_%28film%29_poster.jpg',
-  'The Super Mario Bros. Movie': 'https://upload.wikimedia.org/wikipedia/en/4/44/The_Super_Mario_Bros._Movie_poster.jpg',
-  'Elemental': 'https://upload.wikimedia.org/wikipedia/en/4/4d/Elemental_final_poster.jpg',
-  'Elemental - Những Mảnh Ghép Yêu Thương': 'https://upload.wikimedia.org/wikipedia/en/4/4d/Elemental_final_poster.jpg',
-  'Blue Beetle': 'https://upload.wikimedia.org/wikipedia/en/6/68/Blue_Beetle_%28film%29_poster.jpg',
+  'Transformers: Rise of the Beasts': 'https://en.wikipedia.org/wiki/Special:FilePath/Transformers-_Rise_of_the_Beasts.jpg',
+  'The Marvels': 'https://en.wikipedia.org/wiki/Special:FilePath/The_Marvels_poster.jpg',
+  'The Flash': 'https://en.wikipedia.org/wiki/Special:FilePath/The_Flash_%28film%29_poster.jpg',
+  'The Super Mario Bros. Movie': 'https://en.wikipedia.org/wiki/Special:FilePath/The_Super_Mario_Bros._Movie_poster.jpg',
+  'Elemental': 'https://en.wikipedia.org/wiki/Special:FilePath/Elemental_final_poster.jpg',
+  'Elemental - Những Mảnh Ghép Yêu Thương': 'https://en.wikipedia.org/wiki/Special:FilePath/Elemental_final_poster.jpg',
+  'Blue Beetle': 'https://en.wikipedia.org/wiki/Special:FilePath/Blue_Beetle_%28film%29_poster.jpg',
+
+  'A Tale of Two Sisters - Câu Chuyện Hai Chị Em': 'https://th.bing.com/th/id/R.04d17990d36b9efa77a48ded6799d47d?rik=N%2feast1wevdB%2bw&pid=ImgRaw&r=0',    
+  'Ju-On: The Grudge - Lời Nguyền': 'https://clbphimxua.com/wp-content/uploads/2023/01/MV5BYjNjMWNhZjctYmQzYS00M2ZmLWEzZTktZTJjZDI0NmM0MmMzXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_-e1672903893233.jpg',
+   'Ringu - Vòng Tròn Định Mệnh': 'https://th.bing.com/th/id/R.06e2790fbbddbc92661a998de11e574b?rik=0eC47YVu3IPwrw&pid=ImgRaw&r=0',
+   'Talk to Me - Nói Chuyện Với Tôi': 'https://tse4.mm.bing.net/th/id/OIP.NIIAXEKVbXliMcgJMRJZZwHaLG?rs=1&pid=ImgDetMain&o=7&rm=3',
+   'Barbarian - Kẻ Man Rợ': 'https://posterspy.com/wp-content/uploads/2022/11/Barbarian_Poster.jpg',
+   'Pearl': 'https://tse3.mm.bing.net/th/id/OIP.VXYq_SW-6c5Efkezq9bfOQHaK-?rs=1&pid=ImgDetMain&o=7&rm=3',
+   'The Menu': 'https://th.bing.com/th/id/R.40e55982b5893d3a4771167ee73700c4?rik=FTgc5vsrj2wTgA&riu=http%3a%2f%2fwww.impawards.com%2f2022%2fposters%2fmenu_ver3_xxlg.jpg&ehk=vqkqi2mwhnfvgk0%2beMplFLHrkWclbbRNixcbPoOnRbw%3d&risl=&pid=ImgRaw&r=0',
+   'Nope / Nope (2022)': 'https://posterspy.com/wp-content/uploads/2022/10/Nope-Poster-2-FINAL-LOW-RES.jpg',
+    'The Black Phone - Điện Thoại Đen': 'https://posterspy.com/wp-content/uploads/2023/03/The-Black-Phone-Poster-Edit.webp'
 };
 
-// Fetch poster URL from Wikipedia API
-async function fetchWikiPoster(articleTitle) {
-  return new Promise((resolve, reject) => {
-    const params = new URLSearchParams({
-      action: 'query',
-      titles: articleTitle,
-      prop: 'pageimages',
-      piprop: 'original',
-      format: 'json',
-    });
-
-    const url = `${WIKI_API}?${params}`;
-    
-    https.get(url, (res) => {
+// Helper for HTTP GET
+async function httpGet(url) {
+  return new Promise((resolve) => {
+    const options = {
+      headers: {
+        'User-Agent': 'MovieHub/1.0 (https://github.com/giang-mov); giang@example.com'
+      }
+    };
+    https.get(url, options, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        try {
-          const json = JSON.parse(data);
-          const pages = json.query?.pages;
-          if (pages) {
-            const page = Object.values(pages)[0];
-            if (page.original) {
-              resolve(page.original.source);
-            }
-          }
-          resolve(null);
-        } catch (e) {
-          resolve(null);
-        }
-      });
+      res.on('end', () => resolve(data));
     }).on('error', () => resolve(null));
   });
+}
+
+// Fetch poster URL from Wikipedia using Search + REST Summary API
+async function fetchWikiPoster(query) {
+  try {
+    // 1. Search for the most relevant article title
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=1&format=json`;
+    const searchData = await httpGet(searchUrl);
+    if (!searchData) return null;
+    
+    const searchJson = JSON.parse(searchData);
+    const articleTitle = searchJson[1]?.[0];
+    if (!articleTitle) return null;
+
+    // 2. Get the summary which contains the "originalimage"
+    const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(articleTitle.replace(/ /g, '_'))}`;
+    const summaryData = await httpGet(summaryUrl);
+    if (!summaryData) return null;
+
+    const summaryJson = JSON.parse(summaryData);
+    const sourceUrl = summaryJson.originalimage?.source;
+    
+    if (sourceUrl) {
+      // 3. Convert to stable Special:FilePath if it's a Wikipedia upload URL
+      // Example: https://upload.wikimedia.org/wikipedia/en/2/2e/Inception_(2010)_theatrical_poster.jpg
+      const parts = sourceUrl.split('/');
+      const fileName = parts[parts.length - 1];
+      if (sourceUrl.includes('wikimedia.org')) {
+        return `https://en.wikipedia.org/wiki/Special:FilePath/${fileName}`;
+      }
+      return sourceUrl;
+    }
+    
+    return null;
+  } catch (e) {
+    console.error(`Error fetching poster for ${query}:`, e.message);
+    return null;
+  }
 }
 
 // Validate URL returns 200 OK
@@ -532,10 +561,14 @@ async function main() {
   let invalidUrls = 0;
 
   for (const movie of movies) {
-    // Skip if already has real poster
-    if (!movie.posterUrl?.includes('placeholder')) {
-      skipped++;
-      continue;
+    // Check if already has a valid real poster
+    if (movie.posterUrl && !movie.posterUrl.includes('placeholder')) {
+      const isValid = await validateUrl(movie.posterUrl);
+      if (isValid) {
+        skipped++;
+        continue;
+      }
+      console.log(`♻️  ${movie.title} has invalid URL, re-fetching...`);
     }
 
     let posterUrl = null;
@@ -547,9 +580,22 @@ async function main() {
       source = 'Known poster';
     } else {
       // Try Wikipedia API
-      const wikiTitle = TITLE_MAPPINGS[movie.title] || movie.title.replace(/ /g, '_');
+      let wikiTitle = TITLE_MAPPINGS[movie.title];
+      
+      if (!wikiTitle) {
+        // Try to extract English part if title has "English - Vietnamese" pattern
+        const englishPart = movie.title.split(' - ')[0].trim();
+        wikiTitle = englishPart.replace(/ /g, '_');
+      }
+      
       posterUrl = await fetchWikiPoster(wikiTitle);
-      source = 'Wiki API';
+      
+      // If still not found, try adding "(film)" or "(20xx_film)"
+      if (!posterUrl) {
+         posterUrl = await fetchWikiPoster(wikiTitle + '_(film)');
+      }
+
+      source = posterUrl ? 'Wiki API' : 'Not found';
     }
     
     if (posterUrl) {

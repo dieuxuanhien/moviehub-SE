@@ -130,7 +130,7 @@ export const useDeleteMovie = (movieId: string) => {
 import { getSimilarMovies, SimilarMoviesResponse, getRecommendations, RecommendationsResponse } from '../libs/actions/movies/movie-action';
 
 export const useGetSimilarMovies = (movieId: string, limit = 20) => {
-  return useQuery<ServiceResult<SimilarMoviesResponse>>({
+  return useQuery<SimilarMoviesResponse>({
     queryKey: ['similar-movies', movieId, limit],
     queryFn: async () => getSimilarMovies(movieId, limit),
     enabled: !!movieId,
@@ -139,7 +139,7 @@ export const useGetSimilarMovies = (movieId: string, limit = 20) => {
 
 // Hook for fetching recommendations based on a query
 export const useGetRecommendations = (query: string, limit = 10) => {
-  return useQuery<ServiceResult<RecommendationsResponse>>({
+  return useQuery<RecommendationsResponse>({
     queryKey: ['recommendations', query, limit],
     queryFn: async () => getRecommendations(query, limit),
     enabled: !!query,

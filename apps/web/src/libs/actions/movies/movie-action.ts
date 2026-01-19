@@ -106,7 +106,7 @@ export interface SimilarMoviesResponse {
 export const getSimilarMovies = async (
   movieId: string,
   limit = 20
-): Promise<ServiceResult<SimilarMoviesResponse>> => {
+): Promise<SimilarMoviesResponse> => {
   try {
     const response = await api.get(`/movies/${movieId}/similar`, {
       params: { limit },
@@ -136,7 +136,7 @@ export interface RecommendationsResponse {
 export const getRecommendations = async (
   query: string,
   limit = 10
-): Promise<ServiceResult<RecommendationsResponse>> => {
+): Promise<RecommendationsResponse> => {
   try {
     const response = await api.post('/movies/recommendations', {
       query,

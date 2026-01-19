@@ -66,6 +66,7 @@ services:
       - "5436:5432" # External:Internal (Internal is always 5432)
     volumes:
       - postgres_movie_data:/var/lib/postgresql/data
+      - ./apps/movie-service/docker-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - moviehub-network
     healthcheck:
