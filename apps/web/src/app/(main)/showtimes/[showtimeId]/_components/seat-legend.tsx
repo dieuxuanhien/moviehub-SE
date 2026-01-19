@@ -57,26 +57,42 @@ const seatLegendItems = [
   },
 ];
 
-export const SeatLegend = () => (
-  <div className="flex flex-wrap gap-4 mt-8 text-white justify-center">
-    {seatLegendItems.map((item) => (
-      <div key={item.label} className="flex items-center gap-2">
-        {/* Couple Seat */}
-        {item.isCouple ? (
-          <div className={`h-5 w-10 rounded border ${item.color}`} />
-        ) : (
-          <div
-            className={`h-5 w-5 rounded flex items-center justify-center border ${item.color}`}
-          >
-            {/* icon if available */}
-            {item.icon && (
-              <item.icon className="w-3 h-3 text-current opacity-70" />
-            )}
-          </div>
-        )}
+export const SeatLegend = () => {
+  // Split into status (first 4) and seat types (last 5)
+  const statusItems = seatLegendItems.slice(0, 4);
+  const seatTypeItems = seatLegendItems.slice(4);
 
-        <span className="text-sm text-gray-300">{item.label}</span>
+  const renderLegendItem = (item: typeof seatLegendItems[0]) => (
+    <div key={item.label} className="flex items-center gap-2">
+      {/* Couple Seat */}
+      {item.isCouple ? (
+        <div className={`h-5 w-10 rounded border ${item.color}`} />
+      ) : (
+        <div
+          className={`h-5 w-5 rounded flex items-center justify-center border ${item.color}`}
+        >
+          {/* icon if available */}
+          {item.icon && (
+            <item.icon className="w-3 h-3 text-current opacity-70" />
+          )}
+        </div>
+      )}
+
+      <span className="text-sm text-gray-300">{item.label}</span>
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col gap-3 mt-8 text-white">
+      {/* Row 1: Status indicators */}
+      <div className="flex flex-wrap gap-4 justify-center">
+        {statusItems.map(renderLegendItem)}
       </div>
-    ))}
-  </div>
-);
+      
+      {/* Row 2: Seat types */}
+      <div className="flex flex-wrap gap-4 justify-center">
+        {seatTypeItems.map(renderLegendItem)}
+      </div>
+    </div>
+  );
+};
