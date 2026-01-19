@@ -7,18 +7,20 @@ import {
 } from '@movie-hub/shared-types';
 
 import z from 'zod';
-import api from '../../api-client';
+import api from '../../api/api-client';
 import { ServiceResult } from '@movie-hub/shared-types/common';
 
 export type CreateMovieRequest = z.infer<typeof CreateMovieSchema>;
 export type UpdateMovieRequest = z.infer<typeof UpdateMovieSchema>;
 
-export const getMovies = async (query : MovieQuery): Promise<ServiceResult<MovieSummary[]>> => { 
+export const getMovies = async (
+  query: MovieQuery
+): Promise<ServiceResult<MovieSummary[]>> => {
+  // eslint-disable-next-line no-useless-catch
   try {
     const response = await api.get('/movies', { params: query });
     return response.data;
   } catch (error) {
-    
     throw error;
   }
 };
@@ -39,7 +41,6 @@ export const createMovie = async (
   movieData: CreateMovieRequest,
   token: string
 ): Promise<MovieSummary> => {
-
   try {
     const response = await api.post('/movies', movieData, {
       headers: {
