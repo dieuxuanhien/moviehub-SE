@@ -137,9 +137,10 @@ export default function ConcessionsPage() {
           imageUrl: formData.imageUrl || undefined,
           available: formData.available,
           inventory: formData.inventory,
-          cinemaId: formData.cinemaId || undefined,
+          cinemaId: formData.cinemaId && formData.cinemaId !== 'all' ? formData.cinemaId : undefined,
           allergens: formData.allergens.length > 0 ? formData.allergens : undefined,
         };
+        console.log('Updating concession:', editingConcession.id, 'with data:', updateData);
         await updateConcession.mutateAsync({ id: editingConcession.id, data: updateData });
       } else {
         const createData: CreateConcessionRequest = {
@@ -151,9 +152,10 @@ export default function ConcessionsPage() {
           imageUrl: formData.imageUrl || undefined,
           available: formData.available,
           inventory: formData.inventory,
-          cinemaId: formData.cinemaId || undefined,
+          cinemaId: formData.cinemaId && formData.cinemaId !== 'all' ? formData.cinemaId : undefined,
           allergens: formData.allergens.length > 0 ? formData.allergens : undefined,
         };
+        console.log('Creating concession with data:', createData);
         await createConcession.mutateAsync(createData);
       }
       setDialogOpen(false);
@@ -164,6 +166,7 @@ export default function ConcessionsPage() {
   };
 
   const handleEdit = (concession: Concession) => {
+    console.log('Editing concession:', concession);
     setEditingConcession(concession);
     setFormData({
       name: concession.name,
@@ -176,6 +179,10 @@ export default function ConcessionsPage() {
       inventory: concession.inventory || 0,
       cinemaId: concession.cinemaId ? concession.cinemaId : 'all',
       allergens: concession.allergens || [],
+    });
+    console.log('Form data set to:', {
+      ...formData,
+      cinemaId: concession.cinemaId ? concession.cinemaId : 'all',
     });
     setDialogOpen(true);
   };
@@ -738,11 +745,11 @@ export default function ConcessionsPage() {
               </Label>
               <div className="col-span-3">
                 <Select
-                  value={formData.cinemaId}
-                  onValueChange={(value) => setFormData({ ...formData, cinemaId: value === 'all' ? '' : value })}
+                  value={formData.cinemaId || 'all'}
+                  onValueChange={(value) => setFormData({ ...formData, cinemaId: value })}
                 >
                   <SelectTrigger id="cinemaId">
-                    <SelectValue placeholder="Tất cả rạp (thẮa trống)" />
+                    <SelectValue placeholder="Tất cả rạp (để trống)" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tất Cả Rạp</SelectItem>

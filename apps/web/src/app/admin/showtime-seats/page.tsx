@@ -324,7 +324,7 @@ export default function ShowtimeSeatsPage() {
                   const match = timeStr.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
                   let displayTime = '';
                   if (match) {
-                    const [_, year, month, day, hour, min] = match;
+                    const [, , month, day, hour, min] = match;
                     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                     displayTime = `${monthNames[parseInt(month) - 1]} ${day}, ${hour}:${min}`;
                   }
@@ -403,12 +403,12 @@ export default function ShowtimeSeatsPage() {
                     <p className="font-semibold text-gray-900">
                       {(() => {
                         // Parse time string directly without timezone conversion
-                        const timeStr = seatsResponse.showtime.start_time;
+                        const timeStr = (seatsResponse.showtime.start_time || '').toString();
                         const match = timeStr.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
                         if (match) {
-                          const [_, year, month, day, hour, min] = match;
+                          const [, , month, day, hour, min] = match;
                           const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                          return `${hour}:${min}, ${monthNames[parseInt(month) - 1]} ${day}, ${year}`;
+                          return `${hour}:${min}, ${monthNames[parseInt(month) - 1]} ${day}, ${match[1]}`;
                         }
                         return '';
                       })()}

@@ -8,7 +8,7 @@ export const useGetConcessions = (query: {
   available?: boolean
 }) => {
   return useQuery({
-    queryKey: ['concessions', query.category],
+    queryKey: ['concessions', query.cinemaId, query.category, query.available],
     queryFn: async () => {
       const response = await findAllConcessions(query);
       return response.data;

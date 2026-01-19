@@ -12,8 +12,7 @@ import {
   SelectValue,
 } from '@movie-hub/shacdn-ui/select';
 import { useGetConcessions } from '@/hooks/concession-hooks';
-import { ConcessionDto } from '@/libs/types/concession.type';
-import { ConcessionCategory } from '@movie-hub/shared-types';
+import { ConcessionDto, ConcessionCategory } from '@/libs/types/concession.type';
 import { Loader } from '@/components/loader';
 import { toast } from 'sonner';
 
@@ -27,9 +26,16 @@ export const FoodSelector = ({ cinemaId }: { cinemaId?: string }) => {
   const { data, isLoading } = useGetConcessions({
     category,
     available: true,
+    cinemaId: cinemaId || undefined,
   });
 
   const foodList = data || [];
+
+  // Debug logging
+  console.log('FoodSelector - category:', category);
+  console.log('FoodSelector - cinemaId:', cinemaId);
+  console.log('FoodSelector - foodList:', foodList);
+  console.log('FoodSelector - foodList categories:', foodList.map((f) => ({ name: f.name, category: f.category })));
 
   const handleIncrement = useCallback(
     (food: ConcessionDto) => {
@@ -77,12 +83,12 @@ export const FoodSelector = ({ cinemaId }: { cinemaId?: string }) => {
         </SelectTrigger>
 
         <SelectContent className="bg-zinc-900 text-white border-zinc-700">
-          <SelectItem value={ConcessionCategory.FOOD}>🍔 Đồ ăn</SelectItem>
-          <SelectItem value={ConcessionCategory.BEVERAGE}>
-            🥤 Nước uống
+          <SelectItem value={ConcessionCategory.FOOD}>🍔 Thức Ăn</SelectItem>
+          <SelectItem value={ConcessionCategory.DRINK}>
+            🥤 Đồ Uống
           </SelectItem>
           <SelectItem value={ConcessionCategory.COMBO}>🍿 Combo</SelectItem>
-          <SelectItem value={ConcessionCategory.SNACK}>🛍️ Ăn nhẹ</SelectItem>
+          <SelectItem value={ConcessionCategory.MERCHANDISE}>🎁 Hàng Hóa</SelectItem>
         </SelectContent>
       </Select>
 
