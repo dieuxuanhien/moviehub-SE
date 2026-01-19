@@ -110,7 +110,6 @@ export class DashboardController {
    * Returns latest bookings with enriched movie/cinema data
    */
   @Get('recent-bookings')
-  @Get('recent-bookings')
   async getRecentBookings(
     @Req() req: any,
     @Query('limit') limit?: string,
@@ -140,7 +139,6 @@ export class DashboardController {
    * GET /v1/dashboard/occupancy
    * Returns hall occupancy rates for a given date (defaults to today)
    */
-  @Get('occupancy')
   @Get('occupancy')
   async getOccupancy(
     @Req() req: any,

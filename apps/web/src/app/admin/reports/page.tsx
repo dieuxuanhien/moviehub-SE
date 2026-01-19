@@ -23,8 +23,6 @@ import {
   Building2,
   Download,
   RefreshCw,
-  ArrowUpRight,
-  ArrowDownRight,
 } from 'lucide-react';
 import { Button } from '@movie-hub/shacdn-ui/button';
 import {
@@ -130,10 +128,10 @@ export default function ReportsPage() {
           startDate,
           endDate,
           groupBy: 'day',
-          cinemaId, // Add cinema filter
+          cinemaId, // Filter revenue by cinema
         }),
-        getTopMovies(5, cinemaId, startDate, endDate), // Add filters
-        getTopCinemas(5, cinemaId, startDate, endDate), // Add filters
+        getTopMovies(5, cinemaId, startDate, endDate), // Filter movies by cinema
+        getTopCinemas(5, undefined, startDate, endDate), // Don't filter cinemas - always show all for comparison
       ]);
 
       setRevenueReport(revenueRes);
@@ -176,7 +174,6 @@ export default function ReportsPage() {
             topCinemas.length
         )
       : 0;
-  const revenueGrowth = 0; // Not available yet
 
   const revenueChartData = (revenueReport?.revenueByPeriod || []).map((p) => ({
     date: new Date(p.period).toLocaleDateString('vi-VN', {
@@ -192,14 +189,12 @@ export default function ReportsPage() {
     name: m.title.length > 15 ? m.title.substring(0, 15) + '...' : m.title,
     revenue: m.totalRevenue,
     tickets: m.totalBookings,
-    rating: 0,
   }));
 
   const cinemaPerformance = topCinemas.map((c) => ({
     name: c.name,
     revenue: c.totalRevenue,
     occupancy: Math.round(c.occupancyRate),
-    shows: 0,
   }));
 
   return (
@@ -236,67 +231,72 @@ export default function ReportsPage() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-gray-500" />
-              <Select
-                value={selectedCinema}
-                onValueChange={setSelectedCinema}
-                disabled={isManager}
-              >
-                <SelectTrigger
-                  className={`w-48 ${
-                    isManager ? 'opacity-60 cursor-not-allowed' : ''
-                  }`}
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-gray-500" />
+                <Select
+                  value={selectedCinema}
+                  onValueChange={setSelectedCinema}
+                  disabled={isManager}
                 >
-                  <SelectValue placeholder="Chọn rạp" />
-                </SelectTrigger>
-                <SelectContent>
-                  {!isManager && (
-                    <SelectItem value="all">Tất Cả Rạp</SelectItem>
-                  )}
-                  {filteredCinemas.map((cinema) => (
-                    <SelectItem key={cinema.id} value={cinema.id}>
-                      {cinema.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4 text-gray-500" />
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-64 justify-start text-left font-normal"
+                  <SelectTrigger
+                    className={`w-48 ${
+                      isManager ? 'opacity-60 cursor-not-allowed' : ''
+                    }`}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateRange.from && dateRange.to ? (
-                      <>
-                        {format(dateRange.from, 'dd/MM/yyyy')} -{' '}
-                        {format(dateRange.to, 'dd/MM/yyyy')}
-                      </>
-                    ) : (
-                      <span>Chọn khoảng thời gian</span>
+                    <SelectValue placeholder="Chọn rạp" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {!isManager && (
+                      <SelectItem value="all">Tất Cả Rạp</SelectItem>
                     )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="range"
-                    selected={{ from: dateRange.from, to: dateRange.to }}
-                    onSelect={(range) => {
-                      if (range?.from && range?.to) {
-                        setDateRange({ from: range.from, to: range.to });
-                      }
-                    }}
-                    numberOfMonths={2}
-                  />
-                </PopoverContent>
-              </Popover>
+                    {filteredCinemas.map((cinema) => (
+                      <SelectItem key={cinema.id} value={cinema.id}>
+                        {cinema.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4 text-gray-500" />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-64 justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange.from && dateRange.to ? (
+                        <>
+                          {format(dateRange.from, 'dd/MM/yyyy')} -{' '}
+                          {format(dateRange.to, 'dd/MM/yyyy')}
+                        </>
+                      ) : (
+                        <span>Chọn khoảng thời gian</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="range"
+                      selected={{ from: dateRange.from, to: dateRange.to }}
+                      onSelect={(range) => {
+                        if (range?.from && range?.to) {
+                          setDateRange({ from: range.from, to: range.to });
+                        }
+                      }}
+                      numberOfMonths={2}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
+            <p className="text-xs text-gray-500">
+              💡 Lọc theo rạp áp dụng cho <strong>Doanh Thu</strong> và <strong>Phim</strong>. Tab <strong>Rạp</strong> luôn hiển thị tất cả để so sánh hiệu suất.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -314,10 +314,9 @@ export default function ReportsPage() {
             <div className="text-2xl font-bold">
               {formatCurrency(totalRevenue)}
             </div>
-            <div className="flex items-center text-xs text-green-600">
-              <ArrowUpRight className="h-4 w-4 mr-1" />+{revenueGrowth}% từ tuần
-              trước
-            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Trong khoảng thời gian đã chọn
+            </p>
           </CardContent>
         </Card>
 
@@ -330,10 +329,9 @@ export default function ReportsPage() {
             <div className="text-2xl font-bold">
               {formatNumber(totalTickets)}
             </div>
-            <div className="flex items-center text-xs text-green-600">
-              <ArrowUpRight className="h-4 w-4 mr-1" />
-              +8.2% từ tuần trước
-            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Tổng vé đã bán
+            </p>
           </CardContent>
         </Card>
 
@@ -346,10 +344,9 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{avgOccupancy}%</div>
-            <div className="flex items-center text-xs text-red-600">
-              <ArrowDownRight className="h-4 w-4 mr-1" />
-              -2.3% từ tuần trước
-            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Trung bình các rạp
+            </p>
           </CardContent>
         </Card>
 
@@ -476,9 +473,6 @@ export default function ReportsPage() {
                       <div className="font-semibold text-green-600">
                         {formatCurrency(movie.revenue)}
                       </div>
-                      <div className="flex items-center gap-1 text-sm">
-                        <Badge variant="outline">⭐ {movie.rating}</Badge>
-                      </div>
                     </div>
                   </div>
                 ))}
@@ -509,17 +503,11 @@ export default function ReportsPage() {
                         {cinema.occupancy}% lấp đầy
                       </Badge>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <span className="text-gray-500">Doanh thu:</span>{' '}
-                        <span className="font-medium">
-                          {formatCurrency(cinema.revenue)}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Suất chiếu:</span>{' '}
-                        <span className="font-medium">N/A</span>
-                      </div>
+                    <div className="text-sm">
+                      <span className="text-gray-500">Doanh thu:</span>{' '}
+                      <span className="font-medium">
+                        {formatCurrency(cinema.revenue)}
+                      </span>
                     </div>
                     <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
                       <div
