@@ -196,7 +196,7 @@ export default function QuickBooking() {
   };
 
   return (
-    <div className="relative w-full max-w-6xl mx-auto -mt-32 mb-12 z-20 px-4">
+    <div className="relative w-full max-w-[1600px] mx-auto -mt-32 mb-12 z-20 px-4">
       <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden p-6 md:p-8">
         <div className="flex flex-col xl:flex-row items-center gap-6 justify-between">
           {/* Header Section */}
@@ -217,7 +217,7 @@ export default function QuickBooking() {
                 <Building2 className="text-gray-400 group-hover:text-primary transition-colors w-5 h-5" />
               </div>
               <Select value={selectedCinema} onValueChange={setSelectedCinema}>
-                <SelectTrigger className="w-full h-14 pl-10 pr-4 bg-white/5 border-white/10 text-white placeholder:text-gray-400 hover:bg-white/10 hover:border-primary focus:ring-primary/20 transition-all rounded-xl shadow-sm">
+                <SelectTrigger className="w-full h-14 pl-12 pr-4 bg-white/5 border-white/10 text-white placeholder:text-gray-400 hover:bg-white/10 hover:border-primary focus:ring-primary/20 transition-all rounded-xl shadow-sm">
                   <SelectValue placeholder="Chọn Rạp" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-gray-100 text-gray-700 max-h-64 overflow-y-auto">
@@ -240,7 +240,7 @@ export default function QuickBooking() {
                 onValueChange={setSelectedMovie}
                 disabled={!selectedCinema || isLoadingMovies}
               >
-                <SelectTrigger className="w-full h-14 pl-10 pr-4 bg-white/5 border-white/10 text-white placeholder:text-gray-400 hover:bg-white/10 hover:border-primary focus:ring-primary/20 transition-all rounded-xl shadow-sm disabled:opacity-50">
+                <SelectTrigger className="w-full h-14 pl-12 pr-4 bg-white/5 border-white/10 text-white placeholder:text-gray-400 hover:bg-white/10 hover:border-primary focus:ring-primary/20 transition-all rounded-xl shadow-sm disabled:opacity-50">
                   <SelectValue
                     placeholder={isLoadingMovies ? 'Đang tải...' : 'Chọn Phim'}
                   />
@@ -265,7 +265,7 @@ export default function QuickBooking() {
                 onValueChange={setSelectedDate}
                 disabled={!selectedMovie || isLoadingShowtimes}
               >
-                <SelectTrigger className="w-full h-14 pl-10 pr-4 bg-white/5 border-white/10 text-white placeholder:text-gray-400 hover:bg-white/10 hover:border-primary focus:ring-primary/20 transition-all rounded-xl shadow-sm disabled:opacity-50">
+                <SelectTrigger className="w-full h-14 pl-12 pr-4 bg-white/5 border-white/10 text-white placeholder:text-gray-400 hover:bg-white/10 hover:border-primary focus:ring-primary/20 transition-all rounded-xl shadow-sm disabled:opacity-50">
                   <SelectValue
                     placeholder={
                       isLoadingShowtimes ? 'Đang tải...' : 'Chọn Ngày'
@@ -292,7 +292,7 @@ export default function QuickBooking() {
                 onValueChange={setSelectedShowtime}
                 disabled={!selectedDate}
               >
-                <SelectTrigger className="w-full h-14 pl-10 pr-4 bg-white/5 border-white/10 text-white placeholder:text-gray-400 hover:bg-white/10 hover:border-primary focus:ring-primary/20 transition-all rounded-xl shadow-sm disabled:opacity-50">
+                <SelectTrigger className="w-full h-14 pl-12 pr-4 bg-white/5 border-white/10 text-white placeholder:text-gray-400 hover:bg-white/10 hover:border-primary focus:ring-primary/20 transition-all rounded-xl shadow-sm disabled:opacity-50">
                   <SelectValue placeholder="Chọn Suất" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-gray-100 text-gray-700">

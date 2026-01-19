@@ -51,6 +51,7 @@ import type {
   CreatePromotionRequest,
   UpdatePromotionRequest,
   PromotionFiltersParams,
+  BookingApiResponse,
 } from './types';
 
 // ============================================================================
@@ -391,9 +392,75 @@ export const bookingsApi = {
     });
   },
 
-  // Get booking detail
-  getById: (id: string) =>
-    api.get<BookingDetail>(`/bookings/${id}/summary`),
+  // Get booking detail - Transform from backend response format to FE format
+  getById: async (id: string) => {
+    console.log('🔍 Fetching booking detail for ID:', id);
+    const backendData = await api.get<BookingApiResponse>(`/bookings/${id}`);
+
+    // Extract and flatten seats from ticketGroups
+    const seats = backendData.ticketGroups?.flatMap((group) =>
+      group.seats?.map((seat) => ({
+        seatId: seat.seatId,
+        row: seat.row,
+        number: seat.number,
+        seatType: seat.seatType,
+        ticketType: group.ticketType,
+        price: group.pricePerTicket,
+      })) || []
+    ) || [];
+
+    // Transform concessions to match FE format
+    const concessions = backendData.concessions?.map((item) => ({
+      concessionId: item.concessionId,
+      name: item.name,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      totalPrice: item.totalPrice,
+    })) || [];
+
+    // Extract pricing data
+    const pricing = backendData.pricing || {};
+
+    // Flatten the response to match BookingDetail interface
+    const transformedData: BookingDetail = {
+      id: backendData.bookingId,
+      bookingCode: backendData.bookingCode,
+      showtimeId: backendData.showtime?.id || '',
+      movieTitle: backendData.movie?.title || '',
+      cinemaName: backendData.cinema?.name || '',
+      hallName: backendData.cinema?.hallName || '',
+      startTime: backendData.showtime?.startTime || '',
+      seatCount: seats.length,
+      totalAmount: pricing.finalAmount || 0,
+      status: backendData.status,
+      createdAt: new Date().toISOString(),
+      // Extended BookingDetail fields
+      userId: '', // Not in backend response, will be handled separately if needed
+      customerName: '', // Not in backend response, will be handled separately if needed
+      customerEmail: '', // Not in backend response, will be handled separately if needed
+      customerPhone: '', // Not in backend response, will be handled separately if needed
+      seats,
+      concessions,
+      subtotal: pricing.ticketsSubtotal || 0,
+      discount: pricing.totalDiscount || 0,
+      pointsUsed: 0,
+      pointsDiscount: 0,
+      finalAmount: pricing.finalAmount || 0,
+      promotionCode: pricing.promotionDiscount?.code || undefined,
+      paymentStatus: backendData.paymentStatus,
+      expiresAt: backendData.expiresAt || undefined,
+      updatedAt: new Date().toISOString(),
+      // Additional fields from backend response
+      movie: backendData.movie,
+      cinema: backendData.cinema,
+      showtime: backendData.showtime,
+      pricing,
+      ticketGroups: backendData.ticketGroups,
+    };
+
+    console.log('✅ Booking detail transformed:', transformedData);
+    return transformedData;
+  },
 
   // Get bookings by showtime
   getByShowtime: (showtimeId: string, status?: BookingStatus) =>
