@@ -1,0 +1,1318 @@
+﻿
+> nx run api-gateway:test
+
+node.exe : [0m[7m[1m[31m FAIL 
+[39m[22m[27m[0m [0m[7m[37m api-gateway 
+[39m[27m[0m [2mapps/api-gateway/src/app/module
+/cinema/service/[22m[1mcinema.service.spec.ts[2
+2m
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    
+[0m[7m[1m[3...ce.spec.ts[22m:String) [    ], 
+RemoteException
+    + FullyQualifiedErrorId : NativeCommandErr    
+or
+ 
+  [1mâ— [22mTest suite failed to run
+    [96mapps/api-gateway/src/app/module/cinema/se
+rvice/cinema.service.spec.ts[0m:[93m40[0m:[93m
+36[0m - [91merror[0m[90m TS2554: [0mExpected 
+1 arguments, but got 0.
+    [7m40[0m       const result = await 
+service.getCinemas();
+    [7m  [0m [91m                              
+     ~~~~~~~~~~[0m
+      [96mapps/api-gateway/src/app/module/cinema/
+service/cinema.service.ts[0m:[93m22[0m:[93m20
+[0m
+        [7m22[0m   async getCinemas(status: 
+CinemaStatusEnum) {
+        [7m  [0m [96m                   
+~~~~~~~~~~~~~~~~~~~~~~~~[0m
+        An argument for 'status' was not provided.
+    [96mapps/api-gateway/src/app/module/cinema/se
+rvice/cinema.service.spec.ts[0m:[93m54[0m:[93m
+28[0m - [91merror[0m[90m TS2554: [0mExpected 
+1 arguments, but got 0.
+    [7m54[0m       await expect(service.getCinem
+as()).rejects.toThrow(mockError);
+    [7m  [0m [91m                           
+~~~~~~~~~~[0m
+      [96mapps/api-gateway/src/app/module/cinema/
+service/cinema.service.ts[0m:[93m22[0m:[93m20
+[0m
+        [7m22[0m   async getCinemas(status: 
+CinemaStatusEnum) {
+        [7m  [0m [96m                   
+~~~~~~~~~~~~~~~~~~~~~~~~[0m
+        An argument for 'status' was not provided.
+[0m[7m[1m[32m PASS [39m[22m[27m[0m 
+[0m[7m[37m api-gateway [39m[27m[0m [2mapps/
+api-gateway/src/app/module/user/[22m[1muser.cont
+roller.spec.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m 
+[0m[7m[37m api-gateway [39m[27m[0m [2mapps/
+api-gateway/src/app/module/user/[22m[1muser.serv
+ice.spec.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m 
+[0m[7m[37m api-gateway [39m[27m[0m [2mapps/
+api-gateway/src/app/module/movie/service/[22m[1m
+movie.service.spec.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m 
+[0m[7m[37m api-gateway [39m[27m[0m [2mapps/
+api-gateway/src/app/module/movie/controller/[22m
+[1mmovie.controller.spec.ts[22m
+[0m[7m[1m[31m FAIL [39m[22m[27m[0m 
+[0m[7m[37m api-gateway [39m[27m[0m [2mapps/
+api-gateway/src/app/module/cinema/controller/[22m
+[1mcinema.controller.spec.ts[22m
+[1m[31m  [1mâ— [22m[1mCinemaController â€º 
+getAllCinemas â€º should return all 
+cinemas[39m[22m
+    Nest can't resolve dependencies of the 
+ClerkAuthGuard (Reflector, ?). Please make sure 
+that the argument "user-service" at index [1] is 
+available in the RootTestModule context.
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If "user-service" is a provider, is it part 
+of the current RootTestModule?
+    - If "user-service" is exported from a 
+separate @Module, is that module imported within 
+RootTestModule?
+      @Module({
+        imports: [ /* the Module containing 
+"user-service" */ ]
+      })
+[2m[22m
+[2m      [2mat 
+TestingInjector.lookupComponentInParentModules ([
+22m[2m../../node_modules/@nestjs/core/injector/in
+jector.js[2m:286:19)[22m[2m[22m
+[2m      [2mat 
+TestingInjector.resolveComponentWrapper ([22m[2m
+../../node_modules/@nestjs/testing/testing-injecto
+r.js[2m:19:45)[22m[2m[22m
+[2m      [2mat resolveParam ([22m[2m../../node
+_modules/@nestjs/core/injector/injector.js[2m:141
+:38)[22m[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInjector.resolveConstructorParams ([22m[2
+m../../node_modules/@nestjs/core/injector/injector
+.js[2m:169:27)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInstance ([2
+2m[2m../../node_modules/@nestjs/core/injector/inj
+ector.js[2m:75:13)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInjectable (
+[22m[2m../../node_modules/@nestjs/core/injector/i
+njector.js[2m:99:9)[22m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:80:13[22m
+[2m[22m
+[2m          at async Promise.all (index 0)[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfInjectables ([22m[2m../../node_modules/@ne
+stjs/core/injector/instance-loader.js[2m:79:9)[2
+2m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:41:13[22m
+[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInstanceLoader.createInstances ([22m[2m..
+/../node_modules/@nestjs/core/injector/instance-lo
+ader.js[2m:39:9)[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/core/injector/instance-loader.js[2m:22:13)
+[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/testing/testing-instance-loader.js[2m:9:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.createInstan
+cesOfDependencies ([22m[2m../../node_modules/@ne
+stjs/testing/testing-module.builder.js[2m:118:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.compile ([2
+2m[2m../../node_modules/@nestjs/testing/testing-m
+odule.builder.js[2m:74:9)[22m[2m[22m
+[1m[31m  [1mâ— [22m[1mCinemaController â€º 
+getCinemasNearby â€º should return nearby cinemas 
+with all parameters[39m[22m
+    Nest can't resolve dependencies of the 
+ClerkAuthGuard (Reflector, ?). Please make sure 
+that the argument "user-service" at index [1] is 
+available in the RootTestModule context.
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If "user-service" is a provider, is it part 
+of the current RootTestModule?
+    - If "user-service" is exported from a 
+separate @Module, is that module imported within 
+RootTestModule?
+      @Module({
+        imports: [ /* the Module containing 
+"user-service" */ ]
+      })
+[2m[22m
+[2m      [2mat 
+TestingInjector.lookupComponentInParentModules ([
+22m[2m../../node_modules/@nestjs/core/injector/in
+jector.js[2m:286:19)[22m[2m[22m
+[2m      [2mat 
+TestingInjector.resolveComponentWrapper ([22m[2m
+../../node_modules/@nestjs/testing/testing-injecto
+r.js[2m:19:45)[22m[2m[22m
+[2m      [2mat resolveParam ([22m[2m../../node
+_modules/@nestjs/core/injector/injector.js[2m:141
+:38)[22m[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInjector.resolveConstructorParams ([22m[2
+m../../node_modules/@nestjs/core/injector/injector
+.js[2m:169:27)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInstance ([2
+2m[2m../../node_modules/@nestjs/core/injector/inj
+ector.js[2m:75:13)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInjectable (
+[22m[2m../../node_modules/@nestjs/core/injector/i
+njector.js[2m:99:9)[22m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:80:13[22m
+[2m[22m
+[2m          at async Promise.all (index 0)[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfInjectables ([22m[2m../../node_modules/@ne
+stjs/core/injector/instance-loader.js[2m:79:9)[2
+2m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:41:13[22m
+[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInstanceLoader.createInstances ([22m[2m..
+/../node_modules/@nestjs/core/injector/instance-lo
+ader.js[2m:39:9)[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/core/injector/instance-loader.js[2m:22:13)
+[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/testing/testing-instance-loader.js[2m:9:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.createInstan
+cesOfDependencies ([22m[2m../../node_modules/@ne
+stjs/testing/testing-module.builder.js[2m:118:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.compile ([2
+2m[2m../../node_modules/@nestjs/testing/testing-m
+odule.builder.js[2m:74:9)[22m[2m[22m
+[1m[31m  [1mâ— [22m[1mCinemaController â€º 
+getCinemasNearby â€º should use default values 
+for optional parameters[39m[22m
+    Nest can't resolve dependencies of the 
+ClerkAuthGuard (Reflector, ?). Please make sure 
+that the argument "user-service" at index [1] is 
+available in the RootTestModule context.
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If "user-service" is a provider, is it part 
+of the current RootTestModule?
+    - If "user-service" is exported from a 
+separate @Module, is that module imported within 
+RootTestModule?
+      @Module({
+        imports: [ /* the Module containing 
+"user-service" */ ]
+      })
+[2m[22m
+[2m      [2mat 
+TestingInjector.lookupComponentInParentModules ([
+22m[2m../../node_modules/@nestjs/core/injector/in
+jector.js[2m:286:19)[22m[2m[22m
+[2m      [2mat 
+TestingInjector.resolveComponentWrapper ([22m[2m
+../../node_modules/@nestjs/testing/testing-injecto
+r.js[2m:19:45)[22m[2m[22m
+[2m      [2mat resolveParam ([22m[2m../../node
+_modules/@nestjs/core/injector/injector.js[2m:141
+:38)[22m[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInjector.resolveConstructorParams ([22m[2
+m../../node_modules/@nestjs/core/injector/injector
+.js[2m:169:27)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInstance ([2
+2m[2m../../node_modules/@nestjs/core/injector/inj
+ector.js[2m:75:13)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInjectable (
+[22m[2m../../node_modules/@nestjs/core/injector/i
+njector.js[2m:99:9)[22m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:80:13[22m
+[2m[22m
+[2m          at async Promise.all (index 0)[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfInjectables ([22m[2m../../node_modules/@ne
+stjs/core/injector/instance-loader.js[2m:79:9)[2
+2m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:41:13[22m
+[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInstanceLoader.createInstances ([22m[2m..
+/../node_modules/@nestjs/core/injector/instance-lo
+ader.js[2m:39:9)[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/core/injector/instance-loader.js[2m:22:13)
+[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/testing/testing-instance-loader.js[2m:9:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.createInstan
+cesOfDependencies ([22m[2m../../node_modules/@ne
+stjs/testing/testing-module.builder.js[2m:118:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.compile ([2
+2m[2m../../node_modules/@nestjs/testing/testing-m
+odule.builder.js[2m:74:9)[22m[2m[22m
+[1m[31m  [1mâ— [22m[1mCinemaController â€º 
+searchCinemas â€º should search cinemas with user 
+location[39m[22m
+    Nest can't resolve dependencies of the 
+ClerkAuthGuard (Reflector, ?). Please make sure 
+that the argument "user-service" at index [1] is 
+available in the RootTestModule context.
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If "user-service" is a provider, is it part 
+of the current RootTestModule?
+    - If "user-service" is exported from a 
+separate @Module, is that module imported within 
+RootTestModule?
+      @Module({
+        imports: [ /* the Module containing 
+"user-service" */ ]
+      })
+[2m[22m
+[2m      [2mat 
+TestingInjector.lookupComponentInParentModules ([
+22m[2m../../node_modules/@nestjs/core/injector/in
+jector.js[2m:286:19)[22m[2m[22m
+[2m      [2mat 
+TestingInjector.resolveComponentWrapper ([22m[2m
+../../node_modules/@nestjs/testing/testing-injecto
+r.js[2m:19:45)[22m[2m[22m
+[2m      [2mat resolveParam ([22m[2m../../node
+_modules/@nestjs/core/injector/injector.js[2m:141
+:38)[22m[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInjector.resolveConstructorParams ([22m[2
+m../../node_modules/@nestjs/core/injector/injector
+.js[2m:169:27)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInstance ([2
+2m[2m../../node_modules/@nestjs/core/injector/inj
+ector.js[2m:75:13)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInjectable (
+[22m[2m../../node_modules/@nestjs/core/injector/i
+njector.js[2m:99:9)[22m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:80:13[22m
+[2m[22m
+[2m          at async Promise.all (index 0)[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfInjectables ([22m[2m../../node_modules/@ne
+stjs/core/injector/instance-loader.js[2m:79:9)[2
+2m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:41:13[22m
+[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInstanceLoader.createInstances ([22m[2m..
+/../node_modules/@nestjs/core/injector/instance-lo
+ader.js[2m:39:9)[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/core/injector/instance-loader.js[2m:22:13)
+[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/testing/testing-instance-loader.js[2m:9:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.createInstan
+cesOfDependencies ([22m[2m../../node_modules/@ne
+stjs/testing/testing-module.builder.js[2m:118:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.compile ([2
+2m[2m../../node_modules/@nestjs/testing/testing-m
+odule.builder.js[2m:74:9)[22m[2m[22m
+[1m[31m  [1mâ— [22m[1mCinemaController â€º 
+searchCinemas â€º should search cinemas without 
+user location[39m[22m
+    Nest can't resolve dependencies of the 
+ClerkAuthGuard (Reflector, ?). Please make sure 
+that the argument "user-service" at index [1] is 
+available in the RootTestModule context.
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If "user-service" is a provider, is it part 
+of the current RootTestModule?
+    - If "user-service" is exported from a 
+separate @Module, is that module imported within 
+RootTestModule?
+      @Module({
+        imports: [ /* the Module containing 
+"user-service" */ ]
+      })
+[2m[22m
+[2m      [2mat 
+TestingInjector.lookupComponentInParentModules ([
+22m[2m../../node_modules/@nestjs/core/injector/in
+jector.js[2m:286:19)[22m[2m[22m
+[2m      [2mat 
+TestingInjector.resolveComponentWrapper ([22m[2m
+../../node_modules/@nestjs/testing/testing-injecto
+r.js[2m:19:45)[22m[2m[22m
+[2m      [2mat resolveParam ([22m[2m../../node
+_modules/@nestjs/core/injector/injector.js[2m:141
+:38)[22m[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInjector.resolveConstructorParams ([22m[2
+m../../node_modules/@nestjs/core/injector/injector
+.js[2m:169:27)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInstance ([2
+2m[2m../../node_modules/@nestjs/core/injector/inj
+ector.js[2m:75:13)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInjectable (
+[22m[2m../../node_modules/@nestjs/core/injector/i
+njector.js[2m:99:9)[22m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:80:13[22m
+[2m[22m
+[2m          at async Promise.all (index 0)[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfInjectables ([22m[2m../../node_modules/@ne
+stjs/core/injector/instance-loader.js[2m:79:9)[2
+2m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:41:13[22m
+[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInstanceLoader.createInstances ([22m[2m..
+/../node_modules/@nestjs/core/injector/instance-lo
+ader.js[2m:39:9)[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/core/injector/instance-loader.js[2m:22:13)
+[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/testing/testing-instance-loader.js[2m:9:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.createInstan
+cesOfDependencies ([22m[2m../../node_modules/@ne
+stjs/testing/testing-module.builder.js[2m:118:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.compile ([2
+2m[2m../../node_modules/@nestjs/testing/testing-m
+odule.builder.js[2m:74:9)[22m[2m[22m
+[1m[31m  [1mâ— [22m[1mCinemaController â€º 
+searchCinemas â€º should throw 
+BadRequestException for empty query[39m[22m
+    Nest can't resolve dependencies of the 
+ClerkAuthGuard (Reflector, ?). Please make sure 
+that the argument "user-service" at index [1] is 
+available in the RootTestModule context.
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If "user-service" is a provider, is it part 
+of the current RootTestModule?
+    - If "user-service" is exported from a 
+separate @Module, is that module imported within 
+RootTestModule?
+      @Module({
+        imports: [ /* the Module containing 
+"user-service" */ ]
+      })
+[2m[22m
+[2m      [2mat 
+TestingInjector.lookupComponentInParentModules ([
+22m[2m../../node_modules/@nestjs/core/injector/in
+jector.js[2m:286:19)[22m[2m[22m
+[2m      [2mat 
+TestingInjector.resolveComponentWrapper ([22m[2m
+../../node_modules/@nestjs/testing/testing-injecto
+r.js[2m:19:45)[22m[2m[22m
+[2m      [2mat resolveParam ([22m[2m../../node
+_modules/@nestjs/core/injector/injector.js[2m:141
+:38)[22m[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInjector.resolveConstructorParams ([22m[2
+m../../node_modules/@nestjs/core/injector/injector
+.js[2m:169:27)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInstance ([2
+2m[2m../../node_modules/@nestjs/core/injector/inj
+ector.js[2m:75:13)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInjectable (
+[22m[2m../../node_modules/@nestjs/core/injector/i
+njector.js[2m:99:9)[22m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:80:13[22m
+[2m[22m
+[2m          at async Promise.all (index 0)[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfInjectables ([22m[2m../../node_modules/@ne
+stjs/core/injector/instance-loader.js[2m:79:9)[2
+2m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:41:13[22m
+[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInstanceLoader.createInstances ([22m[2m..
+/../node_modules/@nestjs/core/injector/instance-lo
+ader.js[2m:39:9)[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/core/injector/instance-loader.js[2m:22:13)
+[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/testing/testing-instance-loader.js[2m:9:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.createInstan
+cesOfDependencies ([22m[2m../../node_modules/@ne
+stjs/testing/testing-module.builder.js[2m:118:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.compile ([2
+2m[2m../../node_modules/@nestjs/testing/testing-m
+odule.builder.js[2m:74:9)[22m[2m[22m
+[1m[31m  [1mâ— [22m[1mCinemaController â€º 
+searchCinemas â€º should throw 
+BadRequestException for missing query[39m[22m
+    Nest can't resolve dependencies of the 
+ClerkAuthGuard (Reflector, ?). Please make sure 
+that the argument "user-service" at index [1] is 
+available in the RootTestModule context.
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If "user-service" is a provider, is it part 
+of the current RootTestModule?
+    - If "user-service" is exported from a 
+separate @Module, is that module imported within 
+RootTestModule?
+      @Module({
+        imports: [ /* the Module containing 
+"user-service" */ ]
+      })
+[2m[22m
+[2m      [2mat 
+TestingInjector.lookupComponentInParentModules ([
+22m[2m../../node_modules/@nestjs/core/injector/in
+jector.js[2m:286:19)[22m[2m[22m
+[2m      [2mat 
+TestingInjector.resolveComponentWrapper ([22m[2m
+../../node_modules/@nestjs/testing/testing-injecto
+r.js[2m:19:45)[22m[2m[22m
+[2m      [2mat resolveParam ([22m[2m../../node
+_modules/@nestjs/core/injector/injector.js[2m:141
+:38)[22m[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInjector.resolveConstructorParams ([22m[2
+m../../node_modules/@nestjs/core/injector/injector
+.js[2m:169:27)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInstance ([2
+2m[2m../../node_modules/@nestjs/core/injector/inj
+ector.js[2m:75:13)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInjectable (
+[22m[2m../../node_modules/@nestjs/core/injector/i
+njector.js[2m:99:9)[22m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:80:13[22m
+[2m[22m
+[2m          at async Promise.all (index 0)[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfInjectables ([22m[2m../../node_modules/@ne
+stjs/core/injector/instance-loader.js[2m:79:9)[2
+2m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:41:13[22m
+[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInstanceLoader.createInstances ([22m[2m..
+/../node_modules/@nestjs/core/injector/instance-lo
+ader.js[2m:39:9)[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/core/injector/instance-loader.js[2m:22:13)
+[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/testing/testing-instance-loader.js[2m:9:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.createInstan
+cesOfDependencies ([22m[2m../../node_modules/@ne
+stjs/testing/testing-module.builder.js[2m:118:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.compile ([2
+2m[2m../../node_modules/@nestjs/testing/testing-m
+odule.builder.js[2m:74:9)[22m[2m[22m
+[1m[31m  [1mâ— [22m[1mCinemaController â€º 
+getCinemasWithFilters â€º should parse and pass 
+all filters correctly[39m[22m
+    Nest can't resolve dependencies of the 
+ClerkAuthGuard (Reflector, ?). Please make sure 
+that the argument "user-service" at index [1] is 
+available in the RootTestModule context.
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If "user-service" is a provider, is it part 
+of the current RootTestModule?
+    - If "user-service" is exported from a 
+separate @Module, is that module imported within 
+RootTestModule?
+      @Module({
+        imports: [ /* the Module containing 
+"user-service" */ ]
+      })
+[2m[22m
+[2m      [2mat 
+TestingInjector.lookupComponentInParentModules ([
+22m[2m../../node_modules/@nestjs/core/injector/in
+jector.js[2m:286:19)[22m[2m[22m
+[2m      [2mat 
+TestingInjector.resolveComponentWrapper ([22m[2m
+../../node_modules/@nestjs/testing/testing-injecto
+r.js[2m:19:45)[22m[2m[22m
+[2m      [2mat resolveParam ([22m[2m../../node
+_modules/@nestjs/core/injector/injector.js[2m:141
+:38)[22m[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInjector.resolveConstructorParams ([22m[2
+m../../node_modules/@nestjs/core/injector/injector
+.js[2m:169:27)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInstance ([2
+2m[2m../../node_modules/@nestjs/core/injector/inj
+ector.js[2m:75:13)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInjectable (
+[22m[2m../../node_modules/@nestjs/core/injector/i
+njector.js[2m:99:9)[22m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:80:13[22m
+[2m[22m
+[2m          at async Promise.all (index 0)[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfInjectables ([22m[2m../../node_modules/@ne
+stjs/core/injector/instance-loader.js[2m:79:9)[2
+2m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:41:13[22m
+[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInstanceLoader.createInstances ([22m[2m..
+/../node_modules/@nestjs/core/injector/instance-lo
+ader.js[2m:39:9)[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/core/injector/instance-loader.js[2m:22:13)
+[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/testing/testing-instance-loader.js[2m:9:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.createInstan
+cesOfDependencies ([22m[2m../../node_modules/@ne
+stjs/testing/testing-module.builder.js[2m:118:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.compile ([2
+2m[2m../../node_modules/@nestjs/testing/testing-m
+odule.builder.js[2m:74:9)[22m[2m[22m
+[1m[31m  [1mâ— [22m[1mCinemaController â€º 
+getCinemasWithFilters â€º should handle partial 
+filters[39m[22m
+    Nest can't resolve dependencies of the 
+ClerkAuthGuard (Reflector, ?). Please make sure 
+that the argument "user-service" at index [1] is 
+available in the RootTestModule context.
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If "user-service" is a provider, is it part 
+of the current RootTestModule?
+    - If "user-service" is exported from a 
+separate @Module, is that module imported within 
+RootTestModule?
+      @Module({
+        imports: [ /* the Module containing 
+"user-service" */ ]
+      })
+[2m[22m
+[2m      [2mat 
+TestingInjector.lookupComponentInParentModules ([
+22m[2m../../node_modules/@nestjs/core/injector/in
+jector.js[2m:286:19)[22m[2m[22m
+[2m      [2mat 
+TestingInjector.resolveComponentWrapper ([22m[2m
+../../node_modules/@nestjs/testing/testing-injecto
+r.js[2m:19:45)[22m[2m[22m
+[2m      [2mat resolveParam ([22m[2m../../node
+_modules/@nestjs/core/injector/injector.js[2m:141
+:38)[22m[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInjector.resolveConstructorParams ([22m[2
+m../../node_modules/@nestjs/core/injector/injector
+.js[2m:169:27)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInstance ([2
+2m[2m../../node_modules/@nestjs/core/injector/inj
+ector.js[2m:75:13)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInjectable (
+[22m[2m../../node_modules/@nestjs/core/injector/i
+njector.js[2m:99:9)[22m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:80:13[22m
+[2m[22m
+[2m          at async Promise.all (index 0)[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfInjectables ([22m[2m../../node_modules/@ne
+stjs/core/injector/instance-loader.js[2m:79:9)[2
+2m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:41:13[22m
+[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInstanceLoader.createInstances ([22m[2m..
+/../node_modules/@nestjs/core/injector/instance-lo
+ader.js[2m:39:9)[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/core/injector/instance-loader.js[2m:22:13)
+[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/testing/testing-instance-loader.js[2m:9:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.createInstan
+cesOfDependencies ([22m[2m../../node_modules/@ne
+stjs/testing/testing-module.builder.js[2m:118:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.compile ([2
+2m[2m../../node_modules/@nestjs/testing/testing-m
+odule.builder.js[2m:74:9)[22m[2m[22m
+[1m[31m  [1mâ— [22m[1mCinemaController â€º 
+getCinemasWithFilters â€º should handle empty 
+filters[39m[22m
+    Nest can't resolve dependencies of the 
+ClerkAuthGuard (Reflector, ?). Please make sure 
+that the argument "user-service" at index [1] is 
+available in the RootTestModule context.
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If "user-service" is a provider, is it part 
+of the current RootTestModule?
+    - If "user-service" is exported from a 
+separate @Module, is that module imported within 
+RootTestModule?
+      @Module({
+        imports: [ /* the Module containing 
+"user-service" */ ]
+      })
+[2m[22m
+[2m      [2mat 
+TestingInjector.lookupComponentInParentModules ([
+22m[2m../../node_modules/@nestjs/core/injector/in
+jector.js[2m:286:19)[22m[2m[22m
+[2m      [2mat 
+TestingInjector.resolveComponentWrapper ([22m[2m
+../../node_modules/@nestjs/testing/testing-injecto
+r.js[2m:19:45)[22m[2m[22m
+[2m      [2mat resolveParam ([22m[2m../../node
+_modules/@nestjs/core/injector/injector.js[2m:141
+:38)[22m[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInjector.resolveConstructorParams ([22m[2
+m../../node_modules/@nestjs/core/injector/injector
+.js[2m:169:27)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInstance ([2
+2m[2m../../node_modules/@nestjs/core/injector/inj
+ector.js[2m:75:13)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInjectable (
+[22m[2m../../node_modules/@nestjs/core/injector/i
+njector.js[2m:99:9)[22m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:80:13[22m
+[2m[22m
+[2m          at async Promise.all (index 0)[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfInjectables ([22m[2m../../node_modules/@ne
+stjs/core/injector/instance-loader.js[2m:79:9)[2
+2m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:41:13[22m
+[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInstanceLoader.createInstances ([22m[2m..
+/../node_modules/@nestjs/core/injector/instance-lo
+ader.js[2m:39:9)[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/core/injector/instance-loader.js[2m:22:13)
+[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/testing/testing-instance-loader.js[2m:9:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.createInstan
+cesOfDependencies ([22m[2m../../node_modules/@ne
+stjs/testing/testing-module.builder.js[2m:118:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.compile ([2
+2m[2m../../node_modules/@nestjs/testing/testing-m
+odule.builder.js[2m:74:9)[22m[2m[22m
+[1m[31m  [1mâ— [22m[1mCinemaController â€º 
+getAvailableCities â€º should return available 
+cities[39m[22m
+    Nest can't resolve dependencies of the 
+ClerkAuthGuard (Reflector, ?). Please make sure 
+that the argument "user-service" at index [1] is 
+available in the RootTestModule context.
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If "user-service" is a provider, is it part 
+of the current RootTestModule?
+    - If "user-service" is exported from a 
+separate @Module, is that module imported within 
+RootTestModule?
+      @Module({
+        imports: [ /* the Module containing 
+"user-service" */ ]
+      })
+[2m[22m
+[2m      [2mat 
+TestingInjector.lookupComponentInParentModules ([
+22m[2m../../node_modules/@nestjs/core/injector/in
+jector.js[2m:286:19)[22m[2m[22m
+[2m      [2mat 
+TestingInjector.resolveComponentWrapper ([22m[2m
+../../node_modules/@nestjs/testing/testing-injecto
+r.js[2m:19:45)[22m[2m[22m
+[2m      [2mat resolveParam ([22m[2m../../node
+_modules/@nestjs/core/injector/injector.js[2m:141
+:38)[22m[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInjector.resolveConstructorParams ([22m[2
+m../../node_modules/@nestjs/core/injector/injector
+.js[2m:169:27)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInstance ([2
+2m[2m../../node_modules/@nestjs/core/injector/inj
+ector.js[2m:75:13)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInjectable (
+[22m[2m../../node_modules/@nestjs/core/injector/i
+njector.js[2m:99:9)[22m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:80:13[22m
+[2m[22m
+[2m          at async Promise.all (index 0)[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfInjectables ([22m[2m../../node_modules/@ne
+stjs/core/injector/instance-loader.js[2m:79:9)[2
+2m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:41:13[22m
+[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInstanceLoader.createInstances ([22m[2m..
+/../node_modules/@nestjs/core/injector/instance-lo
+ader.js[2m:39:9)[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/core/injector/instance-loader.js[2m:22:13)
+[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/testing/testing-instance-loader.js[2m:9:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.createInstan
+cesOfDependencies ([22m[2m../../node_modules/@ne
+stjs/testing/testing-module.builder.js[2m:118:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.compile ([2
+2m[2m../../node_modules/@nestjs/testing/testing-m
+odule.builder.js[2m:74:9)[22m[2m[22m
+[1m[31m  [1mâ— [22m[1mCinemaController â€º 
+getAvailableDistricts â€º should return districts 
+for a city[39m[22m
+    Nest can't resolve dependencies of the 
+ClerkAuthGuard (Reflector, ?). Please make sure 
+that the argument "user-service" at index [1] is 
+available in the RootTestModule context.
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If "user-service" is a provider, is it part 
+of the current RootTestModule?
+    - If "user-service" is exported from a 
+separate @Module, is that module imported within 
+RootTestModule?
+      @Module({
+        imports: [ /* the Module containing 
+"user-service" */ ]
+      })
+[2m[22m
+[2m      [2mat 
+TestingInjector.lookupComponentInParentModules ([
+22m[2m../../node_modules/@nestjs/core/injector/in
+jector.js[2m:286:19)[22m[2m[22m
+[2m      [2mat 
+TestingInjector.resolveComponentWrapper ([22m[2m
+../../node_modules/@nestjs/testing/testing-injecto
+r.js[2m:19:45)[22m[2m[22m
+[2m      [2mat resolveParam ([22m[2m../../node
+_modules/@nestjs/core/injector/injector.js[2m:141
+:38)[22m[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInjector.resolveConstructorParams ([22m[2
+m../../node_modules/@nestjs/core/injector/injector
+.js[2m:169:27)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInstance ([2
+2m[2m../../node_modules/@nestjs/core/injector/inj
+ector.js[2m:75:13)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInjectable (
+[22m[2m../../node_modules/@nestjs/core/injector/i
+njector.js[2m:99:9)[22m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:80:13[22m
+[2m[22m
+[2m          at async Promise.all (index 0)[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfInjectables ([22m[2m../../node_modules/@ne
+stjs/core/injector/instance-loader.js[2m:79:9)[2
+2m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:41:13[22m
+[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInstanceLoader.createInstances ([22m[2m..
+/../node_modules/@nestjs/core/injector/instance-lo
+ader.js[2m:39:9)[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/core/injector/instance-loader.js[2m:22:13)
+[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/testing/testing-instance-loader.js[2m:9:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.createInstan
+cesOfDependencies ([22m[2m../../node_modules/@ne
+stjs/testing/testing-module.builder.js[2m:118:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.compile ([2
+2m[2m../../node_modules/@nestjs/testing/testing-m
+odule.builder.js[2m:74:9)[22m[2m[22m
+[1m[31m  [1mâ— [22m[1mCinemaController â€º 
+getAvailableDistricts â€º should throw 
+BadRequestException for empty city[39m[22m
+    Nest can't resolve dependencies of the 
+ClerkAuthGuard (Reflector, ?). Please make sure 
+that the argument "user-service" at index [1] is 
+available in the RootTestModule context.
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If "user-service" is a provider, is it part 
+of the current RootTestModule?
+    - If "user-service" is exported from a 
+separate @Module, is that module imported within 
+RootTestModule?
+      @Module({
+        imports: [ /* the Module containing 
+"user-service" */ ]
+      })
+[2m[22m
+[2m      [2mat 
+TestingInjector.lookupComponentInParentModules ([
+22m[2m../../node_modules/@nestjs/core/injector/in
+jector.js[2m:286:19)[22m[2m[22m
+[2m      [2mat 
+TestingInjector.resolveComponentWrapper ([22m[2m
+../../node_modules/@nestjs/testing/testing-injecto
+r.js[2m:19:45)[22m[2m[22m
+[2m      [2mat resolveParam ([22m[2m../../node
+_modules/@nestjs/core/injector/injector.js[2m:141
+:38)[22m[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInjector.resolveConstructorParams ([22m[2
+m../../node_modules/@nestjs/core/injector/injector
+.js[2m:169:27)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInstance ([2
+2m[2m../../node_modules/@nestjs/core/injector/inj
+ector.js[2m:75:13)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInjectable (
+[22m[2m../../node_modules/@nestjs/core/injector/i
+njector.js[2m:99:9)[22m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:80:13[22m
+[2m[22m
+[2m          at async Promise.all (index 0)[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfInjectables ([22m[2m../../node_modules/@ne
+stjs/core/injector/instance-loader.js[2m:79:9)[2
+2m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:41:13[22m
+[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInstanceLoader.createInstances ([22m[2m..
+/../node_modules/@nestjs/core/injector/instance-lo
+ader.js[2m:39:9)[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/core/injector/instance-loader.js[2m:22:13)
+[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/testing/testing-instance-loader.js[2m:9:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.createInstan
+cesOfDependencies ([22m[2m../../node_modules/@ne
+stjs/testing/testing-module.builder.js[2m:118:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.compile ([2
+2m[2m../../node_modules/@nestjs/testing/testing-m
+odule.builder.js[2m:74:9)[22m[2m[22m
+[1m[31m  [1mâ— [22m[1mCinemaController â€º 
+getCinemaDetail â€º should get cinema detail with 
+user location[39m[22m
+    Nest can't resolve dependencies of the 
+ClerkAuthGuard (Reflector, ?). Please make sure 
+that the argument "user-service" at index [1] is 
+available in the RootTestModule context.
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If "user-service" is a provider, is it part 
+of the current RootTestModule?
+    - If "user-service" is exported from a 
+separate @Module, is that module imported within 
+RootTestModule?
+      @Module({
+        imports: [ /* the Module containing 
+"user-service" */ ]
+      })
+[2m[22m
+[2m      [2mat 
+TestingInjector.lookupComponentInParentModules ([
+22m[2m../../node_modules/@nestjs/core/injector/in
+jector.js[2m:286:19)[22m[2m[22m
+[2m      [2mat 
+TestingInjector.resolveComponentWrapper ([22m[2m
+../../node_modules/@nestjs/testing/testing-injecto
+r.js[2m:19:45)[22m[2m[22m
+[2m      [2mat resolveParam ([22m[2m../../node
+_modules/@nestjs/core/injector/injector.js[2m:141
+:38)[22m[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInjector.resolveConstructorParams ([22m[2
+m../../node_modules/@nestjs/core/injector/injector
+.js[2m:169:27)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInstance ([2
+2m[2m../../node_modules/@nestjs/core/injector/inj
+ector.js[2m:75:13)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInjectable (
+[22m[2m../../node_modules/@nestjs/core/injector/i
+njector.js[2m:99:9)[22m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:80:13[22m
+[2m[22m
+[2m          at async Promise.all (index 0)[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfInjectables ([22m[2m../../node_modules/@ne
+stjs/core/injector/instance-loader.js[2m:79:9)[2
+2m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:41:13[22m
+[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInstanceLoader.createInstances ([22m[2m..
+/../node_modules/@nestjs/core/injector/instance-lo
+ader.js[2m:39:9)[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/core/injector/instance-loader.js[2m:22:13)
+[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/testing/testing-instance-loader.js[2m:9:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.createInstan
+cesOfDependencies ([22m[2m../../node_modules/@ne
+stjs/testing/testing-module.builder.js[2m:118:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.compile ([2
+2m[2m../../node_modules/@nestjs/testing/testing-m
+odule.builder.js[2m:74:9)[22m[2m[22m
+[1m[31m  [1mâ— [22m[1mCinemaController â€º 
+getCinemaDetail â€º should get cinema detail 
+without user location[39m[22m
+    Nest can't resolve dependencies of the 
+ClerkAuthGuard (Reflector, ?). Please make sure 
+that the argument "user-service" at index [1] is 
+available in the RootTestModule context.
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If "user-service" is a provider, is it part 
+of the current RootTestModule?
+    - If "user-service" is exported from a 
+separate @Module, is that module imported within 
+RootTestModule?
+      @Module({
+        imports: [ /* the Module containing 
+"user-service" */ ]
+      })
+[2m[22m
+[2m      [2mat 
+TestingInjector.lookupComponentInParentModules ([
+22m[2m../../node_modules/@nestjs/core/injector/in
+jector.js[2m:286:19)[22m[2m[22m
+[2m      [2mat 
+TestingInjector.resolveComponentWrapper ([22m[2m
+../../node_modules/@nestjs/testing/testing-injecto
+r.js[2m:19:45)[22m[2m[22m
+[2m      [2mat resolveParam ([22m[2m../../node
+_modules/@nestjs/core/injector/injector.js[2m:141
+:38)[22m[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInjector.resolveConstructorParams ([22m[2
+m../../node_modules/@nestjs/core/injector/injector
+.js[2m:169:27)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInstance ([2
+2m[2m../../node_modules/@nestjs/core/injector/inj
+ector.js[2m:75:13)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInjectable (
+[22m[2m../../node_modules/@nestjs/core/injector/i
+njector.js[2m:99:9)[22m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:80:13[22m
+[2m[22m
+[2m          at async Promise.all (index 0)[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfInjectables ([22m[2m../../node_modules/@ne
+stjs/core/injector/instance-loader.js[2m:79:9)[2
+2m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:41:13[22m
+[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInstanceLoader.createInstances ([22m[2m..
+/../node_modules/@nestjs/core/injector/instance-lo
+ader.js[2m:39:9)[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/core/injector/instance-loader.js[2m:22:13)
+[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/testing/testing-instance-loader.js[2m:9:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.createInstan
+cesOfDependencies ([22m[2m../../node_modules/@ne
+stjs/testing/testing-module.builder.js[2m:118:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.compile ([2
+2m[2m../../node_modules/@nestjs/testing/testing-m
+odule.builder.js[2m:74:9)[22m[2m[22m
+[1m[31m  [1mâ— [22m[1mCinemaController â€º 
+getMovieShowtimesAtCinema â€º should return 
+showtimes for movie at cinema[39m[22m
+    Nest can't resolve dependencies of the 
+ClerkAuthGuard (Reflector, ?). Please make sure 
+that the argument "user-service" at index [1] is 
+available in the RootTestModule context.
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If "user-service" is a provider, is it part 
+of the current RootTestModule?
+    - If "user-service" is exported from a 
+separate @Module, is that module imported within 
+RootTestModule?
+      @Module({
+        imports: [ /* the Module containing 
+"user-service" */ ]
+      })
+[2m[22m
+[2m      [2mat 
+TestingInjector.lookupComponentInParentModules ([
+22m[2m../../node_modules/@nestjs/core/injector/in
+jector.js[2m:286:19)[22m[2m[22m
+[2m      [2mat 
+TestingInjector.resolveComponentWrapper ([22m[2m
+../../node_modules/@nestjs/testing/testing-injecto
+r.js[2m:19:45)[22m[2m[22m
+[2m      [2mat resolveParam ([22m[2m../../node
+_modules/@nestjs/core/injector/injector.js[2m:141
+:38)[22m[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInjector.resolveConstructorParams ([22m[2
+m../../node_modules/@nestjs/core/injector/injector
+.js[2m:169:27)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInstance ([2
+2m[2m../../node_modules/@nestjs/core/injector/inj
+ector.js[2m:75:13)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInjectable (
+[22m[2m../../node_modules/@nestjs/core/injector/i
+njector.js[2m:99:9)[22m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:80:13[22m
+[2m[22m
+[2m          at async Promise.all (index 0)[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfInjectables ([22m[2m../../node_modules/@ne
+stjs/core/injector/instance-loader.js[2m:79:9)[2
+2m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:41:13[22m
+[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInstanceLoader.createInstances ([22m[2m..
+/../node_modules/@nestjs/core/injector/instance-lo
+ader.js[2m:39:9)[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/core/injector/instance-loader.js[2m:22:13)
+[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/testing/testing-instance-loader.js[2m:9:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.createInstan
+cesOfDependencies ([22m[2m../../node_modules/@ne
+stjs/testing/testing-module.builder.js[2m:118:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.compile ([2
+2m[2m../../node_modules/@nestjs/testing/testing-m
+odule.builder.js[2m:74:9)[22m[2m[22m
+[1m[31m  [1mâ— [22m[1mCinemaController â€º 
+getMovieShowtimesAtCinema â€º should handle no 
+showtimes found[39m[22m
+    Nest can't resolve dependencies of the 
+ClerkAuthGuard (Reflector, ?). Please make sure 
+that the argument "user-service" at index [1] is 
+available in the RootTestModule context.
+    Potential solutions:
+    - Is RootTestModule a valid NestJS module?
+    - If "user-service" is a provider, is it part 
+of the current RootTestModule?
+    - If "user-service" is exported from a 
+separate @Module, is that module imported within 
+RootTestModule?
+      @Module({
+        imports: [ /* the Module containing 
+"user-service" */ ]
+      })
+[2m[22m
+[2m      [2mat 
+TestingInjector.lookupComponentInParentModules ([
+22m[2m../../node_modules/@nestjs/core/injector/in
+jector.js[2m:286:19)[22m[2m[22m
+[2m      [2mat 
+TestingInjector.resolveComponentWrapper ([22m[2m
+../../node_modules/@nestjs/testing/testing-injecto
+r.js[2m:19:45)[22m[2m[22m
+[2m      [2mat resolveParam ([22m[2m../../node
+_modules/@nestjs/core/injector/injector.js[2m:141
+:38)[22m[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInjector.resolveConstructorParams ([22m[2
+m../../node_modules/@nestjs/core/injector/injector
+.js[2m:169:27)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInstance ([2
+2m[2m../../node_modules/@nestjs/core/injector/inj
+ector.js[2m:75:13)[22m[2m[22m
+[2m      [2mat TestingInjector.loadInjectable (
+[22m[2m../../node_modules/@nestjs/core/injector/i
+njector.js[2m:99:9)[22m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:80:13[22m
+[2m[22m
+[2m          at async Promise.all (index 0)[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfInjectables ([22m[2m../../node_modules/@ne
+stjs/core/injector/instance-loader.js[2m:79:9)[2
+2m[2m[22m
+[2m      [2mat [22m[2m../../node_modules/@nest
+js/core/injector/instance-loader.js[2m:41:13[22m
+[2m[22m
+[2m          at async Promise.all (index 1)[22m
+[2m      [2mat 
+TestingInstanceLoader.createInstances ([22m[2m..
+/../node_modules/@nestjs/core/injector/instance-lo
+ader.js[2m:39:9)[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/core/injector/instance-loader.js[2m:22:13)
+[22m[2m[22m
+[2m      [2mat TestingInstanceLoader.createInsta
+ncesOfDependencies ([22m[2m../../node_modules/@n
+estjs/testing/testing-instance-loader.js[2m:9:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.createInstan
+cesOfDependencies ([22m[2m../../node_modules/@ne
+stjs/testing/testing-module.builder.js[2m:118:9)
+[22m[2m[22m
+[2m      [2mat TestingModuleBuilder.compile ([2
+2m[2m../../node_modules/@nestjs/testing/testing-m
+odule.builder.js[2m:74:9)[22m[2m[22m
+[1mTest Suites: [22m[1m[31m2 
+failed[39m[22m, [1m[32m4 passed[39m[22m, 6 
+total
+[1mTests:       [22m[1m[31m17 
+failed[39m[22m, [1m[32m27 passed[39m[22m, 
+44 total
+[1mSnapshots:   [22m0 total
+[1mTime:[22m        4.691 s, estimated 5 s
+[2mRan all test suites[22m[2m.[22m
+
+
+
+ NX   Running target test for project api-gateway failed
+
+Failed tasks:
+
+- api-gateway:test
+
+Hint: run the command with --verbose for more details.
+
+View structured, searchable error logs at https://nx.app/runs/QfGpTrWnEU
+

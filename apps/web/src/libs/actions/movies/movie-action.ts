@@ -13,7 +13,7 @@ import { ServiceResult } from '@movie-hub/shared-types/common';
 export type CreateMovieRequest = z.infer<typeof CreateMovieSchema>;
 export type UpdateMovieRequest = z.infer<typeof UpdateMovieSchema>;
 
-export const getMovies = async (query : MovieQuery): Promise<ServiceResult<MovieSummary[]>> => {// eslint-disable-next-line no-useless-catch
+export const getMovies = async (query : MovieQuery): Promise<ServiceResult<MovieSummary[]>> => { 
   try {
     const response = await api.get('/movies', { params: query });
     return response.data;
@@ -57,7 +57,7 @@ export const updateMovie = async (
   movieData: UpdateMovieRequest,
   token: string
 ): Promise<MovieSummary> => {
-  // eslint-disable-next-line no-useless-catch
+   
   try {
     const response = await api.put(`/movies/${movieId}`, movieData, {
       headers: {
@@ -75,7 +75,7 @@ export const deleteMovie = async (
   movieId: string,
   token: string
 ): Promise<void> => {
-  // eslint-disable-next-line no-useless-catch
+   
   try {
     await api.delete(`/movies/${movieId}`, {
       headers: {

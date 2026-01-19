@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CinemaController } from './cinema.controller';
 import { CinemaService } from '../service/cinema.service';
 import { BadRequestException } from '@nestjs/common';
+import { ClerkAuthGuard } from '../../../common/guard/clerk-auth.guard';
 
 describe('CinemaController', () => {
   let controller: CinemaController;
@@ -18,6 +19,11 @@ describe('CinemaController', () => {
     getMovieShowtimesAtCinema: jest.fn(),
   };
 
+  // Mock ClerkAuthGuard to skip auth in tests
+  const mockClerkAuthGuard = {
+    canActivate: jest.fn(() => true),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CinemaController],
@@ -26,25 +32,33 @@ describe('CinemaController', () => {
           provide: CinemaService,
           useValue: mockCinemaService,
         },
+        {
+          provide: 'user-service',
+          useValue: { send: jest.fn() },
+        },
       ],
-    }).compile();
+    })
+      .overrideGuard(ClerkAuthGuard)
+      .useValue(mockClerkAuthGuard)
+      .compile();
 
     controller = module.get<CinemaController>(CinemaController);
     cinemaService = module.get(CinemaService);
   });
 
   afterEach(() => {
+
     jest.clearAllMocks();
   });
 
-  describe('getCinemas', () => {
+  describe('getAllCinemas', () => {
     it('should return all cinemas', async () => {
       const mockResult = { data: [{ id: '1', name: 'Cinema 1' }] };
       cinemaService.getCinemas.mockResolvedValue(mockResult);
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas();
 
-      expect(cinemaService.getCinemas).toHaveBeenCalledWith();
+      expect(cinemaService.getCinemas).toHaveBeenCalled();
       expect(result).toEqual(mockResult);
     });
   });

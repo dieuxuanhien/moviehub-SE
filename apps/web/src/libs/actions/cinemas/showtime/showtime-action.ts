@@ -1,4 +1,4 @@
-/* eslint-disable no-useless-catch */
+ 
 import { ShowtimeSeatResponse } from "@movie-hub/shared-types";
 import api from "../../../api-client";
 import { ApiResponse } from "@movie-hub/shared-types/common";

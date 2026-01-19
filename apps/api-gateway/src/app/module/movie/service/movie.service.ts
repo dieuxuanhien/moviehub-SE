@@ -141,7 +141,7 @@ export class MovieService {
         result.data.length > 0
       ) {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           const userIds = [
             ...new Set(result.data.map((r: any) => r.userId)),
           ] as string[];
@@ -218,7 +218,7 @@ export class MovieService {
 
   // ============ Recommendations ============
 
-  async getSimilarMovies(movieId: string, limit: number = 20, offset: number = 0) {
+  async getSimilarMovies(movieId: string, limit = 20, offset = 0) {
     try {
       return await firstValueFrom(
         this.client.send({ cmd: 'get_similar_movies' }, { movieId, limit, offset })
@@ -228,7 +228,7 @@ export class MovieService {
     }
   }
 
-  async getRecommendations(query: string, limit: number = 10) {
+  async getRecommendations(query: string, limit = 10) {
     try {
       return await firstValueFrom(
         this.client.send({ cmd: 'get_recommendations' }, { query, limit })

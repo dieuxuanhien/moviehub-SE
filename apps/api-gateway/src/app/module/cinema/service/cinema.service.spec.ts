@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CinemaService } from './cinema.service';
 import { ClientProxy } from '@nestjs/microservices';
-import { SERVICE_NAME, CinemaMessage } from '@movie-hub/shared-types';
+import { SERVICE_NAME, CinemaMessage, CinemaStatusEnum } from '@movie-hub/shared-types';
 import { of, throwError } from 'rxjs';
 
 describe('CinemaService', () => {
@@ -37,11 +37,11 @@ describe('CinemaService', () => {
 
       clientProxy.send.mockReturnValue(of(mockResponse));
 
-      const result = await service.getCinemas();
+      const result = await service.getCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(clientProxy.send).toHaveBeenCalledWith(
         CinemaMessage.GET_CINEMAS,
-        {}
+        CinemaStatusEnum.ACTIVE
       );
       expect(result).toEqual(mockResponse);
     });
@@ -51,7 +51,7 @@ describe('CinemaService', () => {
 
       clientProxy.send.mockReturnValue(throwError(() => mockError));
 
-      await expect(service.getCinemas()).rejects.toThrow(mockError);
+      await expect(service.getCinemas(CinemaStatusEnum.ACTIVE)).rejects.toThrow(mockError);
     });
   });
 

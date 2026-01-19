@@ -1,4 +1,4 @@
-/* eslint-disable no-useless-catch */
+ 
 import { CreateGenreSchema, GenreResponse } from '@movie-hub/shared-types';
 
 import z from 'zod';
