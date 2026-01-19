@@ -47,8 +47,6 @@ export default function ReviewsPage() {
   // Filters
   const [filterMovieId, setFilterMovieId] = useState<string>('all');
   const [filterRating, setFilterRating] = useState<string>('all');
-  const [filterStartDate, setFilterStartDate] = useState<string>('');
-  const [filterEndDate, setFilterEndDate] = useState<string>('');
   const [page, setPage] = useState(1);
 
   // API hooks
@@ -58,8 +56,6 @@ export default function ReviewsPage() {
   const { data: reviewsData = [], isLoading: loading } = useReviews({
     movieId: filterMovieId === 'all' ? undefined : filterMovieId,
     rating: filterRating === 'all' ? undefined : parseInt(filterRating),
-    startDate: filterStartDate || undefined,
-    endDate: filterEndDate || undefined,
     page,
   });
   const reviews = useMemo(() => Array.isArray(reviewsData) ? reviewsData : [], [reviewsData]);
@@ -83,9 +79,6 @@ export default function ReviewsPage() {
       return {
         ...review,
         movieTitle,
-        // userName/userEmail not available from BE, would need user-service integration
-        userName: 'User', // Placeholder - BE doesn't return user info
-        userEmail: '',
       };
     });
   }, [reviews, movieMap]);
@@ -129,12 +122,10 @@ export default function ReviewsPage() {
   const handleClearFilters = () => {
     setFilterMovieId('all');
     setFilterRating('all');
-    setFilterStartDate('');
-    setFilterEndDate('');
     setPage(1);
   };
 
-  const hasActiveFilters = filterMovieId !== 'all' || filterRating !== 'all' || filterStartDate || filterEndDate;
+  const hasActiveFilters = filterMovieId !== 'all' || filterRating !== 'all';
 
   const renderStars = (rating: number) => {
     return (
@@ -221,7 +212,7 @@ export default function ReviewsPage() {
 
       {/* Modern Filter Container */}
       <div className="p-4 bg-gradient-to-r from-purple-50 via-blue-50 to-pink-50 rounded-lg border border-purple-200/50 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Movie Filter */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">🎬 Phim</label>
@@ -263,34 +254,6 @@ export default function ReviewsPage() {
               </SelectContent>
             </Select>
           </div>
-
-          {/* Start Date */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">📅 Ngày Bắt Đầu</label>
-            <Input
-              type="date"
-              value={filterStartDate}
-              onChange={(e) => {
-                setFilterStartDate(e.target.value);
-                setPage(1);
-              }}
-              className="h-11 border-purple-200 focus:ring-purple-500"
-            />
-          </div>
-
-          {/* End Date */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">📅 Ngày Kết Thúc</label>
-            <Input
-              type="date"
-              value={filterEndDate}
-              onChange={(e) => {
-                setFilterEndDate(e.target.value);
-                setPage(1);
-              }}
-              className="h-11 border-purple-200 focus:ring-purple-500"
-            />
-          </div>
         </div>
 
         {/* Active Filter Chips */}
@@ -318,34 +281,6 @@ export default function ReviewsPage() {
                 <button
                   onClick={() => {
                     setFilterRating('all');
-                    setPage(1);
-                  }}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-            )}
-            {filterStartDate && (
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-full border border-purple-200 shadow-sm">
-                <span className="text-xs font-medium text-gray-700">📅 From {filterStartDate}</span>
-                <button
-                  onClick={() => {
-                    setFilterStartDate('');
-                    setPage(1);
-                  }}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-            )}
-            {filterEndDate && (
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-full border border-purple-200 shadow-sm">
-                <span className="text-xs font-medium text-gray-700">📅 To {filterEndDate}</span>
-                <button
-                  onClick={() => {
-                    setFilterEndDate('');
                     setPage(1);
                   }}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -390,7 +325,6 @@ export default function ReviewsPage() {
                   <TableRow>
                     <TableHead>Đánh Giá</TableHead>
                     <TableHead>Phim</TableHead>
-                    <TableHead>Người Bình Luận</TableHead>
                     <TableHead>Bình Luận</TableHead>
                     <TableHead>Ngày</TableHead>
                     <TableHead>Hành Động</TableHead>
@@ -406,7 +340,6 @@ export default function ReviewsPage() {
                         </div>
                       </TableCell>
                       <TableCell className="font-medium">{review.movieTitle}</TableCell>
-                      <TableCell>{review.userName || review.userEmail || 'Unknown'}</TableCell>
                       <TableCell className="max-w-lg truncate text-gray-600">{review.content}</TableCell>
                       <TableCell className="text-sm text-gray-600">{formatDate(review.createdAt)}</TableCell>
                       <TableCell>
@@ -471,21 +404,6 @@ export default function ReviewsPage() {
                 <div>
                   <Label className="text-sm text-gray-500">Tiêu Đề</Label>
                   <p className="font-medium">{selectedReview.title}</p>
-                </div>
-              </div>
-
-              {/* Reviewer Info */}
-              <div className="border-t pt-4">
-                <h3 className="font-semibold mb-2">Thông Tin Người Bình Luận</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm text-gray-500">Tên</Label>
-                    <p>{selectedReview.userName || 'Ẩn Dành'}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm text-gray-500">Email</Label>
-                    <p>{selectedReview.userEmail}</p>
-                  </div>
                 </div>
               </div>
 

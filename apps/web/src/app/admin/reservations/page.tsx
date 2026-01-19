@@ -778,12 +778,12 @@ export default function ReservationsPage() {
                     <p className="font-medium">
                       {bookingDetail.movie?.title || bookingDetail.movieTitle}
                     </p>
-                    {bookingDetail.movie?.duration > 0 && (
+                    {bookingDetail.movie && bookingDetail.movie.duration > 0 && (
                       <p className="text-xs text-gray-500">
                         Thời lượng: {bookingDetail.movie.duration} phút
                       </p>
                     )}
-                    {bookingDetail.movie?.rating && bookingDetail.movie.rating !== 'N/A' && (
+                    {bookingDetail.movie?.rating && bookingDetail.movie?.rating !== 'N/A' && (
                       <p className="text-xs text-gray-500">
                         Đánh giá: {bookingDetail.movie.rating}
                       </p>
