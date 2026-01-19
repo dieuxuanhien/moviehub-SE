@@ -727,26 +727,41 @@ export default function ReservationsPage() {
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-purple-600 border-r-transparent"></div>
               <p className="mt-4 text-gray-500">Đang tải chi tiết...</p>
             </div>
-          ) : bookingDetail ? (
+          ) : !bookingDetail ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500">Không tìm thấy dữ liệu đặt vé</p>
+            </div>
+          ) : (
             <div className="space-y-4">
               {/* Basic Info */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 pb-4 border-b">
                 <div>
-                  <Label className="text-sm text-gray-500">Mã Đặt Vé</Label>
-                  <p className="font-medium">{bookingDetail.bookingCode}</p>
+                  <Label className="text-sm text-gray-500">ID Đặt Vé</Label>
+                  <p className="font-mono text-xs text-gray-700 break-all">
+                    {bookingDetail.id}
+                  </p>
                 </div>
                 <div>
-                  <Label className="text-sm text-gray-500">Trạng Thái</Label>
+                  <Label className="text-sm text-gray-500">Mã Đặt Vé</Label>
+                  <p className="font-medium text-lg">{bookingDetail.bookingCode}</p>
+                </div>
+                <div>
+                  <Label className="text-sm text-gray-500">Trạng Thái Đặt Vé</Label>
                   <div>
                     <Badge
                       className={getStatusBadgeColor(bookingDetail.status)}
                     >
                       {bookingDetail.status}
                     </Badge>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm text-gray-500">Trạng Thái Thanh Toán</Label>
+                  <div>
                     <Badge
-                      className={`ml-2 ${getPaymentStatusBadge(
+                      className={getPaymentStatusBadge(
                         bookingDetail.paymentStatus
-                      )}`}
+                      )}
                     >
                       {bookingDetail.paymentStatus}
                     </Badge>
@@ -755,56 +770,146 @@ export default function ReservationsPage() {
               </div>
 
               {/* Movie & Cinema Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm text-gray-500">Phim</Label>
-                  <p className="font-medium">{bookingDetail.movieTitle}</p>
-                </div>
-                <div>
-                  <Label className="text-sm text-gray-500">Rạp</Label>
-                  <p className="font-medium">{bookingDetail.cinemaName}</p>
-                </div>
-                <div>
-                  <Label className="text-sm text-gray-500">Phòng</Label>
-                  <p className="font-medium">{bookingDetail.hallName}</p>
-                </div>
-                <div>
-                  <Label className="text-sm text-gray-500">Suất Chiếu</Label>
-                  <p className="font-medium">
-                    {formatDate(bookingDetail.startTime)}
-                  </p>
+              <div className="border-t pt-4">
+                <h3 className="font-semibold mb-3">Thông Tin Phim & Rạp</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm text-gray-500">Phim</Label>
+                    <p className="font-medium">
+                      {bookingDetail.movie?.title || bookingDetail.movieTitle}
+                    </p>
+                    {bookingDetail.movie?.duration > 0 && (
+                      <p className="text-xs text-gray-500">
+                        Thời lượng: {bookingDetail.movie.duration} phút
+                      </p>
+                    )}
+                    {bookingDetail.movie?.rating && bookingDetail.movie.rating !== 'N/A' && (
+                      <p className="text-xs text-gray-500">
+                        Đánh giá: {bookingDetail.movie.rating}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-500">Rạp</Label>
+                    <p className="font-medium">
+                      {bookingDetail.cinema?.name || bookingDetail.cinemaName}
+                    </p>
+                    {bookingDetail.cinema?.address && (
+                      <p className="text-xs text-gray-500">
+                        {bookingDetail.cinema.address}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-500">Phòng</Label>
+                    <p className="font-medium">
+                      {bookingDetail.cinema?.hallName || bookingDetail.hallName}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-500">Suất Chiếu</Label>
+                    <p className="font-medium">
+                      {formatDate(
+                        bookingDetail.showtime?.startTime || bookingDetail.startTime
+                      )}
+                    </p>
+                    {bookingDetail.showtime && (
+                      <>
+                        {bookingDetail.showtime.format && (
+                          <p className="text-xs text-gray-500">
+                            Định dạng: {bookingDetail.showtime.format}
+                          </p>
+                        )}
+                        {bookingDetail.showtime.language && (
+                          <p className="text-xs text-gray-500">
+                            Ngôn ngữ: {bookingDetail.showtime.language}
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* Customer Info */}
-              <div className="border-t pt-4">
-                <h3 className="font-semibold mb-2">Thông Tin Khách Hàng</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm text-gray-500">Tên</Label>
-                    <p>{bookingDetail.customerName}</p>
+              {(bookingDetail.customerName ||
+                bookingDetail.customerEmail ||
+                bookingDetail.customerPhone) && (
+                <div className="border-t pt-4">
+                  <h3 className="font-semibold mb-2">Thông Tin Khách Hàng</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {bookingDetail.customerName && (
+                      <div>
+                        <Label className="text-sm text-gray-500">Tên</Label>
+                        <p>{bookingDetail.customerName}</p>
+                      </div>
+                    )}
+                    {bookingDetail.customerEmail && (
+                      <div>
+                        <Label className="text-sm text-gray-500">Email</Label>
+                        <p>{bookingDetail.customerEmail}</p>
+                      </div>
+                    )}
+                    {bookingDetail.customerPhone && (
+                      <div>
+                        <Label className="text-sm text-gray-500">
+                          Số Điện Thoại
+                        </Label>
+                        <p>{bookingDetail.customerPhone}</p>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <Label className="text-sm text-gray-500">Email</Label>
-                    <p>{bookingDetail.customerEmail}</p>
-                  </div>
-                  {bookingDetail.customerPhone && (
-                    <div>
-                      <Label className="text-sm text-gray-500">
-                        Số Điện Thoại
-                      </Label>
-                      <p>{bookingDetail.customerPhone}</p>
-                    </div>
-                  )}
                 </div>
-              </div>
+              )}
 
-              {/* Seats */}
-              <div className="border-t pt-4">
-                <h3 className="font-semibold mb-2">Ghế</h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {bookingDetail.seats &&
-                    bookingDetail.seats.map((seat, idx: number) => (
+              {/* Ticket Groups (từ backend) */}
+              {bookingDetail.ticketGroups && bookingDetail.ticketGroups.length > 0 && (
+                <div className="border-t pt-4">
+                  <h3 className="font-semibold mb-3">Thông Tin Vé & Ghế</h3>
+                  {bookingDetail.ticketGroups.map((group, groupIdx: number) => (
+                    <div key={groupIdx} className="mb-4 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <div>
+                          <p className="font-medium text-sm">
+                            Loại vé: {group.ticketType}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Số lượng: {group.quantity} vé × {formatPrice(group.pricePerTicket)}
+                          </p>
+                        </div>
+                        <p className="font-semibold">
+                          {formatPrice(group.subtotal)}
+                        </p>
+                      </div>
+                      {group.seats && group.seats.length > 0 && (
+                        <div className="grid grid-cols-4 gap-2 mt-2">
+                          {group.seats.map((seat, seatIdx: number) => (
+                            <div
+                              key={seatIdx}
+                              className="border border-gray-300 bg-white p-2 rounded text-center"
+                            >
+                              <p className="font-medium text-sm">
+                                {seat.row}{seat.number}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {seat.seatType}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Seats (fallback nếu không có ticketGroups) */}
+              {(!bookingDetail.ticketGroups || bookingDetail.ticketGroups.length === 0) &&
+                bookingDetail.seats && bookingDetail.seats.length > 0 && (
+                <div className="border-t pt-4">
+                  <h3 className="font-semibold mb-2">Ghế</h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {bookingDetail.seats.map((seat, idx: number) => (
                       <div key={idx} className="border p-2 rounded text-sm">
                         <p className="font-medium">
                           {String(seat.row)}
@@ -816,8 +921,19 @@ export default function ReservationsPage() {
                         </p>
                       </div>
                     ))}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Thông báo khi không có ghế */}
+              {(!bookingDetail.ticketGroups || bookingDetail.ticketGroups.length === 0) &&
+                (!bookingDetail.seats || bookingDetail.seats.length === 0) && (
+                <div className="border-t pt-4">
+                  <div className="text-center py-4 text-gray-500 bg-gray-50 rounded">
+                    <p className="text-sm">Chưa có ghế được chọn</p>
+                  </div>
+                </div>
+              )}
 
               {/* Concessions */}
               {bookingDetail.concessions &&
@@ -842,14 +958,52 @@ export default function ReservationsPage() {
 
               {/* Pricing */}
               <div className="border-t pt-4">
-                <h3 className="font-semibold mb-2">Định Giá</h3>
-                <div className="space-y-1 text-sm">
+                <h3 className="font-semibold mb-3">Thông Tin Thanh Toán</h3>
+                <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span>Cộng Tiền</span>
+                    <span>Cộng Tiền Vé</span>
                     <span className="font-medium">
-                      {formatPrice(bookingDetail.subtotal || 0)}
+                      {formatPrice(
+                        bookingDetail.pricing?.ticketsSubtotal ||
+                          bookingDetail.subtotal ||
+                          0
+                      )}
                     </span>
                   </div>
+                  {(bookingDetail.pricing?.concessionsSubtotal || 0) > 0 && (
+                    <div className="flex justify-between">
+                      <span>Cộng Tiền Bổ Sung</span>
+                      <span className="font-medium">
+                        {formatPrice(
+                          bookingDetail.pricing?.concessionsSubtotal || 0
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  {(bookingDetail.pricing?.tax?.vatAmount || 0) > 0 && (
+                    <div className="flex justify-between">
+                      <span>
+                        Thuế VAT ({bookingDetail.pricing?.tax?.vatRate || 0}%)
+                      </span>
+                      <span className="font-medium">
+                        {formatPrice(bookingDetail.pricing?.tax?.vatAmount || 0)}
+                      </span>
+                    </div>
+                  )}
+                  {(bookingDetail.pricing?.promotionDiscount?.discountAmount || 0) > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>
+                        Khuyến Mãi ({bookingDetail.pricing?.promotionDiscount?.code})
+                      </span>
+                      <span>
+                        -
+                        {formatPrice(
+                          bookingDetail.pricing?.promotionDiscount
+                            ?.discountAmount || 0
+                        )}
+                      </span>
+                    </div>
+                  )}
                   {bookingDetail.discount && bookingDetail.discount > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>Giảm Giá</span>
@@ -866,16 +1020,12 @@ export default function ReservationsPage() {
                       </span>
                     </div>
                   )}
-                  {bookingDetail.promotionCode && (
-                    <div className="flex justify-between text-purple-600 py-1">
-                      <span>Khuyến Mãi: {bookingDetail.promotionCode}</span>
-                    </div>
-                  )}
                   <div className="flex justify-between font-bold text-base border-t pt-2 mt-2">
                     <span>Tổng Tiền</span>
                     <span className="text-green-600">
                       {formatPrice(
-                        bookingDetail.finalAmount ||
+                        bookingDetail.pricing?.finalAmount ||
+                          bookingDetail.finalAmount ||
                           bookingDetail.totalAmount ||
                           0
                       )}
@@ -916,7 +1066,7 @@ export default function ReservationsPage() {
                 )}
               </div>
             </div>
-          ) : null}
+          )}
 
           <DialogFooter>
             {bookingDetail?.status === 'PENDING' && (

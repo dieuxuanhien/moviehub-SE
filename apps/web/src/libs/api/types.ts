@@ -695,6 +695,122 @@ export interface BookingDetail extends BookingSummary {
   cancelledAt?: string | Date;
   cancellationReason?: string;
   updatedAt: string | Date;
+  // Additional fields from backend response
+  movie?: {
+    id: string;
+    title: string;
+    duration: number;
+    rating: string;
+  };
+  cinema?: {
+    id: string;
+    name: string;
+    address: string;
+    hallName: string;
+  };
+  showtime?: {
+    id: string;
+    startTime: string;
+    endTime: string;
+    format: string;
+    language: string;
+  };
+  pricing?: {
+    ticketsSubtotal: number;
+    concessionsSubtotal: number;
+    subtotal: number;
+    tax: {
+      vatRate: number;
+      vatAmount: number;
+    };
+    promotionDiscount?: {
+      code: string;
+      description: string;
+      discountAmount: number;
+    };
+    totalDiscount: number;
+    totalBeforeTax: number;
+    finalAmount: number;
+  };
+  ticketGroups?: Array<{
+    ticketType: string;
+    quantity: number;
+    pricePerTicket: number;
+    subtotal: number;
+    seats: Array<{
+      seatId: string;
+      row: string;
+      number: number;
+      seatType: string;
+    }>;
+  }>;
+}
+
+// ============================================================================
+// BOOKING API RESPONSE FROM BACKEND (Raw Format)
+// ============================================================================
+
+export interface BookingApiResponse {
+  bookingId: string;
+  bookingCode: string;
+  movie: {
+    id: string;
+    title: string;
+    duration: number;
+    rating: string;
+  };
+  cinema: {
+    id: string;
+    name: string;
+    address: string;
+    hallName: string;
+  };
+  showtime: {
+    id: string;
+    startTime: string;
+    endTime: string;
+    format: string;
+    language: string;
+  };
+  ticketGroups: Array<{
+    ticketType: string;
+    quantity: number;
+    pricePerTicket: number;
+    subtotal: number;
+    seats: Array<{
+      seatId: string;
+      row: string;
+      number: number;
+      seatType: string;
+    }>;
+  }>;
+  concessions: Array<{
+    concessionId: string;
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+  }>;
+  pricing: {
+    ticketsSubtotal: number;
+    concessionsSubtotal: number;
+    subtotal: number;
+    tax: {
+      vatRate: number;
+      vatAmount: number;
+    };
+    promotionDiscount?: {
+      code: string;
+      description: string;
+      discountAmount: number;
+    };
+    totalDiscount: number;
+    totalBeforeTax: number;
+    finalAmount: number;
+  };
+  status: BookingStatus;
+  paymentStatus: PaymentStatus;
+  expiresAt: string | null;
 }
 
 export type GetBookingsResponse = PaginatedResponse<BookingSummary>;

@@ -24,7 +24,7 @@ export const FoodSelector = ({ cinemaId }: { cinemaId?: string }) => {
   );
 
   const { data, isLoading } = useGetConcessions({
-    category,
+    category: category as ConcessionCategory | undefined,
     available: true,
     cinemaId: cinemaId || undefined,
   });
