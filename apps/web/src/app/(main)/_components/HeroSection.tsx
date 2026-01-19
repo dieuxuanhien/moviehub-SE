@@ -53,6 +53,11 @@ export default function HeroSection() {
         <div className="w-full h-full animate-pulse bg-gray-900 flex items-center justify-center">
           <span className="text-gray-500">Đang tải phim nổi bật...</span>
         </div>
+      ) : movies.length === 0 ? (
+        // No movies available
+        <div className="w-full h-full bg-gray-900 flex items-center justify-center">
+          <span className="text-gray-400">Không có phim đang chiếu</span>
+        </div>
       ) : (
         <Carousel
           setApi={setApi}
@@ -61,18 +66,18 @@ export default function HeroSection() {
           }}
           className="w-full h-full"
         >
-          <CarouselContent>
-            {movies.map((movie, index) => (
+          <CarouselContent className="-ml-0">
+            {movies.filter(movie => movie && movie.id).map((movie, index) => (
               <CarouselItem
                 key={movie.id}
-                className="relative w-full h-[600px] lg:h-[700px]"
+                className="relative w-full h-[600px] lg:h-[700px] pl-0"
               >
                 {/* Background Image: Prefer backdropUrl, fallback to posterUrl */}
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
                   style={{
                     backgroundImage: `url(${
-                      movie.backdropUrl || movie.posterUrl
+                      movie?.backdropUrl || movie?.posterUrl || '/placeholder.jpg'
                     })`,
                   }}
                 />
@@ -87,12 +92,12 @@ export default function HeroSection() {
 
                 {/* Content */}
                 <div className="relative h-full flex items-start lg:items-center max-w-[1920px] mx-auto px-4 sm:px-8 md:px-12 lg:px-24 xl:px-32">
-                  <div className="max-w-2xl space-y-4 md:space-y-6 pt-28 sm:pt-32 lg:pt-20">
+                  <div className="max-w-3xl space-y-4 md:space-y-6 pt-28 sm:pt-32 lg:pt-20">
                     <span className="inline-block px-3 py-1 bg-yellow-400 text-black font-bold text-[10px] sm:text-xs rounded uppercase tracking-wider">
                       Đang Chiếu
                     </span>
-                    <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black text-white leading-tight uppercase drop-shadow-lg line-clamp-2">
-                      {movie.title}
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-tight uppercase drop-shadow-lg">
+                      {movie?.title || 'Đang cập nhật'}
                     </h1>
 
                     {/* Description is not in MovieSummary, using a generic tagline or hiding it if unavailable. 
@@ -100,27 +105,31 @@ export default function HeroSection() {
                         For now, we can render production info or generic text.*/}
                     <p className="text-base sm:text-lg text-gray-200 line-clamp-2 drop-shadow-md">
                       {/* {movie.description} - unavailable in MovieSummary. Using localized rating/country info instead. */}
-                      Phim {movie.productionCountry} | {movie.runtime} phút |{' '}
-                      {movie.ageRating}
+                      Phim {movie?.productionCountry || 'Việt Nam'} | {movie?.runtime || 0} phút |{' '}
+                      {movie?.ageRating || 'K'}
                     </p>
 
                     <div className="flex flex-wrap gap-4 pt-4">
-                      <Link href={`/movies/${movie.id}`}>
-                        <Button className="h-10 sm:h-12 px-6 sm:px-8 bg-primary hover:bg-primary/90 text-white font-bold rounded-full text-base sm:text-lg shadow-[0_0_20px_-5px_hsl(var(--primary))] transition-transform hover:scale-105">
-                          <Play className="mr-2 w-4 h-4 sm:w-5 sm:h-5 fill-current" />
-                          ĐẶT VÉ NGAY
-                        </Button>
-                      </Link>
+                      {movie?.id && (
+                        <>
+                          <Link href={`/movies/${movie.id}`}>
+                            <Button className="h-10 sm:h-12 px-6 sm:px-8 bg-primary hover:bg-primary/90 text-white font-bold rounded-full text-base sm:text-lg shadow-[0_0_20px_-5px_hsl(var(--primary))] transition-transform hover:scale-105">
+                              <Play className="mr-2 w-4 h-4 sm:w-5 sm:h-5 fill-current" />
+                              ĐẶT VÉ NGAY
+                            </Button>
+                          </Link>
 
-                      <Link href={`/movies/${movie.id}`}>
-                        <Button
-                          variant="outline"
-                          className="h-10 sm:h-12 px-6 sm:px-8 border-white text-white hover:bg-white hover:text-black font-bold rounded-full text-base sm:text-lg transition-all backdrop-blur-sm"
-                        >
-                          <Info className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
-                          CHI TIẾT
-                        </Button>
-                      </Link>
+                          <Link href={`/movies/${movie.id}`}>
+                            <Button
+                              variant="outline"
+                              className="h-10 sm:h-12 px-6 sm:px-8 border-white text-white hover:bg-white hover:text-black font-bold rounded-full text-base sm:text-lg transition-all backdrop-blur-sm"
+                            >
+                              <Info className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+                              CHI TIẾT
+                            </Button>
+                          </Link>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
