@@ -195,6 +195,11 @@ resource "azurerm_container_app" "movie_service" {
   }
 
   secret {
+    name  = "gemini-api-key"
+    value = var.gemini_api_key
+  }
+
+  secret {
     name  = "acr-password"
     value = azurerm_container_registry.main.admin_password
   }
