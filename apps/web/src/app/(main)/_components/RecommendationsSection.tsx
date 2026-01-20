@@ -115,7 +115,7 @@ export default function RecommendationsSection() {
             <div className="flex items-center gap-2 text-white/70">
               <span>Kết quả cho:</span>
               <span className="px-3 py-1 bg-yellow-500/20 text-yellow-300 rounded-full text-sm font-medium">
-                "{submittedQuery}"
+                &quot;{submittedQuery}&quot;
               </span>
             </div>
             {/* Show enriched query if available */}
@@ -148,7 +148,7 @@ export default function RecommendationsSection() {
               ))
             ) : movies.length === 0 ? (
               <div className="text-center py-10 text-gray-500 flex items-center justify-center w-full">
-                🎬 Không tìm thấy phim phù hợp với "{submittedQuery}". Thử mô tả khác nhé!
+                🎬 Không tìm thấy phim phù hợp với &quot;{submittedQuery}&quot;. Thử mô tả khác nhé!
               </div>
             ) : (
               movies.map((movie) => (
