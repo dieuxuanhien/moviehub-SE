@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '@movie-hub/shacdn-ui/select';
 import { useGetConcessions } from '@/hooks/concession-hooks';
-import { ConcessionCategory } from '@movie-hub/shared-types/booking/enum/concession';
+import { ConcessionCategory } from '@movie-hub/shared-types';
 import type { ConcessionDto } from '@/libs/types/concession.type';
 import { Loader } from '@/components/loader';
 import { toast } from 'sonner';
@@ -89,11 +89,11 @@ export const FoodSelector = ({ cinemaId }: { cinemaId?: string }) => {
           <SelectContent className="bg-slate-900 text-white border-slate-700">
             <SelectItem value="all" className="cursor-pointer hover:bg-primary/20">🎯 Tất cả mặt hàng</SelectItem>
             <SelectItem value={ConcessionCategory.FOOD} className="cursor-pointer hover:bg-primary/20">🍔 Thức Ăn</SelectItem>
-            <SelectItem value={ConcessionCategory.DRINK} className="cursor-pointer hover:bg-primary/20">
+            <SelectItem value={ConcessionCategory.BEVERAGE} className="cursor-pointer hover:bg-primary/20">
               🥤 Đồ Uống
             </SelectItem>
-            <SelectItem value={ConcessionCategory.COMBO} className="cursor-pointer hover:bg-primary/20">🍿 Combo</SelectItem>
-            <SelectItem value={ConcessionCategory.MERCHANDISE} className="cursor-pointer hover:bg-primary/20">🎁 Hàng Hóa</SelectItem>
+            <SelectItem value={ConcessionCategory.SNACK} className="cursor-pointer hover:bg-primary/20">🍿 Snack</SelectItem>
+            <SelectItem value={ConcessionCategory.COMBO} className="cursor-pointer hover:bg-primary/20">🎁 Combo</SelectItem>
           </SelectContent>
         </Select>
       </div>
