@@ -113,7 +113,7 @@ export const Navbar = ({ cinemas }: NavbarProps) => {
           {/* Logo with glow effect */}
           <div className="flex-shrink-0 group">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300 pointer-events-none" />
               <Logo />
             </div>
           </div>

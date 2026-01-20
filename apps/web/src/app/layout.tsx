@@ -34,7 +34,7 @@ export default function RootLayout({
                 colorPrimary: '#E11D48',
               },
             }}
-            afterSignOutUrl="/admin/login"
+            afterSignOutUrl="/"
           >
             <PageWrapper>
               <Toaster theme="light" richColors closeButton />
