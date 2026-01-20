@@ -41,7 +41,7 @@ export default function MembershipPage() {
               <Star className="w-8 h-8" />
             </div>
             <CardTitle className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 uppercase italic tracking-wider">
-              C'FRIEND
+              C&apos;FRIEND
             </CardTitle>
             <p className="text-blue-200/60 font-medium">
               Thành viên Thân Thiết
@@ -102,7 +102,7 @@ export default function MembershipPage() {
               <Crown className="w-8 h-8" />
             </div>
             <CardTitle className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-300 uppercase italic tracking-wider">
-              C'VIP
+              C&apos;VIP
             </CardTitle>
             <p className="text-purple-200/60 font-medium">Thành viên VIP</p>
           </CardHeader>

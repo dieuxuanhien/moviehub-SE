@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 class MockRpcException extends Error {
   constructor(error) {
     super(typeof error === 'string' ? error : JSON.stringify(error));
