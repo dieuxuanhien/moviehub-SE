@@ -2,215 +2,106 @@
 
 This guide explains how to deploy MovieHub using pre-built Docker images from Docker Hub.
 
+## Prerequisites
+
+- Docker and Docker Compose installed
+- Clone the repository (for `.env` files and database init scripts)
+
 ## Quick Start
 
-### 1. Create a `docker-compose.prod.yml` file:
-
-```yaml
-version: '3.8'
-
-services:
-  # ==================== DATABASES ====================
-  postgres-movie:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: movie_hub_movie
-    volumes:
-      - postgres_movie_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  postgres-user:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: movie_hub_user
-    volumes:
-      - postgres_user_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  postgres-booking:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: movie_hub_booking
-    volumes:
-      - postgres_booking_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  postgres-cinema:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: movie_hub_cinema
-    volumes:
-      - postgres_cinema_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    volumes:
-      - redis_data:/data
-
-  # ==================== BACKEND SERVICES ====================
-  movie-service:
-    image: ngoctruonggiang/moviehub-movie-service:latest
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres-movie:5432/movie_hub_movie
-      - TCP_HOST=0.0.0.0
-      - TCP_PORT=3002
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-    depends_on:
-      postgres-movie:
-        condition: service_healthy
-
-  user-service:
-    image: ngoctruonggiang/moviehub-user-service:latest
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres-user:5432/movie_hub_user
-      - TCP_HOST=0.0.0.0
-      - TCP_PORT=3001
-      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
-    depends_on:
-      postgres-user:
-        condition: service_healthy
-
-  booking-service:
-    image: ngoctruonggiang/moviehub-booking-service:latest
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres-booking:5432/movie_hub_booking
-      - TCP_HOST=0.0.0.0
-      - TCP_PORT=3003
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - CINEMA_HOST=cinema-service
-      - CINEMA_PORT=3004
-      - USER_HOST=user-service
-      - USER_PORT=3001
-    depends_on:
-      postgres-booking:
-        condition: service_healthy
-      redis:
-        condition: service_started
-
-  cinema-service:
-    image: ngoctruonggiang/moviehub-cinema-service:latest
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres-cinema:5432/movie_hub_cinema
-      - TCP_HOST=0.0.0.0
-      - TCP_PORT=3004
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    depends_on:
-      postgres-cinema:
-        condition: service_healthy
-      redis:
-        condition: service_started
-
-  # ==================== API GATEWAY ====================
-  api-gateway:
-    image: ngoctruonggiang/moviehub-api-gateway:latest
-    ports:
-      - "4000:3000"
-    environment:
-      - MOVIE_HOST=movie-service
-      - MOVIE_PORT=3002
-      - USER_HOST=user-service
-      - USER_PORT=3001
-      - BOOKING_HOST=booking-service
-      - BOOKING_PORT=3003
-      - CINEMA_HOST=cinema-service
-      - CINEMA_PORT=3004
-      - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
-      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
-    depends_on:
-      - movie-service
-      - user-service
-      - booking-service
-      - cinema-service
-
-  # ==================== FRONTEND ====================
-  web:
-    image: ngoctruonggiang/moviehub-web:latest
-    ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://api-gateway:3000/api/v1
-      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
-      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
-    depends_on:
-      - api-gateway
-
-volumes:
-  postgres_movie_data:
-  postgres_user_data:
-  postgres_booking_data:
-  postgres_cinema_data:
-  redis_data:
-```
-
-### 2. Create a `.env` file:
-
-```env
-# Clerk Authentication (get from https://clerk.com)
-CLERK_PUBLISHABLE_KEY=pk_test_xxx
-CLERK_SECRET_KEY=sk_test_xxx
-
-# Gemini API (get from https://aistudio.google.com)
-GEMINI_API_KEY=AIzaSy...
-```
-
-### 3. Pull and Run:
-
+### 1. Clone the repository:
 ```bash
-# Pull all images
-docker compose -f docker-compose.prod.yml pull
-
-# Start all services
-docker compose -f docker-compose.prod.yml up -d
-
-# Check status
-docker compose -f docker-compose.prod.yml ps
+git clone https://github.com/your-org/moviehub-SE.git
+cd moviehub-SE
 ```
 
-### 4. Access the Application:
+### 2. Set up environment files:
+Copy the example `.env` files for each service:
+```bash
+# Database env files
+cp apps/user-service/.env.db.example apps/user-service/.env.db
+cp apps/movie-service/.env.db.example apps/movie-service/.env.db
+cp apps/cinema-service/.env.db.example apps/cinema-service/.env.db
+cp apps/booking-service/.env.db.example apps/booking-service/.env.db
 
-- **Frontend**: http://localhost:3000
+# Service env files
+cp apps/user-service/.env.example apps/user-service/.env
+cp apps/movie-service/.env.example apps/movie-service/.env
+cp apps/cinema-service/.env.example apps/cinema-service/.env
+cp apps/booking-service/.env.example apps/booking-service/.env
+cp apps/api-gateway/.env.example apps/api-gateway/.env
+cp apps/web/.env.example apps/web/.env
+```
+
+### 3. Configure required API keys:
+Edit the `.env` files with your credentials:
+- **Clerk** (apps/api-gateway/.env, apps/web/.env): Get from https://clerk.com
+- **Gemini API** (apps/movie-service/.env): Get from https://aistudio.google.com
+
+### 4. Pull images and start:
+```bash
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### 5. Access the application:
+- **Frontend**: http://localhost:5200
 - **API Gateway**: http://localhost:4000/api/v1
 
 ## Docker Hub Images
 
-| Service | Image |
-|---------|-------|
-| API Gateway | `ngoctruonggiang/moviehub-api-gateway:latest` |
-| Movie Service | `ngoctruonggiang/moviehub-movie-service:latest` |
-| Booking Service | `ngoctruonggiang/moviehub-booking-service:latest` |
-| Cinema Service | `ngoctruonggiang/moviehub-cinema-service:latest` |
-| User Service | `ngoctruonggiang/moviehub-user-service:latest` |
-| Web Frontend | `ngoctruonggiang/moviehub-web:latest` |
+| Service | Image | Port |
+|---------|-------|------|
+| API Gateway | `ngoctruonggiang/moviehub-api-gateway:latest` | 4000 |
+| Movie Service | `ngoctruonggiang/moviehub-movie-service:latest` | 4002 |
+| Booking Service | `ngoctruonggiang/moviehub-booking-service:latest` | 4004 |
+| Cinema Service | `ngoctruonggiang/moviehub-cinema-service:latest` | 4003 |
+| User Service | `ngoctruonggiang/moviehub-user-service:latest` | 4001 |
+| Web Frontend | `ngoctruonggiang/moviehub-web:latest` | 5200 |
 
-## Notes
+## Pull All Images
 
-1. **Database Migrations**: The databases will be empty. You'll need to run Prisma migrations for each service.
-2. **Seed Data**: After migrations, seed data can be imported from the project's SQL files.
-3. **Environment Variables**: Make sure to set all required environment variables in the `.env` file.
+```bash
+docker pull ngoctruonggiang/moviehub-api-gateway:latest
+docker pull ngoctruonggiang/moviehub-movie-service:latest
+docker pull ngoctruonggiang/moviehub-booking-service:latest
+docker pull ngoctruonggiang/moviehub-cinema-service:latest
+docker pull ngoctruonggiang/moviehub-user-service:latest
+docker pull ngoctruonggiang/moviehub-web:latest
+```
+
+## Useful Commands
+
+```bash
+# View logs
+docker compose -f docker-compose.prod.yml logs -f
+
+# Stop all services
+docker compose -f docker-compose.prod.yml down
+
+# Restart a specific service
+docker compose -f docker-compose.prod.yml restart movie-service
+
+# View running containers
+docker compose -f docker-compose.prod.yml ps
+```
+
+## Environment Files Structure
+
+```
+apps/
+├── api-gateway/.env          # API Gateway config (Clerk, service hosts)
+├── booking-service/
+│   ├── .env                  # Booking service config
+│   └── .env.db               # Booking database credentials
+├── cinema-service/
+│   ├── .env                  # Cinema service config
+│   └── .env.db               # Cinema database credentials
+├── movie-service/
+│   ├── .env                  # Movie service config (Gemini API key)
+│   └── .env.db               # Movie database credentials
+├── user-service/
+│   ├── .env                  # User service config (Clerk)
+│   └── .env.db               # User database credentials
+└── web/.env                  # Frontend config (Clerk public key)
+```
