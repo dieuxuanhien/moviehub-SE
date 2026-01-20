@@ -53,10 +53,18 @@ async function getRuntimeConfig() {
 const getInitialBaseUrl = () => {
   const envUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL;
   if (envUrl) {
-    return envUrl.replace(/\/+$|\s+$/g, '').replace(/\/api\/v1$/i, '');
+    // Normalize: remove trailing slashes and ensure /api/v1 suffix
+    let normalized = envUrl.replace(/\/+$|\s+$/g, '');
+    if (!normalized.endsWith('/api/v1')) {
+      // Remove /api/v1 if exists (to avoid duplication)
+      normalized = normalized.replace(/\/api\/v1$/i, '');
+      // Add /api/v1 suffix
+      normalized = `${normalized}/api/v1`;
+    }
+    return normalized;
   }
   // Fallback should never be used in production if env vars are set correctly
-  return 'https://api-gateway.gentlemoss-ee6e319d.southeastasia.azurecontainerapps.io';
+  return 'https://api-gateway.gentlemoss-ee6e319d.southeastasia.azurecontainerapps.io/api/v1';
 };
 
 let normalizedBase = getInitialBaseUrl();
@@ -66,7 +74,12 @@ if (typeof window !== 'undefined') {
   getRuntimeConfig().then(config => {
     const rawBase = config?.NEXT_PUBLIC_BACKEND_API_URL;
     if (rawBase) {
-      const newBase = rawBase.replace(/\/+$|\s+$/g, '');
+      // Normalize: remove trailing slashes and ensure /api/v1 suffix
+      let newBase = rawBase.replace(/\/+$|\s+$/g, '');
+      if (!newBase.endsWith('/api/v1')) {
+        newBase = newBase.replace(/\/api\/v1$/i, '');
+        newBase = `${newBase}/api/v1`;
+      }
       if (newBase !== normalizedBase) {
         normalizedBase = newBase;
         apiClient.defaults.baseURL = normalizedBase;
