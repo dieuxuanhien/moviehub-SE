@@ -36,24 +36,29 @@ async function main() {
 
   console.log(`📍 Found ${cinemas.length} cinemas`);
 
-  // Get movie IDs from movie-service API
+  // Get movie IDs from movie database directly
   let movies = [];
   try {
-    // Try API first
-    const response = await fetch('http://localhost:4000/api/movies?limit=100');
-    if (response.ok) {
-      const data = await response.json();
-      movies = data.data || data.movies || data;
-      if (Array.isArray(movies) && movies.length > 0) {
-        console.log(`🎬 Found ${movies.length} movies from API`);
-      } else {
-        throw new Error('No movies in response');
-      }
+    // Try to use movie-service Prisma client
+    const movieDbUrl = process.env.MOVIE_DATABASE_URL || 'postgresql://postgres:postgres@localhost:5436/movie_hub_movie';
+    const { PrismaClient: MoviePrismaClient } = require('../../movie-service/generated/prisma');
+    const moviePrisma = new MoviePrismaClient({
+      datasources: { db: { url: movieDbUrl } }
+    });
+    
+    movies = await moviePrisma.movie.findMany({
+      select: { id: true, runtime: true, title: true },
+      take: 100
+    });
+    await moviePrisma.$disconnect();
+    
+    if (movies.length > 0) {
+      console.log(`🎬 Found ${movies.length} movies from database`);
     } else {
-      throw new Error('API returned error');
+      throw new Error('No movies in database');
     }
   } catch (error) {
-    console.log('⚠️ Could not fetch movies from API:', error.message);
+    console.log('⚠️ Could not fetch movies from database:', error.message);
     console.log('📦 Skipping showtime seeding - run after movies are seeded');
     return;
   }
