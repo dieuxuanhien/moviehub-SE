@@ -257,5 +257,15 @@ export class MovieService {
       throw new RpcException(error);
     }
   }
+
+  async getForYouRecommendations(bookedMovieIds: string[], limit = 20) {
+    try {
+      return await firstValueFrom(
+        this.client.send({ cmd: 'get_for_you_recommendations' }, { bookedMovieIds, limit })
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
+  }
 }
 
