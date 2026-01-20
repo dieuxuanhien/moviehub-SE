@@ -4,7 +4,7 @@
 FROM node:20-alpine AS deps
 
 WORKDIR /app
-RUN npm install -g npm@latest && npm -v
+
 # Copy only package files for better caching
 COPY package*.json ./
 
@@ -47,8 +47,8 @@ RUN npx nx build booking-service --prod
 # ===========================================
 FROM node:20-alpine AS production
 
-# Install openssl for Prisma
-RUN apk add --no-cache openssl
+# Install openssl for Prisma, wget for healthcheck, dumb-init for signal handling
+RUN apk add --no-cache openssl wget dumb-init
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -70,12 +70,12 @@ COPY --chown=nestjs:nodejs --from=builder /app/apps/booking-service/prisma ./pri
 
 USER nestjs
 
-# Health check
+# Health check (verify actual service health)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD node --version || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3004/health || exit 1
 
 # Expose TCP port (configured via environment)
 EXPOSE 3004
 
-# Start the application
-CMD ["node", "main.js"]
+# Start the application with dumb-init for proper signal handling
+CMD ["dumb-init", "node", "main.js"]

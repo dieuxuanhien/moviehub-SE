@@ -4,7 +4,7 @@
 FROM node:20-alpine AS deps
 
 WORKDIR /app
-RUN npm install -g npm@latest && npm -v
+
 # Copy only package files for better caching
 COPY package*.json ./
 
@@ -40,18 +40,16 @@ RUN NODE_ENV=production npx nx run web:build
 # ===========================================
 FROM node:20-alpine AS production
 
-# Install wget for healthcheck
-RUN apk add --no-cache wget
+# Install wget for healthcheck and dumb-init for signal handling
+RUN apk add --no-cache wget dumb-init
 
 WORKDIR /app
 
-# Runtime environment variables - can be changed without rebuild
+# Runtime environment variables - these can be overridden at runtime via docker-compose/K8s
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
-    PORT=4200 \
-    NEXT_PUBLIC_WEBSOCKET_URL=wss://api-gateway.gentlemoss-ee6e319d.southeastasia.azurecontainerapps.io \
-    NEXT_PUBLIC_API_URL=https://api-gateway.gentlemoss-ee6e319d.southeastasia.azurecontainerapps.io/api/v1 \
-    NEXT_PUBLIC_BACKEND_API_URL=https://api-gateway.gentlemoss-ee6e319d.southeastasia.azurecontainerapps.io/api/v1
+    PORT=4200
+# NOTE: Set NEXT_PUBLIC_API_URL and NEXT_PUBLIC_WEBSOCKET_URL at runtime
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -76,5 +74,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Expose HTTP port
 EXPOSE 4200
 
-# Start Next.js using standalone server
-CMD ["node", "apps/web/server.js"]
+# Start Next.js using standalone server with dumb-init for proper signal handling
+CMD ["dumb-init", "node", "apps/web/server.js"]

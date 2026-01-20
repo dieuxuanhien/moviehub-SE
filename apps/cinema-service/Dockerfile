@@ -5,9 +5,6 @@ FROM node:20-alpine AS deps
 
 WORKDIR /app
 
-RUN npm install -g npm@latest && npm -v
-
-
 # Copy only package files for better caching
 COPY package*.json ./
 
@@ -49,9 +46,8 @@ RUN npx nx build cinema-service --prod
 # ===========================================
 FROM node:20-alpine AS production
 
-# Install openssl for Prisma
-
-RUN apk add --no-cache openssl
+# Install openssl for Prisma, wget for healthcheck, dumb-init for signal handling
+RUN apk add --no-cache openssl wget dumb-init
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -59,12 +55,11 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copy the full root package.json for dependencies including Prisma
-COPY --chown=nestjs:nodejs --from=builder /app/package.json ./
-COPY --chown=nestjs:nodejs --from=builder /app/package-lock.json ./
+# Copy the Nx-generated package.json (minimal production dependencies only)
+COPY --chown=nestjs:nodejs --from=builder /app/dist/apps/cinema-service/package*.json ./
 
-# Install dependencies including Prisma for runtime
-RUN npm ci --legacy-peer-deps && \
+# Install ONLY minimal production dependencies
+RUN npm ci --omit=dev --legacy-peer-deps && \
     npm cache clean --force
 
 # Copy ONLY the built application and Prisma files
@@ -74,12 +69,12 @@ COPY --chown=nestjs:nodejs --from=builder /app/apps/cinema-service/prisma ./pris
 
 USER nestjs
 
-# Health check
+# Health check (verify actual service health)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD node --version || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3003/health || exit 1
 
 # Expose TCP port (configured via environment)
 EXPOSE 3003
 
-# Start the application
-CMD ["node", "main.js"]
+# Start the application with dumb-init for proper signal handling
+CMD ["dumb-init", "node", "main.js"]

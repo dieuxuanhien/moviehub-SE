@@ -4,7 +4,7 @@
 FROM node:20-alpine AS deps
 
 WORKDIR /app
-RUN npm install -g npm@latest && npm -v
+
 # Copy only package files for better caching
 COPY package*.json ./
 
@@ -42,8 +42,8 @@ RUN npx nx build api-gateway --prod
 # ===========================================
 FROM node:20-alpine AS production
 
-# Install wget for healthcheck
-RUN apk add --no-cache wget
+# Install wget for healthcheck and dumb-init for signal handling
+RUN apk add --no-cache wget dumb-init
 
 # Create non-root user for security  
 RUN addgroup -g 1001 -S nodejs && \
@@ -73,5 +73,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
 # Expose HTTP port
 EXPOSE 3000
 
-# Start the application
-CMD ["node", "main.js"]
+# Start the application with dumb-init for proper signal handling
+CMD ["dumb-init", "node", "main.js"]
