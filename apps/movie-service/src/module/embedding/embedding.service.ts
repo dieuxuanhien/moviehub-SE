@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import * as crypto from 'crypto';
 
 export interface EmbeddingResult {
@@ -9,11 +9,20 @@ export interface EmbeddingResult {
   textHash: string;
 }
 
+export interface EnrichmentResult {
+  originalQuery: string;
+  enrichedQuery: string;
+  genres?: string[];
+  mood?: string;
+}
+
 @Injectable()
 export class EmbeddingService implements OnModuleInit {
   private readonly logger = new Logger(EmbeddingService.name);
   private genAI: GoogleGenerativeAI | null = null;
-  private readonly MODEL_NAME = 'text-embedding-004'; // Gemini embedding model
+  private generativeModel: GenerativeModel | null = null;
+  private readonly EMBEDDING_MODEL = 'text-embedding-004'; // Gemini embedding model
+  private readonly GENERATIVE_MODEL = 'gemini-2.0-flash'; // For query enrichment
 
   constructor(private readonly configService: ConfigService) {
     this.logger.log('🔧 EmbeddingService constructor called');
@@ -39,10 +48,19 @@ export class EmbeddingService implements OnModuleInit {
 
     try {
       this.genAI = new GoogleGenerativeAI(apiKey);
-      this.logger.log(`✅ Gemini embedding service initialized with model: ${this.MODEL_NAME}`);
+      
+      // Initialize generative model for query enrichment
+      this.generativeModel = this.genAI.getGenerativeModel({ 
+        model: this.GENERATIVE_MODEL 
+      });
+      
+      this.logger.log(`✅ Gemini services initialized:`);
+      this.logger.log(`   - Embedding model: ${this.EMBEDDING_MODEL}`);
+      this.logger.log(`   - Generative model: ${this.GENERATIVE_MODEL}`);
     } catch (error) {
       this.logger.error('❌ Failed to initialize Gemini:', error);
       this.genAI = null;
+      this.generativeModel = null;
     }
   }
 
@@ -51,6 +69,68 @@ export class EmbeddingService implements OnModuleInit {
    */
   isAvailable(): boolean {
     return this.genAI !== null;
+  }
+
+  /**
+   * Check if generative model is available for query enrichment
+   */
+  isGenerativeAvailable(): boolean {
+    return this.generativeModel !== null;
+  }
+
+  /**
+   * Enrich a short user query into a detailed movie description
+   * This helps improve embedding similarity matching
+   * 
+   * @example
+   * Input: "action"
+   * Output: "action movie with exciting fight scenes, car chases, explosions, and heroic protagonists saving the world"
+   */
+  async enrichQuery(query: string): Promise<EnrichmentResult> {
+    const result: EnrichmentResult = {
+      originalQuery: query,
+      enrichedQuery: query, // Default to original if enrichment fails
+    };
+
+    // Return original if service not available or query is already detailed
+    if (!this.isGenerativeAvailable() || !this.generativeModel) {
+      this.logger.warn('Generative model not available, using original query');
+      return result;
+    }
+
+    // Skip enrichment for already detailed queries (> 50 chars)
+    if (query.length > 50) {
+      this.logger.debug('Query already detailed, skipping enrichment');
+      return result;
+    }
+
+    try {
+      const prompt = `You are a movie search assistant. Expand this short movie search query into a detailed description that captures what the user likely wants. Include relevant themes, moods, genres, and typical elements.
+
+User query: "${query}"
+
+Rules:
+- Keep the response under 100 words
+- Focus on movie characteristics (plot themes, mood, style, typical elements)
+- Include Vietnamese context if the query is in Vietnamese
+- Do NOT mention specific movie titles
+- Respond in the same language as the query
+
+Respond with ONLY the expanded description, no explanations:`;
+
+      const response = await this.generativeModel.generateContent(prompt);
+      const enrichedText = response.response.text().trim();
+
+      if (enrichedText && enrichedText.length > query.length) {
+        result.enrichedQuery = enrichedText;
+        this.logger.log(`✨ Query enriched: "${query}" → "${enrichedText.substring(0, 80)}..."`);
+      }
+
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to enrich query:', error);
+      return result; // Return original query on error
+    }
   }
 
   /**
@@ -67,7 +147,7 @@ export class EmbeddingService implements OnModuleInit {
       
       // Get embedding model and call embedContent
       const embeddingModel = this.genAI.getGenerativeModel({ 
-        model: this.MODEL_NAME 
+        model: this.EMBEDDING_MODEL 
       });
       
       const result = await embeddingModel.embedContent(text);
@@ -77,7 +157,7 @@ export class EmbeddingService implements OnModuleInit {
       
       return {
         embedding,
-        model: this.MODEL_NAME,
+        model: this.EMBEDDING_MODEL,
         textHash,
       };
     } catch (error) {
@@ -128,3 +208,4 @@ export class EmbeddingService implements OnModuleInit {
     return crypto.createHash('md5').update(text).digest('hex');
   }
 }
+

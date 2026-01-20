@@ -6,6 +6,7 @@ import OtherServices from './_components/OtherServices';
 import HeroSection from './_components/HeroSection';
 import MembershipSection from './_components/MembershipSection';
 import RecommendationsSection from './_components/RecommendationsSection';
+import ForYouSection from './_components/ForYouSection';
 
 import { CinemaListNearby } from './_components/cinema-near-list';
 import QuickBooking from './_components/QuickBooking';
@@ -60,6 +61,11 @@ export default async function MainPage() {
               href="showing"
               status="now_showing"
             />
+          </section>
+
+          {/* For You - Personalized recommendations based on booking history */}
+          <section>
+            <ForYouSection />
           </section>
 
           {/* Slider phim sắp chiếu - Keep as Slider or Grid? User asked to refactor 'Now Showing'. 

@@ -131,6 +131,7 @@ export interface RecommendationsResponse {
   movies: RecommendedMovie[];
   total: number;
   query: string;
+  enrichedQuery?: string; // LLM-expanded query for better semantic matching
 }
 
 // Get personalized recommendations based on a query (genre, mood, etc.)
@@ -149,3 +150,28 @@ export const getRecommendations = async (
   }
 };
 
+// For You Recommendations Response Type
+export interface ForYouResponse {
+  movies: SimilarMovie[];
+  total: number;
+  hasMore: boolean;
+  isPersonalized: boolean;
+}
+
+// Get personalized "For You" recommendations based on booking history
+export const getForYouRecommendations = async (
+  limit = 20,
+  token: string
+): Promise<ForYouResponse> => {
+  try {
+    const response = await api.get('/movies/for-you', {
+      params: { limit },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
