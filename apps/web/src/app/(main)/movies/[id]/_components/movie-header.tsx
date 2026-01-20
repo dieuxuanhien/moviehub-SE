@@ -40,49 +40,67 @@ export const MovieHeader = ({ movieId }: { movieId: string }) => {
       ) : isError || !movieData ? (
         <ErrorFallback message={error?.message} />
       ) : (
-        <div className="flex flex-col flex-wrap md:flex-row items-center gap-8 aspect-video rounded-2xl">
-          {/* Backdrop */}
+        <div className="relative flex flex-col flex-wrap md:flex-row items-center gap-8 aspect-video rounded-2xl overflow-hidden">
+          {/* Backdrop with multiple layers for depth */}
           {movieData?.backdropUrl && movieData?.backdropUrl.trim() !== '' ? (
-            <Image
-              src={movieData.backdropUrl}
-              alt={movieData.title}
-              fill
-              priority
-              className="object-cover brightness-20 rounded-2xl"
-            />
+            <>
+              {/* Main backdrop image */}
+              <Image
+                src={movieData.backdropUrl}
+                alt={movieData.title}
+                fill
+                priority
+                className="object-cover"
+                sizes="100vw"
+              />
+              {/* Gradient overlays for better readability */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/70 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/50" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
+            </>
           ) : (
-            <div className="absolute inset-0 bg-gray-900 rounded-2xl" />
+            <>
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
+            </>
           )}
-          <div className="absolute inset-0 bg-black/60" />
 
           {/* Content */}
-          <div className=" z-10 flex flex-col md:flex-row items-center gap-8 px-6 md:px-12 py-8">
-            <Image
-              width={288}
-              height={416}
-              src={
-                movieData.posterUrl && movieData.posterUrl.trim() !== ''
-                  ? movieData.posterUrl
-                  : '/images/placeholder-bg.png'
-              }
-              alt={movieData.title}
-              className="rounded-xl h-[416px] w-[288px] object-cover shadow-lg"
-            />
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 px-6 md:px-12 py-8">
+            <div className="relative group">
+              <Image
+                width={288}
+                height={416}
+                src={
+                  movieData.posterUrl && movieData.posterUrl.trim() !== ''
+                    ? movieData.posterUrl
+                    : '/images/placeholder-bg.png'
+                }
+                alt={movieData.title}
+                className="rounded-xl h-[416px] w-[288px] object-cover shadow-2xl shadow-black/50 ring-2 ring-white/10 transition-transform group-hover:scale-105 duration-300"
+              />
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </div>
 
             <div className="flex flex-1 flex-col gap-3 text-white max-w-2xl">
-              <div className="flex items-center gap-2 text-sm text-slate-100 font-bold">
-                <span>{movieData.languageType}</span>
-                <span>•</span>
-                <span>{movieData.ageRating}</span>
-                <span>•</span>
-                <span>{movieData.productionCountry}</span>
+              {/* Language, Rating, Country badges */}
+              <div className="flex items-center gap-2 text-sm">
+                <span className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold">
+                  {movieData.languageType}
+                </span>
+                <span className="px-3 py-1 rounded-full bg-primary/20 backdrop-blur-sm border border-primary/30 text-primary-foreground font-semibold">
+                  {movieData.ageRating}
+                </span>
+                <span className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold">
+                  {movieData.productionCountry}
+                </span>
               </div>
 
-              <h1 className="text-4xl md:text-5xl font-bold">
+              <h1 className="text-4xl md:text-5xl font-bold drop-shadow-lg">
                 {movieData.title}
               </h1>
               {movieData.originalTitle && (
-                <p className="text-gray-400 italic text-lg">
+                <p className="text-gray-300 italic text-lg drop-shadow">
                   ({movieData.originalTitle})
                 </p>
               )}
@@ -92,48 +110,51 @@ export const MovieHeader = ({ movieId }: { movieId: string }) => {
                 <span>{mo</span>
               </div> */}
 
-              <div className="flex items-start gap-2 mt-3 text-gray-300">
-                <FileTextIcon className="w-4 h-4 flex-shrink-0 text-slate-100" />
-                <p className="text-sm">{movieData.overview}</p>
+              <div className="flex items-start gap-3 mt-2 p-4 bg-black/30 backdrop-blur-sm rounded-lg border border-white/10">
+                <FileTextIcon className="w-5 h-5 flex-shrink-0 text-primary mt-0.5" />
+                <p className="text-sm text-gray-200 leading-relaxed">{movieData.overview}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mt-4 text-sm text-gray-300">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-slate-100" />
-                  <span>{movieData.runtime} phút</span>
+              <div className="grid grid-cols-2 gap-3 mt-4 text-sm">
+                <div className="flex items-center gap-2 p-2 bg-black/20 backdrop-blur-sm rounded-lg border border-white/5">
+                  <Clock className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-gray-200">{movieData.runtime} phút</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="w-4 h-4 text-slate-100" />
-                  <span>{formattedDate}</span>
+                <div className="flex items-center gap-2 p-2 bg-black/20 backdrop-blur-sm rounded-lg border border-white/5">
+                  <CalendarDays className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-gray-200">{formattedDate}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <User2 className="w-4 h-4 text-slate-100" />
-                  <span>{movieData.director}</span>
+                <div className="flex items-center gap-2 p-2 bg-black/20 backdrop-blur-sm rounded-lg border border-white/5">
+                  <User2 className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-gray-200 truncate">{movieData.director}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Globe2 className="w-4 h-4 text-slate-100" />
-                  <span>
+                <div className="flex items-center gap-2 p-2 bg-black/20 backdrop-blur-sm rounded-lg border border-white/5">
+                  <Globe2 className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-gray-200 truncate">
                     {movieData.spokenLanguages?.length
                       ? movieData.spokenLanguages.join(', ')
-                      : 'Không có thông tin ngôn ngữ'}
+                      : 'Không có thông tin'}
                     {movieData.originalLanguage &&
                       ` (${movieData.originalLanguage.toUpperCase()})`}
                   </span>
                 </div>
               </div>
 
-              <p className="text-sm text-gray-300">
-                <Film className="inline w-4 h-4 text-slate-100 mr-1" />
-                {movieData.genre?.length
-                  ? movieData.genre
-                      .map((g: GenreResponse) => g.name)
-                      .join(' | ')
-                  : 'Chưa có thể loại'}
-              </p>
+              <div className="flex items-center gap-2 p-3 bg-black/20 backdrop-blur-sm rounded-lg border border-white/5 mt-2">
+                <Film className="w-5 h-5 text-primary flex-shrink-0" />
+                <p className="text-sm text-gray-200">
+                  {movieData.genre?.length
+                    ? movieData.genre
+                        .map((g: GenreResponse) => g.name)
+                        .join(' • ')
+                    : 'Chưa có thể loại'}
+                </p>
+              </div>
 
-              <div className="flex items-center gap-2 mt-4">
+              <div className="flex items-center gap-3 mt-4">
                 <Button
                   variant="outline"
+                  className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 text-white"
                   onClick={() => {
                     if (movieData.trailerUrl) {
                       openModal(movieData.trailerUrl);
@@ -144,18 +165,14 @@ export const MovieHeader = ({ movieId }: { movieId: string }) => {
                   {movieData.trailerUrl ? 'Xem Trailer' : 'Trailer chưa có'}
                 </Button>
 
-                <Button>
+                <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/50">
                   <Link
                     href="#dateSelect"
-                    className="px-10 py-3 rounded-md text-sm font-medium active:scale-95 transition"
+                    className="px-8 py-2 text-sm font-semibold"
                   >
                     Mua vé
                   </Link>
                 </Button>
-
-                <button className="bg-gray-700 p-2.5 rounded-full active:scale-95 transition hover:bg-gray-600">
-                  <Heart className="w-5 h-5" />
-                </button>
               </div>
             </div>
           </div>
