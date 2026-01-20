@@ -7,7 +7,7 @@ import {
   GetCinemaDetailDto,
   CinemaListResponse,
   CinemaLocationResponse,
-} from './dto/cinema-location.dto';
+} from '@movie-hub/shared-types';
 
 describe('CinemaLocationController', () => {
   let controller: CinemaLocationController;
@@ -126,7 +126,7 @@ describe('CinemaLocationController', () => {
       const result = await controller.getCinemasNearby(validDto);
 
       expect(result).toEqual(emptyResponse);
-      expect(result.cinemas).toHaveLength(0);
+      expect(result.data.cinemas).toHaveLength(0);
     });
 
     it('should propagate service errors', async () => {
@@ -191,8 +191,8 @@ describe('CinemaLocationController', () => {
 
       const result = await controller.getCinemasNearby(validDto);
 
-      expect(result.cinemas).toHaveLength(100);
-      expect(result.total).toBe(100);
+      expect(result.data.cinemas).toHaveLength(100);
+      expect(result.data.total).toBe(100);
     });
   });
 
@@ -344,9 +344,9 @@ describe('CinemaLocationController', () => {
 
       const result = await controller.getCinemasWithFilters(paginationFilter);
 
-      expect(result.page).toBe(2);
-      expect(result.limit).toBe(10);
-      expect(result.hasMore).toBe(true);
+      expect(result.data.page).toBe(2);
+      expect(result.data.limit).toBe(10);
+      expect(result.data.hasMore).toBe(true);
       expect(mockService.getCinemasWithFilters).toHaveBeenCalledWith(
         paginationFilter
       );
@@ -460,8 +460,8 @@ describe('CinemaLocationController', () => {
 
       const result = await controller.getCinemaDetail(differentDto);
 
-      expect(result.id).toBe('cinema-123');
-      expect(result.name).toBe('Lotte Cinema Ha Noi');
+      expect(result.data.id).toBe('cinema-123');
+      expect(result.data.name).toBe('Lotte Cinema Ha Noi');
       expect(mockService.getCinemaDetail).toHaveBeenCalledWith(differentDto);
     });
 

@@ -16,7 +16,7 @@ export type UpdateMovieRequest = z.infer<typeof UpdateMovieSchema>;
 export const getMovies = async (
   query: MovieQuery
 ): Promise<ServiceResult<MovieSummary[]>> => {
-  // eslint-disable-next-line no-useless-catch
+   
   try {
     const response = await api.get('/movies', { params: query });
     return response.data;

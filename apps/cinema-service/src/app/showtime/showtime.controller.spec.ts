@@ -1,18 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ShowtimeController } from './showtime.controller';
 import { ShowtimeService } from './showtime.service';
+import { ShowtimeCommandService } from './showtime-command.service';
 import {
   GetShowtimesQuery,
   ShowtimeSummaryResponse,
   ShowtimeSeatResponse,
   ShowtimeStatusEnum,
   DayTypeEnum,
-  TimeSlotEnum,
   FormatEnum,
   SeatTypeEnum,
   SeatStatusEnum,
-  TicketTypeEnum,
   ReservationStatusEnum,
+  LayoutTypeEnum,
 } from '@movie-hub/shared-types';
 
 // Mock data
@@ -21,20 +21,27 @@ const mockShowtimeSummaryResponse: ShowtimeSummaryResponse = {
   hallId: 'hall-1',
   startTime: new Date('2025-01-15T14:30:00Z'),
   endTime: new Date('2025-01-15T16:30:00Z'),
+  format: FormatEnum.TWO_D,
   status: ShowtimeStatusEnum.SELLING,
 };
 
 const mockShowtimeSeatResponse: ShowtimeSeatResponse = {
   showtime: {
     id: 'showtime-1',
+    movieId: 'movie-1',
+    movieTitle: 'Test Movie',
     start_time: new Date('2025-01-15T14:30:00Z'),
     end_time: new Date('2025-01-15T16:30:00Z'),
     dateType: DayTypeEnum.WEEKDAY,
-    timeSlot: TimeSlotEnum.AFTERNOON,
     format: FormatEnum.TWO_D,
     language: 'en',
     subtitles: ['vi'],
   },
+  cinemaId: 'cinema-1',
+  cinemaName: 'CGV Vincom Center',
+  hallId: 'hall-1',
+  hallName: 'Hall 1',
+  layoutType: LayoutTypeEnum.STANDARD,
   seat_map: [
     {
       row: 'A',
@@ -58,16 +65,13 @@ const mockShowtimeSeatResponse: ShowtimeSeatResponse = {
       ],
     },
   ],
-  ticketTypes: Object.values(TicketTypeEnum),
   ticketPrices: [
     {
       seatType: SeatTypeEnum.STANDARD,
-      ticketType: TicketTypeEnum.ADULT,
       price: 120000,
     },
     {
       seatType: SeatTypeEnum.VIP,
-      ticketType: TicketTypeEnum.ADULT,
       price: 180000,
     },
   ],
@@ -91,7 +95,10 @@ describe('ShowtimeController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ShowtimeController],
-      providers: [{ provide: ShowtimeService, useValue: mockShowtimeService }],
+      providers: [
+        { provide: ShowtimeService, useValue: mockShowtimeService },
+        { provide: ShowtimeCommandService, useValue: {} },
+      ],
     }).compile();
 
     controller = module.get<ShowtimeController>(ShowtimeController);
@@ -109,7 +116,7 @@ describe('ShowtimeController', () => {
     };
 
     it('should return showtime summary list from service', async () => {
-      const expectedResponse = [mockShowtimeSummaryResponse];
+      const expectedResponse = { data: [mockShowtimeSummaryResponse], message: 'Fetch showtimes successfully' };
       mockShowtimeService.getMovieShowtimesAtCinema.mockResolvedValue(
         expectedResponse
       );
@@ -129,12 +136,15 @@ describe('ShowtimeController', () => {
       ).toHaveBeenCalledTimes(1);
     });
 
+
     it('should handle empty showtimes from service', async () => {
-      mockShowtimeService.getMovieShowtimesAtCinema.mockResolvedValue([]);
+      const emptyResponse = { data: [], message: 'Fetch showtimes successfully' };
+      mockShowtimeService.getMovieShowtimesAtCinema.mockResolvedValue(emptyResponse);
 
       const result = await controller.getMovieShowtimesAtCinema(mockPayload);
 
-      expect(result).toEqual([]);
+      expect(result).toEqual(emptyResponse);
+      expect(result.data).toEqual([]);
       expect(
         mockShowtimeService.getMovieShowtimesAtCinema
       ).toHaveBeenCalledWith(
@@ -143,6 +153,7 @@ describe('ShowtimeController', () => {
         mockPayload.query
       );
     });
+
 
     it('should handle multiple showtimes from service', async () => {
       const multipleShowtimes = [
@@ -160,15 +171,17 @@ describe('ShowtimeController', () => {
           endTime: new Date('2025-01-15T21:00:00Z'),
         },
       ];
+      const expectedResponse = { data: multipleShowtimes, message: 'Fetch showtimes successfully' };
       mockShowtimeService.getMovieShowtimesAtCinema.mockResolvedValue(
-        multipleShowtimes
+        expectedResponse
       );
 
       const result = await controller.getMovieShowtimesAtCinema(mockPayload);
 
-      expect(result).toEqual(multipleShowtimes);
-      expect(result).toHaveLength(3);
+      expect(result).toEqual(expectedResponse);
+      expect(result.data).toHaveLength(3);
     });
+
 
     it('should propagate service errors', async () => {
       const serviceError = new Error('Service unavailable');
@@ -194,13 +207,14 @@ describe('ShowtimeController', () => {
         ...mockPayload,
         query: { date: '2025-12-31' } as GetShowtimesQuery,
       };
-      mockShowtimeService.getMovieShowtimesAtCinema.mockResolvedValue([]);
+      const emptyResponse = { data: [], message: 'Fetch showtimes successfully' };
+      mockShowtimeService.getMovieShowtimesAtCinema.mockResolvedValue(emptyResponse);
 
       const result = await controller.getMovieShowtimesAtCinema(
         payloadWithDifferentDate
       );
 
-      expect(result).toEqual([]);
+      expect(result).toEqual(emptyResponse);
       expect(
         mockShowtimeService.getMovieShowtimesAtCinema
       ).toHaveBeenCalledWith(
@@ -230,13 +244,12 @@ describe('ShowtimeController', () => {
       ];
 
       for (const payload of payloadsToTest) {
-        mockShowtimeService.getMovieShowtimesAtCinema.mockResolvedValue([
-          mockShowtimeSummaryResponse,
-        ]);
+        const expectedResponse = { data: [mockShowtimeSummaryResponse], message: 'Fetch showtimes successfully' };
+        mockShowtimeService.getMovieShowtimesAtCinema.mockResolvedValue(expectedResponse);
 
         const result = await controller.getMovieShowtimesAtCinema(payload);
 
-        expect(result).toEqual([mockShowtimeSummaryResponse]);
+        expect(result).toEqual(expectedResponse);
         expect(
           mockShowtimeService.getMovieShowtimesAtCinema
         ).toHaveBeenCalledWith(
@@ -249,8 +262,8 @@ describe('ShowtimeController', () => {
 
     it('should handle async service calls correctly', async () => {
       // Test that the controller properly waits for the service promise
-      let resolveService: (value: ShowtimeSummaryResponse[]) => void;
-      const servicePromise = new Promise<ShowtimeSummaryResponse[]>(
+      let resolveService: (value: any) => void;
+      const servicePromise = new Promise<any>(
         (resolve) => {
           resolveService = resolve;
         }
@@ -264,11 +277,13 @@ describe('ShowtimeController', () => {
         controller.getMovieShowtimesAtCinema(mockPayload);
 
       // Resolve the service promise after a delay
-      setTimeout(() => resolveService([mockShowtimeSummaryResponse]), 100);
+      const expectedResponse = { data: [mockShowtimeSummaryResponse], message: 'Fetch showtimes successfully' };
+      setTimeout(() => resolveService(expectedResponse), 100);
 
       const result = await controllerPromise;
-      expect(result).toEqual([mockShowtimeSummaryResponse]);
+      expect(result).toEqual(expectedResponse);
     });
+
   });
 
   describe('getShowtimeSeats', () => {
@@ -547,9 +562,8 @@ describe('ShowtimeController', () => {
         query: { date: '2025-01-17' } as GetShowtimesQuery,
       };
 
-      mockShowtimeService.getMovieShowtimesAtCinema.mockResolvedValue([
-        mockShowtimeSummaryResponse,
-      ]);
+      const expectedResponse = { data: [mockShowtimeSummaryResponse], message: 'Fetch showtimes successfully' };
+      mockShowtimeService.getMovieShowtimesAtCinema.mockResolvedValue(expectedResponse);
 
       const promises = [
         controller.getMovieShowtimesAtCinema(payload1),
@@ -560,7 +574,7 @@ describe('ShowtimeController', () => {
       const results = await Promise.all(promises);
 
       expect(results).toHaveLength(3);
-      expect(results.every((result) => result.length === 1)).toBe(true);
+      expect(results.every((result) => result.data.length === 1)).toBe(true);
       expect(
         mockShowtimeService.getMovieShowtimesAtCinema
       ).toHaveBeenCalledTimes(3);
@@ -618,7 +632,8 @@ describe('ShowtimeController', () => {
         userId: 'user-123',
       };
 
-      mockShowtimeService.getMovieShowtimesAtCinema.mockResolvedValue([]);
+      const emptyResponse = { data: [], message: 'Fetch showtimes successfully' };
+      mockShowtimeService.getMovieShowtimesAtCinema.mockResolvedValue(emptyResponse);
       mockShowtimeService.getShowtimeSeats.mockResolvedValue(
         mockShowtimeSeatResponse
       );

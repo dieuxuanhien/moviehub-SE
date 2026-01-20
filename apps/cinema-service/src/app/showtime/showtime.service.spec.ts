@@ -4,7 +4,7 @@ import { ShowtimeService } from './showtime.service';
 import { PrismaService } from '../prisma.service';
 import { ShowtimeMapper } from './showtime.mapper';
 import { ShowtimeSeatMapper } from './showtime-seat.mapper';
-import { RedisService } from '../realtime/redis.service';
+import { RealtimeService } from '../realtime/realtime.service';
 import {
   GetShowtimesQuery,
   ShowtimeSummaryResponse,
@@ -12,11 +12,10 @@ import {
   ReservationStatusEnum,
   ShowtimeStatusEnum,
   DayTypeEnum,
-  TimeSlotEnum,
   FormatEnum,
   SeatTypeEnum,
   SeatStatusEnum,
-  TicketTypeEnum,
+  LayoutTypeEnum,
 } from '@movie-hub/shared-types';
 import { Decimal } from '@prisma/client/runtime/library';
 
@@ -139,20 +138,27 @@ const mockShowtimeSummaryResponse: ShowtimeSummaryResponse = {
   hallId: 'hall-1',
   startTime: new Date('2025-01-15T14:30:00Z'),
   endTime: new Date('2025-01-15T16:30:00Z'),
+  format: FormatEnum.TWO_D,
   status: ShowtimeStatusEnum.SELLING,
 };
 
 const mockShowtimeSeatResponse: ShowtimeSeatResponse = {
   showtime: {
     id: 'showtime-1',
+    movieId: 'movie-1',
+    movieTitle: 'Test Movie',
     start_time: new Date('2025-01-15T14:30:00Z'),
     end_time: new Date('2025-01-15T16:30:00Z'),
     dateType: DayTypeEnum.WEEKDAY,
-    timeSlot: TimeSlotEnum.AFTERNOON,
     format: FormatEnum.TWO_D,
     language: 'en',
     subtitles: ['vi'],
   },
+  cinemaId: 'cinema-1',
+  cinemaName: 'CGV Vincom Center',
+  hallId: 'hall-1',
+  hallName: 'Hall 1',
+  layoutType: LayoutTypeEnum.STANDARD,
   seat_map: [
     {
       row: 'A',
@@ -189,16 +195,13 @@ const mockShowtimeSeatResponse: ShowtimeSeatResponse = {
       ],
     },
   ],
-  ticketTypes: Object.values(TicketTypeEnum),
   ticketPrices: [
     {
       seatType: SeatTypeEnum.STANDARD,
-      ticketType: TicketTypeEnum.ADULT,
       price: 120000,
     },
     {
       seatType: SeatTypeEnum.VIP,
-      ticketType: TicketTypeEnum.ADULT,
       price: 180000,
     },
   ],
@@ -227,7 +230,7 @@ describe('ShowtimeService', () => {
   };
   let mockShowtimeMapper: jest.Mocked<ShowtimeMapper>;
   let mockShowtimeSeatMapper: jest.Mocked<ShowtimeSeatMapper>;
-  let mockRedisService: jest.Mocked<RedisService>;
+  let mockRedisService: jest.Mocked<RealtimeService>;
 
   beforeEach(async () => {
     // Create mocked services
@@ -259,8 +262,9 @@ describe('ShowtimeService', () => {
       getOrSetCache: jest.fn(),
       getAllHeldSeats: jest.fn(),
       getUserHeldSeats: jest.fn(),
+      getUserTTL: jest.fn(),
       deleteCacheByPrefix: jest.fn(),
-    } as unknown as jest.Mocked<RedisService>;
+    } as unknown as jest.Mocked<RealtimeService>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -268,7 +272,7 @@ describe('ShowtimeService', () => {
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: ShowtimeMapper, useValue: mockShowtimeMapper },
         { provide: ShowtimeSeatMapper, useValue: mockShowtimeSeatMapper },
-        { provide: RedisService, useValue: mockRedisService },
+        { provide: RealtimeService, useValue: mockRedisService },
       ],
     }).compile();
 

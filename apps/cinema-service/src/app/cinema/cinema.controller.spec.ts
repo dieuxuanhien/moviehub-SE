@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CinemaController } from './cinema.controller';
 import { CinemaService } from './cinema.service';
+import { CinemaStatusEnum } from '@movie-hub/shared-types';
 
 describe('CinemaController', () => {
   let controller: CinemaController;
@@ -128,7 +129,7 @@ describe('CinemaController', () => {
     it('should return all cinemas', async () => {
       mockCinemaService.getCinemas.mockResolvedValue(mockCinemas);
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result).toEqual(mockCinemas);
       expect(result).toHaveLength(3);
@@ -140,7 +141,7 @@ describe('CinemaController', () => {
       const emptyCinemas = [];
       mockCinemaService.getCinemas.mockResolvedValue(emptyCinemas);
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result).toEqual([]);
       expect(result).toHaveLength(0);
@@ -152,7 +153,7 @@ describe('CinemaController', () => {
       const singleCinema = [mockCinemas[0]];
       mockCinemaService.getCinemas.mockResolvedValue(singleCinema);
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result).toEqual(singleCinema);
       expect(result).toHaveLength(1);
@@ -164,7 +165,7 @@ describe('CinemaController', () => {
     it('should call cinemaService.getCinemas method', async () => {
       mockCinemaService.getCinemas.mockResolvedValue(mockCinemas);
 
-      await controller.getCinemas();
+      await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(mockCinemaService.getCinemas).toHaveBeenCalled();
       expect(mockCinemaService.getCinemas).toHaveBeenCalledWith();
@@ -174,7 +175,7 @@ describe('CinemaController', () => {
     it('should return cinema data with correct schema structure', async () => {
       mockCinemaService.getCinemas.mockResolvedValue(mockCinemas);
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result[0]).toHaveProperty('id');
       expect(result[0]).toHaveProperty('name');
@@ -204,7 +205,7 @@ describe('CinemaController', () => {
     it('should verify data types in cinema objects', async () => {
       mockCinemaService.getCinemas.mockResolvedValue(mockCinemas);
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
       const firstCinema = result[0];
 
       expect(typeof firstCinema.id).toBe('string');
@@ -251,7 +252,7 @@ describe('CinemaController', () => {
         cinemasWithDifferentAmenities
       );
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result[0].amenities).toContain('IMAX');
       expect(result[0].amenities).toContain('3D');
@@ -285,9 +286,9 @@ describe('CinemaController', () => {
         cinemasFromDifferentCities
       );
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
-      const cities = result.map((cinema) => cinema.city);
+      const cities = result.data.map((cinema) => cinema.city);
       expect(cities).toContain('Ho Chi Minh City');
       expect(cities).toContain('Ha Noi');
       expect(cities).toContain('Da Nang');
@@ -297,9 +298,9 @@ describe('CinemaController', () => {
     it('should handle cinemas with valid coordinates', async () => {
       mockCinemaService.getCinemas.mockResolvedValue(mockCinemas);
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
-      result.forEach((cinema) => {
+      result.data.forEach((cinema) => {
         expect(cinema.latitude).toBeGreaterThan(-90);
         expect(cinema.latitude).toBeLessThan(90);
         expect(cinema.longitude).toBeGreaterThan(-180);
@@ -312,7 +313,7 @@ describe('CinemaController', () => {
       const serviceError = new Error('Cinema service error');
       mockCinemaService.getCinemas.mockRejectedValue(serviceError);
 
-      await expect(controller.getCinemas()).rejects.toThrow(
+      await expect(controller.getAllCinemas(CinemaStatusEnum.ACTIVE)).rejects.toThrow(
         'Cinema service error'
       );
       expect(mockCinemaService.getCinemas).toHaveBeenCalled();
@@ -322,7 +323,7 @@ describe('CinemaController', () => {
       const dbError = new Error('Database connection failed');
       mockCinemaService.getCinemas.mockRejectedValue(dbError);
 
-      await expect(controller.getCinemas()).rejects.toThrow(
+      await expect(controller.getAllCinemas(CinemaStatusEnum.ACTIVE)).rejects.toThrow(
         'Database connection failed'
       );
       expect(mockCinemaService.getCinemas).toHaveBeenCalled();
@@ -344,7 +345,7 @@ describe('CinemaController', () => {
 
       mockCinemaService.getCinemas.mockResolvedValue(cinemasWithNullFields);
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result[0].email).toBeNull();
       expect(result[0].website).toBeNull();
@@ -361,7 +362,7 @@ describe('CinemaController', () => {
     it('should not modify the service response', async () => {
       mockCinemaService.getCinemas.mockResolvedValue(mockCinemas);
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result).toEqual(mockCinemas);
       expect(result).toHaveLength(mockCinemas.length);
@@ -382,7 +383,7 @@ describe('CinemaController', () => {
 
       mockCinemaService.getCinemas.mockResolvedValue(largeCinemaDataset);
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result).toHaveLength(100);
       expect(result[0].id).toBe('cinema-1');
@@ -393,14 +394,14 @@ describe('CinemaController', () => {
     it('should maintain data integrity', async () => {
       mockCinemaService.getCinemas.mockResolvedValue(mockCinemas);
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result).toBeDefined();
       expect(result).not.toBeNull();
       expect(Array.isArray(result)).toBe(true);
 
-      if (result.length > 0) {
-        result.forEach((cinema) => {
+      if (result.data.length > 0) {
+        result.data.forEach((cinema) => {
           expect(cinema.id).toBeDefined();
           expect(cinema.name).toBeDefined();
           expect(cinema.address).toBeDefined();
@@ -414,7 +415,7 @@ describe('CinemaController', () => {
     it('should handle concurrent requests correctly', async () => {
       mockCinemaService.getCinemas.mockResolvedValue(mockCinemas);
 
-      const promises = Array.from({ length: 5 }, () => controller.getCinemas());
+      const promises = Array.from({ length: 5 }, () => controller.getAllCinemas(CinemaStatusEnum.ACTIVE));
       const results = await Promise.all(promises);
 
       results.forEach((result) => {
@@ -427,7 +428,7 @@ describe('CinemaController', () => {
     it('should handle service returning null', async () => {
       mockCinemaService.getCinemas.mockResolvedValue(null);
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result).toBeNull();
       expect(mockCinemaService.getCinemas).toHaveBeenCalled();
@@ -436,7 +437,7 @@ describe('CinemaController', () => {
     it('should handle service returning undefined', async () => {
       mockCinemaService.getCinemas.mockResolvedValue(undefined);
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result).toBeUndefined();
       expect(mockCinemaService.getCinemas).toHaveBeenCalled();
@@ -445,16 +446,16 @@ describe('CinemaController', () => {
 
   describe('Message Pattern Integration', () => {
     it('should be decorated with correct MessagePattern', () => {
-      // This test verifies that the getCinemas method is properly decorated
+      // This test verifies that the getAllCinemas method is properly decorated
       // The actual MessagePattern decorator is applied at runtime
-      expect(controller.getCinemas).toBeDefined();
-      expect(typeof controller.getCinemas).toBe('function');
+      expect(controller.getAllCinemas).toBeDefined();
+      expect(typeof controller.getAllCinemas).toBe('function');
     });
 
     it('should handle microservice communication patterns', async () => {
       mockCinemaService.getCinemas.mockResolvedValue(mockCinemas);
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -467,9 +468,9 @@ describe('CinemaController', () => {
       expect(controller).toBeDefined();
     });
 
-    it('should have getCinemas method', () => {
-      expect(controller.getCinemas).toBeDefined();
-      expect(typeof controller.getCinemas).toBe('function');
+    it('should have getAllCinemas method', () => {
+      expect(controller.getAllCinemas).toBeDefined();
+      expect(typeof controller.getAllCinemas).toBe('function');
     });
 
     it('should have cinemaService dependency injected', () => {
@@ -483,7 +484,7 @@ describe('CinemaController', () => {
       const originalError = new Error('Original service error');
       mockCinemaService.getCinemas.mockRejectedValue(originalError);
 
-      await expect(controller.getCinemas()).rejects.toThrow(
+      await expect(controller.getAllCinemas(CinemaStatusEnum.ACTIVE)).rejects.toThrow(
         'Original service error'
       );
       expect(mockCinemaService.getCinemas).toHaveBeenCalled();
@@ -493,7 +494,7 @@ describe('CinemaController', () => {
       const systemError = new Error('System failure');
       mockCinemaService.getCinemas.mockRejectedValue(systemError);
 
-      await expect(controller.getCinemas()).rejects.toThrow('System failure');
+      await expect(controller.getAllCinemas(CinemaStatusEnum.ACTIVE)).rejects.toThrow('System failure');
       expect(mockCinemaService.getCinemas).toHaveBeenCalled();
     });
   });
@@ -502,9 +503,9 @@ describe('CinemaController', () => {
     it('should return valid cinema data structure', async () => {
       mockCinemaService.getCinemas.mockResolvedValue(mockCinemas);
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
-      result.forEach((cinema) => {
+      result.data.forEach((cinema) => {
         expect(cinema).toHaveProperty('id');
         expect(cinema).toHaveProperty('name');
         expect(cinema).toHaveProperty('address');
@@ -544,7 +545,7 @@ describe('CinemaController', () => {
 
       mockCinemaService.getCinemas.mockResolvedValue(edgeCaseCinemas);
 
-      const result = await controller.getCinemas();
+      const result = await controller.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result[0].name).toBe('');
       expect(result[0].amenities).toEqual([]);
@@ -554,3 +555,5 @@ describe('CinemaController', () => {
     });
   });
 });
+
+

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CinemaService } from './cinema.service';
 import { PrismaService } from '../prisma.service';
+import { CinemaStatusEnum } from '@movie-hub/shared-types';
 
 describe('CinemaService', () => {
   let service: CinemaService;
@@ -117,7 +118,7 @@ describe('CinemaService', () => {
     it('should return all cinemas', async () => {
       mockPrismaService.cinemas.findMany.mockResolvedValue(mockCinemas);
 
-      const result = await service.getCinemas();
+      const result = await service.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result).toEqual(mockCinemas);
       expect(result).toHaveLength(3);
@@ -129,7 +130,7 @@ describe('CinemaService', () => {
       const emptyCinemas = [];
       mockPrismaService.cinemas.findMany.mockResolvedValue(emptyCinemas);
 
-      const result = await service.getCinemas();
+      const result = await service.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result).toEqual([]);
       expect(result).toHaveLength(0);
@@ -141,7 +142,7 @@ describe('CinemaService', () => {
       const singleCinema = [mockCinemas[0]];
       mockPrismaService.cinemas.findMany.mockResolvedValue(singleCinema);
 
-      const result = await service.getCinemas();
+      const result = await service.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result).toEqual(singleCinema);
       expect(result).toHaveLength(1);
@@ -153,7 +154,7 @@ describe('CinemaService', () => {
     it('should return cinemas with all expected schema properties', async () => {
       mockPrismaService.cinemas.findMany.mockResolvedValue(mockCinemas);
 
-      const result = await service.getCinemas();
+      const result = await service.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result[0]).toHaveProperty('id');
       expect(result[0]).toHaveProperty('name');
@@ -183,7 +184,7 @@ describe('CinemaService', () => {
     it('should verify cinema data types and structure', async () => {
       mockPrismaService.cinemas.findMany.mockResolvedValue(mockCinemas);
 
-      const result = await service.getCinemas();
+      const result = await service.getAllCinemas(CinemaStatusEnum.ACTIVE);
       const firstCinema = result[0];
 
       expect(typeof firstCinema.id).toBe('string');
@@ -230,7 +231,7 @@ describe('CinemaService', () => {
         cinemasWithDifferentAmenities
       );
 
-      const result = await service.getCinemas();
+      const result = await service.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result[0].amenities).toContain('IMAX');
       expect(result[0].amenities).toContain('3D');
@@ -264,9 +265,9 @@ describe('CinemaService', () => {
         cinemasFromDifferentCities
       );
 
-      const result = await service.getCinemas();
+      const result = await service.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
-      const cities = result.map((cinema) => cinema.city);
+      const cities = result.data.map((cinema) => cinema.city);
       expect(cities).toContain('Ho Chi Minh City');
       expect(cities).toContain('Ha Noi');
       expect(cities).toContain('Da Nang');
@@ -276,9 +277,9 @@ describe('CinemaService', () => {
     it('should handle cinemas with valid coordinates', async () => {
       mockPrismaService.cinemas.findMany.mockResolvedValue(mockCinemas);
 
-      const result = await service.getCinemas();
+      const result = await service.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
-      result.forEach((cinema) => {
+      result.data.forEach((cinema) => {
         expect(cinema.latitude).toBeGreaterThan(-90);
         expect(cinema.latitude).toBeLessThan(90);
         expect(cinema.longitude).toBeGreaterThan(-180);
@@ -291,7 +292,7 @@ describe('CinemaService', () => {
       const dbError = new Error('Database connection failed');
       mockPrismaService.cinemas.findMany.mockRejectedValue(dbError);
 
-      await expect(service.getCinemas()).rejects.toThrow(
+      await expect(service.getAllCinemas(CinemaStatusEnum.ACTIVE)).rejects.toThrow(
         'Database connection failed'
       );
       expect(mockPrismaService.cinemas.findMany).toHaveBeenCalledWith();
@@ -315,7 +316,7 @@ describe('CinemaService', () => {
         cinemasWithNullFields
       );
 
-      const result = await service.getCinemas();
+      const result = await service.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result[0].email).toBeNull();
       expect(result[0].website).toBeNull();
@@ -339,7 +340,7 @@ describe('CinemaService', () => {
 
       mockPrismaService.cinemas.findMany.mockResolvedValue(largeCinemaDataset);
 
-      const result = await service.getCinemas();
+      const result = await service.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result).toHaveLength(100);
       expect(result[0].id).toBe('cinema-1');
@@ -350,14 +351,14 @@ describe('CinemaService', () => {
     it('should maintain data integrity and structure', async () => {
       mockPrismaService.cinemas.findMany.mockResolvedValue(mockCinemas);
 
-      const result = await service.getCinemas();
+      const result = await service.getAllCinemas(CinemaStatusEnum.ACTIVE);
 
       expect(result).toBeDefined();
       expect(result).not.toBeNull();
       expect(Array.isArray(result)).toBe(true);
 
-      if (result.length > 0) {
-        result.forEach((cinema) => {
+      if (result.data.length > 0) {
+        result.data.forEach((cinema) => {
           expect(cinema.id).toBeDefined();
           expect(cinema.name).toBeDefined();
           expect(cinema.address).toBeDefined();
@@ -374,7 +375,7 @@ describe('CinemaService', () => {
       const dbError = new Error('Failed to connect to database');
       mockPrismaService.cinemas.findMany.mockRejectedValue(dbError);
 
-      await expect(service.getCinemas()).rejects.toThrow(
+      await expect(service.getAllCinemas(CinemaStatusEnum.ACTIVE)).rejects.toThrow(
         'Failed to connect to database'
       );
       expect(mockPrismaService.cinemas.findMany).toHaveBeenCalledWith();
@@ -384,7 +385,7 @@ describe('CinemaService', () => {
       const networkError = new Error('Network timeout');
       mockPrismaService.cinemas.findMany.mockRejectedValue(networkError);
 
-      await expect(service.getCinemas()).rejects.toThrow('Network timeout');
+      await expect(service.getAllCinemas(CinemaStatusEnum.ACTIVE)).rejects.toThrow('Network timeout');
       expect(mockPrismaService.cinemas.findMany).toHaveBeenCalledWith();
     });
 
@@ -392,7 +393,7 @@ describe('CinemaService', () => {
       const permissionError = new Error('Access denied');
       mockPrismaService.cinemas.findMany.mockRejectedValue(permissionError);
 
-      await expect(service.getCinemas()).rejects.toThrow('Access denied');
+      await expect(service.getAllCinemas(CinemaStatusEnum.ACTIVE)).rejects.toThrow('Access denied');
       expect(mockPrismaService.cinemas.findMany).toHaveBeenCalledWith();
     });
   });
@@ -402,9 +403,11 @@ describe('CinemaService', () => {
       expect(service).toBeDefined();
     });
 
-    it('should have getCinemas method', () => {
-      expect(service.getCinemas).toBeDefined();
-      expect(typeof service.getCinemas).toBe('function');
+    it('should have getAllCinemas method', () => {
+      expect(service.getAllCinemas).toBeDefined();
+      expect(typeof service.getAllCinemas).toBe('function');
     });
   });
 });
+
+
