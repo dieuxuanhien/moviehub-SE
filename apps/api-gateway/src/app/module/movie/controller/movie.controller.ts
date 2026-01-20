@@ -56,7 +56,12 @@ export class MovieController {
   }
 
   @Post()
-  async createMovie(@Body() request: CreateMovieRequest) {
+  @UseGuards(ClerkAuthGuard)
+  async createMovie(@Req() req: any, @Body() request: CreateMovieRequest) {
+    const userCinemaId = req.staffContext?.cinemaId;
+    if (userCinemaId) {
+      throw new ForbiddenException('Managers cannot create movies');
+    }
     return this.movieService.createMovie(request);
   }
 
@@ -83,14 +88,6 @@ export class MovieController {
       limit ? parseInt(limit, 10) : 20,
       offset ? parseInt(offset, 10) : 0,
     );
-  @Post()
-  @UseGuards(ClerkAuthGuard)
-  async createMovie(@Req() req: any, @Body() request: CreateMovieRequest) {
-    const userCinemaId = req.staffContext?.cinemaId;
-    if (userCinemaId) {
-      throw new ForbiddenException('Managers cannot create movies');
-    }
-    return this.movieService.createMovie(request);
   }
 
   @Put(':id')
