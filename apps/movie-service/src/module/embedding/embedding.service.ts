@@ -22,7 +22,7 @@ export class EmbeddingService implements OnModuleInit {
   private genAI: GoogleGenerativeAI | null = null;
   private generativeModel: GenerativeModel | null = null;
   private readonly EMBEDDING_MODEL = 'text-embedding-004'; // Gemini embedding model
-  private readonly GENERATIVE_MODEL = 'gemini-2.0-flash'; // For query enrichment
+  private readonly GENERATIVE_MODEL = 'gemini-2.5-flash'; // For query enrichment
 
   constructor(private readonly configService: ConfigService) {
     this.logger.log('🔧 EmbeddingService constructor called');
