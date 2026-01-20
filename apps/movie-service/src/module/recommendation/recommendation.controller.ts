@@ -87,5 +87,15 @@ export class RecommendationController {
       data.limit ?? 10,
     );
   }
+
+  @MessagePattern({ cmd: 'get_for_you_recommendations' })
+  async getForYouRecommendationsTcp(
+    @Payload() data: { bookedMovieIds: string[]; limit?: number },
+  ) {
+    return this.recommendationService.getForYouRecommendations(
+      data.bookedMovieIds,
+      data.limit ?? 20,
+    );
+  }
 }
 

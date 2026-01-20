@@ -237,14 +237,14 @@ export class RecommendationService {
   async getRecommendationsByQuery(
     query: string,
     limit = 10,
-  ): Promise<RecommendationResult> {
+  ): Promise<RecommendationResult & { enrichedQuery?: string }> {
     if (!query || query.trim().length === 0) {
       throw new BadRequestException('Query is required');
     }
 
     this.logger.debug(`Getting recommendations for query: "${query}"`);
 
-    // Detect genre from query keywords
+    // Detect genre from ORIGINAL query keywords (before enrichment)
     const detectedGenres: string[] = [];
     const queryLower = query.toLowerCase();
     
@@ -259,8 +259,17 @@ export class RecommendationService {
     }
 
     try {
-      // Generate embedding for the query text
-      const embeddingResult = await this.embeddingService.generateEmbedding(query);
+      // Step 1: Enrich the query using LLM for better embedding matching
+      // Short queries like "action" become "action movie with exciting fight scenes..."
+      const enrichmentResult = await this.embeddingService.enrichQuery(query);
+      const enrichedQuery = enrichmentResult.enrichedQuery;
+      
+      if (enrichedQuery !== query) {
+        this.logger.log(`🔮 Query enriched: "${query}" → "${enrichedQuery.substring(0, 60)}..."`);
+      }
+
+      // Step 2: Generate embedding for the ENRICHED query text
+      const embeddingResult = await this.embeddingService.generateEmbedding(enrichedQuery);
       
       if (!embeddingResult || !embeddingResult.embedding) {
         this.logger.error('Failed to generate embedding for query');
@@ -386,6 +395,7 @@ export class RecommendationService {
         movies: rerankedMovies.map(({ genreIds, embeddingSimilarity, avgRating, reviewCount, releaseDate, ...movie }) => movie),
         total,
         hasMore: limit < total,
+        enrichedQuery: enrichedQuery !== query ? enrichedQuery : undefined,
       };
     } catch (error) {
       this.logger.error('Error getting recommendations by query:', error);
@@ -822,4 +832,196 @@ export class RecommendationService {
     this.logger.log(`Batch complete: ${success} success, ${failed} failed`);
     return { success, failed };
   }
+
+  /**
+   * Get personalized "For You" recommendations based on user's booking history
+   * 
+   * Algorithm:
+   * 1. If user has booking history → find similar movies to their watched movies
+   * 2. If no history (cold-start) → return trending movies
+   * 
+   * @param bookedMovieIds - Array of movie IDs the user has booked/watched
+   * @param limit - Number of recommendations to return
+   */
+  async getForYouRecommendations(
+    bookedMovieIds: string[],
+    limit = 20,
+  ): Promise<RecommendationResult & { isPersonalized: boolean }> {
+    // Validate input
+    for (const id of bookedMovieIds) {
+      this.validateUUID(id, 'bookedMovieId');
+    }
+
+    // Cold-start: No booking history → return trending
+    if (bookedMovieIds.length === 0) {
+      this.logger.log('Cold-start user: returning trending movies');
+      const trending = await this.getTrendingMovies(limit);
+      return { ...trending, isPersonalized: false };
+    }
+
+    this.logger.log(`Generating personalized recommendations from ${bookedMovieIds.length} booked movies`);
+
+    try {
+      // Step 1: Get genres from booked movies
+      const bookedMovies = await this.prisma.movie.findMany({
+        where: { id: { in: bookedMovieIds } },
+        include: { movieGenres: { include: { genre: true } } },
+      });
+
+      // Extract unique genre IDs from booked movies
+      const preferredGenreIds = new Set<string>();
+      for (const movie of bookedMovies) {
+        for (const mg of movie.movieGenres) {
+          preferredGenreIds.add(mg.genreId);
+        }
+      }
+
+      this.logger.log(`User prefers ${preferredGenreIds.size} genres: ${[...preferredGenreIds].join(', ')}`);
+
+      // Step 2: Find similar movies user hasn't watched
+      // Use embedding similarity if available, otherwise fallback to genre matching
+      const candidateLimit = Math.min(limit * DIVERSITY_CONFIG.candidateMultiplier, 100);
+      
+      // Format booked movie IDs for SQL
+      const bookedIdsArray = bookedMovieIds.map(id => `'${id}'`).join(',');
+
+      const candidates = await this.prisma.$queryRaw<RawMovieCandidate[]>`
+        SELECT 
+          m.id,
+          m.title,
+          m.poster_url as "posterUrl",
+          m.release_date as "releaseDate",
+          COALESCE(
+            (SELECT 1 - MIN(me2.embedding <=> me.embedding)
+             FROM movie_embeddings me2 
+             WHERE me2.movie_id = ANY(${bookedMovieIds}::uuid[])
+             AND me.embedding IS NOT NULL),
+            0.5
+          ) as "embeddingSimilarity",
+          COALESCE(
+            (SELECT ARRAY_AGG(mg.genre_id::text) FROM movie_genres mg WHERE mg.movie_id = m.id),
+            ARRAY[]::text[]
+          ) as "genreIds",
+          COALESCE(
+            (SELECT AVG(r.rating)::float FROM reviews r WHERE r.movie_id = m.id),
+            0
+          ) as "avgRating",
+          COALESCE(
+            (SELECT COUNT(*)::int FROM reviews r WHERE r.movie_id = m.id),
+            0
+          ) as "reviewCount"
+        FROM movies m
+        LEFT JOIN movie_embeddings me ON m.id = me.movie_id
+        WHERE m.id != ALL(${bookedMovieIds}::uuid[])
+          AND EXISTS (
+            SELECT 1 FROM movie_releases mr 
+            WHERE mr.movie_id = m.id 
+            AND (
+              (mr.start_date <= CURRENT_DATE AND (mr.end_date >= CURRENT_DATE OR mr.end_date IS NULL))
+              OR (mr.start_date > CURRENT_DATE AND mr.start_date <= (CURRENT_DATE + interval '60 days'))
+            )
+          )
+          AND EXISTS (
+            SELECT 1 FROM movie_genres mg 
+            WHERE mg.movie_id = m.id 
+            AND mg.genre_id = ANY(${[...preferredGenreIds]}::uuid[])
+          )
+        ORDER BY "embeddingSimilarity" DESC, m.release_date DESC
+        LIMIT ${candidateLimit}
+      `;
+
+      if (candidates.length === 0) {
+        this.logger.warn('No candidates found with preferred genres, falling back to trending');
+        const trending = await this.getTrendingMovies(limit);
+        return { ...trending, isPersonalized: false };
+      }
+
+      // Step 3: Apply hybrid scoring with genre boost
+      const scored = this.applyHybridScoringWithGenreBoost(candidates, [...preferredGenreIds]);
+
+      // Step 4: Apply MMR diversity to avoid repetitive recommendations
+      const diverseResults = this.applyMMRDiversity(scored, limit);
+
+      // Step 5: Format results
+      const movies: SimilarMovie[] = diverseResults.map(m => ({
+        id: m.id,
+        title: m.title,
+        posterUrl: m.posterUrl,
+        similarity: m.similarity,
+      }));
+
+      return {
+        movies,
+        total: movies.length,
+        hasMore: candidates.length > limit,
+        isPersonalized: true,
+      };
+
+    } catch (error) {
+      this.logger.error('Error generating For You recommendations:', error);
+      // Fallback to trending on error
+      const trending = await this.getTrendingMovies(limit);
+      return { ...trending, isPersonalized: false };
+    }
+  }
+
+  /**
+   * Get trending movies (cold-start fallback)
+   * 
+   * Scoring: 50% rating + 50% recency
+   * Includes:
+   * - Movies with valid movie_releases (now showing or upcoming 60 days)
+   * - OR movies with release_date in the past year (fallback for movies without releases)
+   */
+  async getTrendingMovies(limit = 20): Promise<RecommendationResult> {
+    this.logger.log(`Fetching ${limit} trending movies`);
+
+    const movies = await this.prisma.$queryRaw<Array<{
+      id: string;
+      title: string;
+      posterUrl: string;
+      avgRating: number;
+      releaseDate: Date;
+    }>>`
+      SELECT 
+        m.id,
+        m.title,
+        m.poster_url as "posterUrl",
+        COALESCE((SELECT AVG(r.rating)::float FROM reviews r WHERE r.movie_id = m.id), 3.0) as "avgRating",
+        m.release_date as "releaseDate"
+      FROM movies m
+      WHERE (
+        -- Option 1: Has valid movie_releases entry
+        EXISTS (
+          SELECT 1 FROM movie_releases mr 
+          WHERE mr.movie_id = m.id 
+          AND (
+            (mr.start_date <= CURRENT_DATE AND (mr.end_date >= CURRENT_DATE OR mr.end_date IS NULL))
+            OR (mr.start_date > CURRENT_DATE AND mr.start_date <= (CURRENT_DATE + interval '60 days'))
+          )
+        )
+        -- Option 2: Fallback - movie released in past 2 years
+        OR (m.release_date >= (CURRENT_DATE - interval '2 years'))
+      )
+      ORDER BY (
+        0.5 * (COALESCE((SELECT AVG(r.rating)::float FROM reviews r WHERE r.movie_id = m.id), 3.0) / 5.0) +
+        0.5 * GREATEST(0, 1.0 - (EXTRACT(EPOCH FROM (CURRENT_DATE::timestamp - m.release_date::timestamp)) / (365.0 * 24 * 60 * 60)))
+      ) DESC
+      LIMIT ${limit}
+    `;
+
+    const result: SimilarMovie[] = movies.map(m => ({
+      id: m.id,
+      title: m.title,
+      posterUrl: m.posterUrl,
+      similarity: (m.avgRating / 5.0) * 0.5 + 0.5, // Pseudo-similarity for UI consistency
+    }));
+
+    return {
+      movies: result,
+      total: result.length,
+      hasMore: false,
+    };
+  }
 }
+

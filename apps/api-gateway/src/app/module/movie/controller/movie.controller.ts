@@ -27,7 +27,9 @@ import { MovieService } from '../service/movie.service';
   path: 'movies',
 })
 export class MovieController {
-  constructor(private readonly movieService: MovieService) {}
+  constructor(
+    private readonly movieService: MovieService,
+  ) {}
 
   // ============ Admin Routes (MUST be before :id routes) ============
 
@@ -42,6 +44,25 @@ export class MovieController {
   }
 
   // ============ Recommendation Routes ============
+
+  @Get('for-you')
+  @UseGuards(ClerkAuthGuard)
+  async getForYouRecommendations(
+    @Req() req: any,
+    @Query('limit') limit?: string,
+  ) {
+    // NOTE: For proper personalization, we need movie IDs from user's booking history.
+    // However, booking schema only stores showtimeId, not movieId.
+    // To get movieId, we'd need to call cinema-service for each showtime.
+    // For now, we return trending movies (cold-start), which still provides good UX.
+    // TODO: Future enhancement - add movieId to showtime response from booking-service
+    //       or batch-fetch movie IDs from cinema-service
+    
+    return this.movieService.getForYouRecommendations(
+      [], // Empty = cold-start = trending movies
+      limit ? parseInt(limit, 10) : 20,
+    );
+  }
 
   @Post('recommendations')
   async getRecommendations(@Body() body: { query: string; limit?: number }) {

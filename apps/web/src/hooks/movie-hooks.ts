@@ -127,7 +127,7 @@ export const useDeleteMovie = (movieId: string) => {
 };
 
 // Hook for fetching similar movies
-import { getSimilarMovies, SimilarMoviesResponse, getRecommendations, RecommendationsResponse } from '../libs/actions/movies/movie-action';
+import { getSimilarMovies, SimilarMoviesResponse, getRecommendations, RecommendationsResponse, getForYouRecommendations, ForYouResponse } from '../libs/actions/movies/movie-action';
 
 export const useGetSimilarMovies = (movieId: string, limit = 20) => {
   return useQuery<SimilarMoviesResponse>({
@@ -147,4 +147,18 @@ export const useGetRecommendations = (query: string, limit = 10) => {
   });
 };
 
-
+// Hook for fetching personalized "For You" recommendations
+export const useForYouRecommendations = (limit = 20) => {
+  const { getToken, isSignedIn } = useAuth();
+  
+  return useQuery<ForYouResponse>({
+    queryKey: ['for-you', limit],
+    queryFn: async () => {
+      const token = await getToken();
+      if (!token) throw new Error('Not authenticated');
+      return getForYouRecommendations(limit, token);
+    },
+    enabled: !!isSignedIn,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+};
