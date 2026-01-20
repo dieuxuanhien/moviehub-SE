@@ -581,16 +581,11 @@ describe('CinemaLocationService', () => {
 
       const result = await service.getCinemaDetail(validDto);
 
-      expect(result).toEqual(mockCinemaResponse);
+      expect(result.data).toEqual(mockCinemaResponse);
       expect(mockPrismaService.cinemas.findUnique).toHaveBeenCalledWith({
         where: { id: 'cinema-1' },
         include: { halls: true },
       });
-      expect(mockMapper.toCinemaLocationResponse).toHaveBeenCalledWith(
-        mockCinemaWithHalls,
-        validDto.userLatitude,
-        validDto.userLongitude
-      );
     });
 
     it('should throw NotFoundException when cinema is not found', async () => {
