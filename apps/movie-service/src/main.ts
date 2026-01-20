@@ -22,6 +22,9 @@ async function bootstrap() {
     },
   });
 
+  // Initialize app to trigger lifecycle hooks (OnModuleInit, etc.)
+  await app.init();
+  
   await app.startAllMicroservices();
 
   Logger.log(`🚀 Movie service run successfully`);

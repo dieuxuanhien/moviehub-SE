@@ -1,0 +1,255 @@
+﻿[NX CLOUD] Verifying current cloud bundle
+[NX CLOUD] A local bundle currently exists:  {
+  version: '2601.19.2',
+  fullPath: 'C:\\Users\\giang\\OneDrive\\Desktop\\Movie Hub\\moviehub-SE\\.nx\\cache\\cloud\\2601.19.2'
+}
+[NX CLOUD] Last verification was within the past 30 minutes, will not verify this time
+[NX CLOUD] Done:  C:\Users\giang\OneDrive\Desktop\Movie Hub\moviehub-SE\.nx\cache\cloud\2601.19.2
+node.exe : Was not able to require.resolve 
+module nx/src/utils/app-root from the 
+following paths: 
+C:\Users\giang\OneDrive\Desktop\Movie Hub\mov
+iehub-SE\node_modules\nx\node_modules,C:\User
+s\giang\OneDrive\Desktop\Movie 
+Hub\moviehub-SE\node_modules. This may be 
+expected.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: 
+(Was     not able to...ay be 
+expected.:String) [], Rem    oteException
+    + FullyQualifiedErrorId : 
+NativeCommandError
+ 
+Was not able to require.resolve module 
+nx/src/utils/app-root from the following 
+paths: C:\Users\giang\OneDrive\Desktop\Movie 
+Hub\moviehub-SE\node_modules\nx\node_modules,
+C:\Users\giang\OneDrive\Desktop\Movie 
+Hub\moviehub-SE\node_modules. This may be 
+expected.
+Was not able to require.resolve module 
+nx/src/tasks-runner/process-metrics-service 
+from the following paths: 
+C:\Users\giang\OneDrive\Desktop\Movie Hub\mov
+iehub-SE\node_modules\nx\node_modules,C:\User
+s\giang\OneDrive\Desktop\Movie 
+Hub\moviehub-SE\node_modules. This may be 
+expected.
+[Nx Cloud Debug] Skipping foreground heartbeat since CI environment is not detected.
+[NX CLOUD] Verifying current cloud bundle
+[NX CLOUD] A local bundle currently exists:  {
+  version: '2601.19.2',
+  fullPath: 'C:\\Users\\giang\\OneDrive\\Desktop\\Movie Hub\\moviehub-SE\\.nx\\cache\\cloud\\2601.19.2'
+}
+[NX CLOUD] Last verification was within the past 30 minutes, will not verify this time
+[NX CLOUD] Done:  C:\Users\giang\OneDrive\Desktop\Movie Hub\moviehub-SE\.nx\cache\cloud\2601.19.2
+[Nx Cloud Debug] Attempting to acquire filesystem lock with path:  C:\Users\giang\AppData\Local\Temp\client-instance-id.lock
+[Nx Cloud Debug] Failed to create folder lock at path: C:\Users\giang\AppData\Local\Temp\client-instance-id.lock
+[Nx Cloud] Unable to detect a VCS context from the environment.
+
+ NX   RunStart
+
+
+{
+  "branch": null,
+  "runGroup": "b58ffa6da09abb518a5aa1f334fcdc5e97cf40a7",
+  "ciExecutionId": null,
+  "ciExecutionEnv": "",
+  "hashes": [
+    "12164543842975302884"
+  ],
+  "machineInfo": {
+    "machineId": "98LpKN1zfpoS5SEliUPsZA==",
+    "platform": "win32",
+    "version": "Windows 11 Pro",
+    "cpuCores": 16
+  },
+  "vcsContext": null,
+  "clientInstanceSource": "CLOUD_RUNNER",
+  "clientInstanceId": "529bd8e9-73bd-4085-822f-16d08ee68f66"
+}
+
+
+> nx run api-gateway:test
+
+RunStart duration: 420
+[0m[7m[1m[31m FAIL [39m[22m[27m[0m 
+[0m[7m[37m api-gateway [39m[27m[0m [2m
+apps/api-gateway/src/app/module/cinema/servic
+e/[22m[1mcinema.service.spec.ts[22m
+  [1mâ— [22mTest suite failed to run
+    [96mapps/api-gateway/src/app/module/cine
+ma/service/cinema.service.spec.ts[0m:[93m40
+[0m:[93m36[0m - [91merror[0m[90m 
+TS2554: [0mExpected 1 arguments, but got 0.
+    [7m40[0m       const result = await 
+service.getCinemas();
+    [7m  [0m [91m                         
+          ~~~~~~~~~~[0m
+      [96mapps/api-gateway/src/app/module/ci
+nema/service/cinema.service.ts[0m:[93m22[0
+m:[93m20[0m
+        [7m22[0m   async 
+getCinemas(status: CinemaStatusEnum) {
+        [7m  [0m [96m                   
+~~~~~~~~~~~~~~~~~~~~~~~~[0m
+        An argument for 'status' was not 
+provided.
+    [96mapps/api-gateway/src/app/module/cine
+ma/service/cinema.service.spec.ts[0m:[93m54
+[0m:[93m28[0m - [91merror[0m[90m 
+TS2554: [0mExpected 1 arguments, but got 0.
+    [7m54[0m       await expect(service.get
+Cinemas()).rejects.toThrow(mockError);
+    [7m  [0m [91m                         
+  ~~~~~~~~~~[0m
+      [96mapps/api-gateway/src/app/module/ci
+nema/service/cinema.service.ts[0m:[93m22[0
+m:[93m20[0m
+        [7m22[0m   async 
+getCinemas(status: CinemaStatusEnum) {
+        [7m  [0m [96m                   
+~~~~~~~~~~~~~~~~~~~~~~~~[0m
+        An argument for 'status' was not 
+provided.
+[0m[7m[1m[32m PASS [39m[22m[27m[0m 
+[0m[7m[37m api-gateway [39m[27m[0m [2m
+apps/api-gateway/src/app/module/user/[22m[1
+muser.service.spec.ts[22m
+  UserService
+    getUsers
+      [32mâˆ[39m [2mshould proxy the 
+request to user microservice (26 ms)[22m
+      [32mâˆ[39m [2mshould throw 
+RpcException when microservice fails (10 
+ms)[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m 
+[0m[7m[37m api-gateway [39m[27m[0m [2m
+apps/api-gateway/src/app/module/user/[22m[1
+muser.controller.spec.ts[22m
+  UserController
+    getUser
+      [32mâˆ[39m [2mshould return all 
+users (18 ms)[22m
+      [32mâˆ[39m [2mshould handle 
+service errors (9 ms)[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m 
+[0m[7m[37m api-gateway [39m[27m[0m [2m
+apps/api-gateway/src/app/module/movie/control
+ler/[22m[1mmovie.controller.spec.ts[22m
+  MovieController
+    getMovies
+      [32mâˆ[39m [2mshould return movies 
+with query parameters (21 ms)[22m
+      [32mâˆ[39m [2mshould handle empty 
+query parameters (4 ms)[22m
+      [32mâˆ[39m [2mshould pass through 
+service errors (20 ms)[22m
+    findOne
+      [32mâˆ[39m [2mshould return a 
+movie by ID (2 ms)[22m
+      [32mâˆ[39m [2mshould handle 
+non-existent movie ID (4 ms)[22m
+    createMovie
+      [32mâˆ[39m [2mshould create a new 
+movie (2 ms)[22m
+      [32mâˆ[39m [2mshould handle 
+validation errors (2 ms)[22m
+    updateMovie
+      [32mâˆ[39m [2mshould update an 
+existing movie (2 ms)[22m
+      [32mâˆ[39m [2mshould handle 
+non-existent movie for update (4 ms)[22m
+    remove
+      [32mâˆ[39m [2mshould delete a 
+movie and return null (2 ms)[22m
+      [32mâˆ[39m [2mshould handle delete 
+errors (5 ms)[22m
+      [32mâˆ[39m [2mshould handle 
+non-existent movie for delete (2 ms)[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m 
+[0m[7m[37m api-gateway [39m[27m[0m [2m
+apps/api-gateway/src/app/module/movie/service
+/[22m[1mmovie.service.spec.ts[22m
+  MovieService
+    getMovies
+      [32mâˆ[39m [2mshould proxy the 
+request to movie microservice (17 ms)[22m
+      [32mâˆ[39m [2mshould throw 
+RpcException when microservice fails (11 
+ms)[22m
+      [32mâˆ[39m [2mshould handle empty 
+query parameters (2 ms)[22m
+    getMovieDetail
+      [32mâˆ[39m [2mshould proxy the 
+request to get movie detail (3 ms)[22m
+      [32mâˆ[39m [2mshould throw 
+RpcException when movie not found (3 ms)[22m
+    createMovie
+      [32mâˆ[39m [2mshould proxy create 
+movie request (3 ms)[22m
+      [32mâˆ[39m [2mshould handle 
+validation errors from microservice (3 
+ms)[22m
+    updateMovie
+      [32mâˆ[39m [2mshould proxy update 
+movie request with ID (2 ms)[22m
+      [32mâˆ[39m [2mshould throw 
+RpcException when update fails (2 ms)[22m
+    deleteMovie
+      [32mâˆ[39m [2mshould proxy delete 
+movie request (3 ms)[22m
+      [32mâˆ[39m [2mshould throw 
+RpcException when delete fails (2 ms)[22m
+[0m[7m[1m[31m FAIL [39m[22m[27m[0m 
+[0m[7m[37m api-gateway [39m[27m[0m [2m
+apps/api-gateway/src/app/module/cinema/contro
+ller/[22m[1mcinema.controller.spec.ts[22m
+  [1mâ— [22mTest suite failed to run
+    [96mapps/api-gateway/src/app/module/cine
+ma/controller/cinema.controller.spec.ts[0m:
+[93m45[0m:[93m39[0m - [91merror[0m[90m 
+TS2551: [0mProperty 'getCinemas' does not 
+exist on type 'CinemaController'. Did you 
+mean 'getAllCinemas'?
+    [7m45[0m       const result = await 
+controller.getCinemas();
+    [7m  [0m [91m                         
+             ~~~~~~~~~~[0m
+      [96mapps/api-gateway/src/app/module/ci
+nema/controller/cinema.controller.ts[0m:[93
+m45[0m:[93m9[0m
+        [7m45[0m   async 
+getAllCinemas(@Query('status') status?: 
+CinemaStatusEnum) {
+        [7m  [0m [96m        
+~~~~~~~~~~~~~[0m
+        'getAllCinemas' is declared here.
+[1mTest Suites: [22m[1m[31m2 
+failed[39m[22m, [1m[32m4 
+passed[39m[22m, 6 total
+[1mTests:       [22m[1m[32m27 
+passed[39m[22m, 27 total
+[1mSnapshots:   [22m0 total
+[1mTime:[22m        4.562 s, estimated 5 s
+[2mRan all test suites[22m[2m.[22m
+
+
+
+ NX   Running target test for project api-gateway failed
+
+Failed tasks:
+
+- api-gateway:test
+
+Hint: run the command with --verbose for more details.
+
+
+ NX   Storing terminal outputs for api-gateway:test with hash 12164543842975302884
+
+View structured, searchable error logs at https://nx.app/runs/LvMlXJ41CD
+

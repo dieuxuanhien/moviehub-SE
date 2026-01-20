@@ -16,6 +16,14 @@ export class ClerkAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
 
+    // 🔓 DEV MODE: Skip auth when SKIP_AUTH=true (for faster development)
+    if (process.env.SKIP_AUTH === 'true') {
+      // Set a default dev user ID
+      request.userId = process.env.DEV_USER_ID || 'dev-admin-user';
+      this.logger.warn('⚠️ Auth bypassed - SKIP_AUTH=true (Development Mode)');
+      return true;
+    }
+
     // ====== 1️⃣ Check if permission is required ======
     const requiredPermission = this.reflector.get<string>(
       PERMISSION_KEY,

@@ -141,7 +141,7 @@ export class MovieService {
         result.data.length > 0
       ) {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           const userIds = [
             ...new Set(result.data.map((r: any) => r.userId)),
           ] as string[];
@@ -215,4 +215,47 @@ export class MovieService {
       throw new RpcException(error);
     }
   }
+
+  // ============ Recommendations ============
+
+  async getSimilarMovies(movieId: string, limit = 20, offset = 0) {
+    try {
+      return await firstValueFrom(
+        this.client.send({ cmd: 'get_similar_movies' }, { movieId, limit, offset })
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
+  }
+
+  async getRecommendations(query: string, limit = 10) {
+    try {
+      return await firstValueFrom(
+        this.client.send({ cmd: 'get_recommendations' }, { query, limit })
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
+  }
+
+  async generateEmbedding(movieId: string) {
+    try {
+      return await firstValueFrom(
+        this.client.send({ cmd: 'generate_embedding' }, { movieId })
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
+  }
+
+  async batchGenerateEmbeddings() {
+    try {
+      return await firstValueFrom(
+        this.client.send({ cmd: 'batch_generate_embeddings' }, {})
+      );
+    } catch (error) {
+      throw new RpcException(error);
+    }
+  }
 }
+

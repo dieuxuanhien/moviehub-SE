@@ -29,10 +29,43 @@ import { MovieService } from '../service/movie.service';
 export class MovieController {
   constructor(private readonly movieService: MovieService) {}
 
+  // ============ Admin Routes (MUST be before :id routes) ============
+
+  @Post('admin/embeddings/batch')
+  async batchGenerateEmbeddings() {
+    return this.movieService.batchGenerateEmbeddings();
+  }
+
+  @Post('admin/embeddings/generate/:id')
+  async generateEmbedding(@Param('id') id: string) {
+    return this.movieService.generateEmbedding(id);
+  }
+
+  // ============ Recommendation Routes ============
+
+  @Post('recommendations')
+  async getRecommendations(@Body() body: { query: string; limit?: number }) {
+    return this.movieService.getRecommendations(body.query, body.limit || 10);
+  }
+
+  // ============ Movie CRUD ============
+
   @Get()
   async getMovies(@Query() query: MovieQuery) {
     return this.movieService.getMovies(query);
   }
+
+  @Post()
+  @UseGuards(ClerkAuthGuard)
+  async createMovie(@Req() req: any, @Body() request: CreateMovieRequest) {
+    const userCinemaId = req.staffContext?.cinemaId;
+    if (userCinemaId) {
+      throw new ForbiddenException('Managers cannot create movies');
+    }
+    return this.movieService.createMovie(request);
+  }
+
+  // ============ Movie by ID routes ============
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
@@ -44,14 +77,17 @@ export class MovieController {
     return this.movieService.getMovieRelease(id);
   }
 
-  @Post()
-  @UseGuards(ClerkAuthGuard)
-  async createMovie(@Req() req: any, @Body() request: CreateMovieRequest) {
-    const userCinemaId = req.staffContext?.cinemaId;
-    if (userCinemaId) {
-      throw new ForbiddenException('Managers cannot create movies');
-    }
-    return this.movieService.createMovie(request);
+  @Get(':id/similar')
+  async getSimilarMovies(
+    @Param('id') id: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return this.movieService.getSimilarMovies(
+      id,
+      limit ? parseInt(limit, 10) : 20,
+      offset ? parseInt(offset, 10) : 0,
+    );
   }
 
   @Put(':id')
@@ -79,7 +115,8 @@ export class MovieController {
     return null;
   }
 
-  // reviews
+  // ============ Reviews ============
+
   @Get(':id/reviews')
   async getReviews(@Param('id') id: string, @Query() query: ReviewQuery) {
     query.movieId = id;

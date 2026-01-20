@@ -9,7 +9,12 @@ RUN npm install -g npm@latest && npm -v
 COPY package*.json ./
 
 # Install ALL dependencies (needed for build)
-RUN npm i --legacy-peer-deps
+# Configure npm for better network resilience
+RUN npm config set fetch-timeout 600000 && \
+    npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 60000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm i --legacy-peer-deps
 # ===========================================
 # BUILD STAGE - Build the application
 # ===========================================

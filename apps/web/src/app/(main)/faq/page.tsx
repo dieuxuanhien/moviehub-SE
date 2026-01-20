@@ -22,9 +22,9 @@ export default function FAQPage() {
               Làm thế nào để đăng ký thành viên?
             </AccordionTrigger>
             <AccordionContent className="text-gray-400">
-              Bạn có thể đăng ký tài khoản miễn phí bằng cách nhấn vào nút "Đăng
-              Ký" ở góc trên bên phải màn hình. Sau khi điền đầy đủ thông tin,
-              bạn sẽ trở thành thành viên C'Friend ngay lập tức.
+              Bạn có thể đăng ký tài khoản miễn phí bằng cách nhấn vào nút &quot;Đăng
+              Ký&quot; ở góc trên bên phải màn hình. Sau khi điền đầy đủ thông tin,
+              bạn sẽ trở thành thành viên C&apos;Friend ngay lập tức.
             </AccordionContent>
           </AccordionItem>
 
@@ -36,7 +36,7 @@ export default function FAQPage() {
               Tôi có thể hủy vé đã đặt không?
             </AccordionTrigger>
             <AccordionContent className="text-gray-400">
-              Đối với thành viên C'VIP, bạn được miễn phí đổi/trả vé trước giờ
+              Đối với thành viên C&apos;VIP, bạn được miễn phí đổi/trả vé trước giờ
               chiếu 60 phút. Đối với thành viên thường và khách vãng lai, vé đã
               mua không hỗ trợ hoàn hủy trừ trường hợp bất khả kháng từ phía
               rạp.

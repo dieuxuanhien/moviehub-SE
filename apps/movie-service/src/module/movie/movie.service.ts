@@ -37,7 +37,7 @@ export class MovieService {
 
     const where: any = {};
 
-    if (query.status === 'now_showing') {
+    if (query.status === 'now_show') {
       where.movieReleases = {
         some: {
           startDate: { lte: today },
@@ -110,6 +110,7 @@ export class MovieService {
     return {
       data,
       meta,
+      message: 'Get movies successfully',
     };
   }
 
@@ -143,6 +144,7 @@ export class MovieService {
         averageRating: stats._avg.rating ?? 0,
         reviewCount: stats._count.rating ?? 0,
       }),
+      message: 'Get movie detail successfully',
     };
   }
 

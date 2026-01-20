@@ -16,7 +16,7 @@ export type UpdateMovieRequest = z.infer<typeof UpdateMovieSchema>;
 export const getMovies = async (
   query: MovieQuery
 ): Promise<ServiceResult<MovieSummary[]>> => {
-  // eslint-disable-next-line no-useless-catch
+   
   try {
     const response = await api.get('/movies', { params: query });
     return response.data;
@@ -58,7 +58,7 @@ export const updateMovie = async (
   movieData: UpdateMovieRequest,
   token: string
 ): Promise<MovieSummary> => {
-  // eslint-disable-next-line no-useless-catch
+   
   try {
     const response = await api.put(`/movies/${movieId}`, movieData, {
       headers: {
@@ -76,7 +76,7 @@ export const deleteMovie = async (
   movieId: string,
   token: string
 ): Promise<void> => {
-  // eslint-disable-next-line no-useless-catch
+   
   try {
     await api.delete(`/movies/${movieId}`, {
       headers: {
@@ -88,3 +88,64 @@ export const deleteMovie = async (
     throw error;
   }
 };
+
+// Similar Movies Response Type
+export interface SimilarMovie {
+  id: string;
+  title: string;
+  posterUrl: string;
+  similarity: number;
+}
+
+export interface SimilarMoviesResponse {
+  movies: SimilarMovie[];
+  total: number;
+  hasMore: boolean;
+}
+
+// Get similar movies for a given movie
+export const getSimilarMovies = async (
+  movieId: string,
+  limit = 20
+): Promise<SimilarMoviesResponse> => {
+  try {
+    const response = await api.get(`/movies/${movieId}/similar`, {
+      params: { limit },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Recommendations Response Type
+export interface RecommendedMovie {
+  id: string;
+  title: string;
+  posterUrl: string;
+  similarity: number; // Backend returns 'similarity', not 'score'
+  genres?: string[];
+}
+
+export interface RecommendationsResponse {
+  movies: RecommendedMovie[];
+  total: number;
+  query: string;
+}
+
+// Get personalized recommendations based on a query (genre, mood, etc.)
+export const getRecommendations = async (
+  query: string,
+  limit = 10
+): Promise<RecommendationsResponse> => {
+  try {
+    const response = await api.post('/movies/recommendations', {
+      query,
+      limit,
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+

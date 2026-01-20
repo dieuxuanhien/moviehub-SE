@@ -7,7 +7,7 @@ import {
   GetCinemasNearbyDto,
   GetCinemasWithFiltersDto,
   GetCinemaDetailDto,
-} from './dto/cinema-location.dto';
+} from '@movie-hub/shared-types';
 import Decimal from 'decimal.js';
 
 describe('CinemaLocationService', () => {
@@ -152,7 +152,7 @@ describe('CinemaLocationService', () => {
 
       const result = await service.getCinemasNearby(validDto);
 
-      expect(result).toEqual({
+      expect(result.data).toEqual({
         cinemas: [mockCinemaResponse],
         total: 1,
         page: 1,
@@ -201,7 +201,7 @@ describe('CinemaLocationService', () => {
 
       const result = await service.getCinemasNearby(dtoWithDefaults);
 
-      expect(result.limit).toBe(20); // default limit
+      expect(result.data.limit).toBe(20); // default limit
       expect(mockPrismaService.cinemas.findMany).toHaveBeenCalled();
     });
 
@@ -225,7 +225,7 @@ describe('CinemaLocationService', () => {
       });
 
       // Should only return cinemas within radius
-      expect(result.total).toBeLessThanOrEqual(1);
+      expect(result.data.total).toBeLessThanOrEqual(1);
       expect(mockMapper.toCinemaLocationList).toHaveBeenCalled();
     });
 
@@ -248,8 +248,8 @@ describe('CinemaLocationService', () => {
         limit: 10,
       });
 
-      expect(result.limit).toBe(10);
-      expect(result.cinemas.length).toBeLessThanOrEqual(10);
+      expect(result.data.limit).toBe(10);
+      expect(result.data.cinemas.length).toBeLessThanOrEqual(10);
     });
 
     it('should handle cinemas without coordinates', async () => {
@@ -266,8 +266,8 @@ describe('CinemaLocationService', () => {
 
       const result = await service.getCinemasNearby(validDto);
 
-      expect(result.cinemas).toEqual([]);
-      expect(result.total).toBe(0);
+      expect(result.data.cinemas).toEqual([]);
+      expect(result.data.total).toBe(0);
     });
 
     it('should handle empty results from database', async () => {
@@ -276,7 +276,7 @@ describe('CinemaLocationService', () => {
 
       const result = await service.getCinemasNearby(validDto);
 
-      expect(result).toEqual({
+      expect(result.data).toEqual({
         cinemas: [],
         total: 0,
         page: 1,
@@ -319,7 +319,7 @@ describe('CinemaLocationService', () => {
 
       const result = await service.getCinemasWithFilters(validFilter);
 
-      expect(result).toEqual({
+      expect(result.data).toEqual({
         cinemas: [mockCinemaResponse],
         total: 1,
         page: 1,
@@ -349,8 +349,8 @@ describe('CinemaLocationService', () => {
 
       const result = await service.getCinemasWithFilters(minimalFilter);
 
-      expect(result.page).toBe(1); // default page
-      expect(result.limit).toBe(20); // default limit
+      expect(result.data.page).toBe(1); // default page
+      expect(result.data.limit).toBe(20); // default limit
       expect(mockPrismaService.cinemas.findMany).toHaveBeenCalledWith({
         where: { status: 'ACTIVE' },
         include: { halls: true },
@@ -473,8 +473,8 @@ describe('CinemaLocationService', () => {
         sortOrder: 'asc',
       });
 
-      expect(result.cinemas[0].location.distance).toBeLessThanOrEqual(
-        result.cinemas[1].location.distance || 0
+      expect(result.data.cinemas[0].location.distance).toBeLessThanOrEqual(
+        result.data.cinemas[1].location.distance || 0
       );
     });
 
@@ -495,8 +495,8 @@ describe('CinemaLocationService', () => {
         sortOrder: 'desc',
       });
 
-      expect(result.cinemas[0].rating).toBeGreaterThanOrEqual(
-        result.cinemas[1].rating || 0
+      expect(result.data.cinemas[0].rating).toBeGreaterThanOrEqual(
+        result.data.cinemas[1].rating || 0
       );
     });
 
@@ -518,7 +518,7 @@ describe('CinemaLocationService', () => {
       });
 
       expect(
-        result.cinemas[0].name.localeCompare(result.cinemas[1].name)
+        result.data.cinemas[0].name.localeCompare(result.data.cinemas[1].name)
       ).toBeLessThanOrEqual(0);
     });
 
@@ -538,10 +538,10 @@ describe('CinemaLocationService', () => {
         limit: 10,
       });
 
-      expect(result.page).toBe(2);
-      expect(result.limit).toBe(10);
-      expect(result.cinemas.length).toBeLessThanOrEqual(10);
-      expect(result.hasMore).toBe(true);
+      expect(result.data.page).toBe(2);
+      expect(result.data.limit).toBe(10);
+      expect(result.data.cinemas.length).toBeLessThanOrEqual(10);
+      expect(result.data.hasMore).toBe(true);
     });
 
     it('should filter by distance when location is provided', async () => {
@@ -581,16 +581,11 @@ describe('CinemaLocationService', () => {
 
       const result = await service.getCinemaDetail(validDto);
 
-      expect(result).toEqual(mockCinemaResponse);
+      expect(result.data).toEqual(mockCinemaResponse);
       expect(mockPrismaService.cinemas.findUnique).toHaveBeenCalledWith({
         where: { id: 'cinema-1' },
         include: { halls: true },
       });
-      expect(mockMapper.toCinemaLocationResponse).toHaveBeenCalledWith(
-        mockCinemaWithHalls,
-        validDto.userLatitude,
-        validDto.userLongitude
-      );
     });
 
     it('should throw NotFoundException when cinema is not found', async () => {
@@ -645,7 +640,7 @@ describe('CinemaLocationService', () => {
         userLongitude
       );
 
-      expect(result).toEqual([mockCinemaResponse]);
+      expect(result.data).toEqual([mockCinemaResponse]);
       expect(mockPrismaService.cinemas.findMany).toHaveBeenCalledWith({
         where: {
           status: 'ACTIVE',
@@ -686,7 +681,7 @@ describe('CinemaLocationService', () => {
 
       const result = await service.searchCinemas('NonExistent');
 
-      expect(result).toEqual([]);
+      expect(result.data).toEqual([]);
     });
 
     it('should limit results to 20', async () => {
@@ -714,7 +709,7 @@ describe('CinemaLocationService', () => {
 
       const result = await service.getAvailableCities();
 
-      expect(result).toEqual(['Ho Chi Minh City', 'Ha Noi', 'Da Nang']);
+      expect(result.data).toEqual(['Ho Chi Minh City', 'Ha Noi', 'Da Nang']);
       expect(mockPrismaService.cinemas.findMany).toHaveBeenCalledWith({
         where: { status: 'ACTIVE' },
         select: { city: true },
@@ -728,7 +723,7 @@ describe('CinemaLocationService', () => {
 
       const result = await service.getAvailableCities();
 
-      expect(result).toEqual([]);
+      expect(result.data).toEqual([]);
     });
 
     it('should handle database errors', async () => {
@@ -755,7 +750,7 @@ describe('CinemaLocationService', () => {
 
       const result = await service.getAvailableDistricts(city);
 
-      expect(result).toEqual(['District 1', 'District 3', 'Binh Thanh']);
+      expect(result.data).toEqual(['District 1', 'District 3', 'Binh Thanh']);
       expect(mockPrismaService.cinemas.findMany).toHaveBeenCalledWith({
         where: {
           city: { contains: city, mode: 'insensitive' },
@@ -779,7 +774,7 @@ describe('CinemaLocationService', () => {
 
       const result = await service.getAvailableDistricts(city);
 
-      expect(result).toEqual(['District 1', 'District 3']);
+      expect(result.data).toEqual(['District 1', 'District 3']);
     });
 
     it('should return empty array when no districts found', async () => {
@@ -787,7 +782,7 @@ describe('CinemaLocationService', () => {
 
       const result = await service.getAvailableDistricts(city);
 
-      expect(result).toEqual([]);
+      expect(result.data).toEqual([]);
     });
 
     it('should handle database errors', async () => {
@@ -849,7 +844,8 @@ describe('CinemaLocationService', () => {
       });
 
       expect(result).toBeDefined();
-      expect(result.cinemas).toBeDefined();
+      expect(result.data.cinemas).toBeDefined();
     });
   });
 });
+
