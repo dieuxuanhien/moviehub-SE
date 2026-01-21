@@ -2231,4 +2231,47 @@ export class BookingService {
       return [];
     }
   }
+
+  /**
+   * Get unique movie IDs from user's confirmed/completed bookings
+   * Used for personalized "For You" recommendations
+   */
+  async getUserWatchedMovieIds(userId: string): Promise<string[]> {
+    this.logger.log(`[ForYou] getUserWatchedMovieIds called for user: ${userId}`);
+    try {
+      // Get user's confirmed/completed bookings (most recent 20)
+      const bookings = await this.prisma.bookings.findMany({
+        where: {
+          user_id: userId,
+          status: { in: ['CONFIRMED', 'COMPLETED'] },
+        },
+        select: { showtime_id: true },
+        orderBy: { created_at: 'desc' },
+        take: 20,
+      });
+      this.logger.log(`[ForYou] Found ${bookings.length} bookings for user ${userId}`);
+
+      if (bookings.length === 0) {
+        return [];
+      }
+
+      const showtimeIds = bookings.map((b) => b.showtime_id);
+
+      // Batch fetch showtimes to get movieIds
+      const result = await firstValueFrom(
+        this.cinemaClient.send(CinemaMessage.SHOWTIME.GET_SHOWTIMES_BY_IDS, {
+          showtimeIds,
+        })
+      );
+
+      const showtimes = result?.data || [];
+      const movieIds = [...new Set(showtimes.map((s: any) => s.movieId).filter(Boolean))];
+
+      this.logger.log(`[ForYou] User ${userId} has watched ${movieIds.length} unique movies: ${movieIds.slice(0, 3).join(', ')}...`);
+      return movieIds as string[];
+    } catch (error) {
+      this.logger.error(`[ForYou] Failed to get watched movies for user ${userId}`, error);
+      return [];
+    }
+  }
 }

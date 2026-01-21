@@ -20,7 +20,8 @@ export class MovieService {
   logger = new Logger(MovieService.name);
 
   constructor(
-    @Inject(SERVICE_NAME.Movie) private readonly client: ClientProxy
+    @Inject(SERVICE_NAME.Movie) private readonly client: ClientProxy,
+    @Inject(SERVICE_NAME.BOOKING) private readonly bookingClient: ClientProxy
   ) {}
 
   private clerkClient = createClerkClient({
@@ -265,6 +266,24 @@ export class MovieService {
       );
     } catch (error) {
       throw new RpcException(error);
+    }
+  }
+
+  /**
+   * Get user's watched movie IDs from booking service
+   * Used for personalized recommendations
+   */
+  async getUserBookedMovieIds(userId: string): Promise<string[]> {
+    this.logger.log(`[ForYou] Getting booked movies for user: ${userId}`);
+    try {
+      const movieIds = await firstValueFrom(
+        this.bookingClient.send('booking.getUserWatchedMovieIds', { userId })
+      );
+      this.logger.log(`[ForYou] Got ${movieIds?.length || 0} booked movie IDs for user ${userId}`);
+      return movieIds || [];
+    } catch (error) {
+      this.logger.error(`[ForYou] Failed to get booked movies for user ${userId}: ${error.message}`, error.stack);
+      return []; // Fallback to empty = trending movies
     }
   }
 }

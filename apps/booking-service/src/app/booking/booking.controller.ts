@@ -205,4 +205,15 @@ export class BookingController {
       data.includeStatuses
     );
   }
+
+  // ==================== RECOMMENDATIONS ====================
+
+  /**
+   * Get unique movie IDs from user's booking history
+   * Used for personalized "For You" recommendations
+   */
+  @MessagePattern('booking.getUserWatchedMovieIds')
+  async getUserWatchedMovieIds(@Payload() data: { userId: string }) {
+    return this.bookingService.getUserWatchedMovieIds(data.userId);
+  }
 }

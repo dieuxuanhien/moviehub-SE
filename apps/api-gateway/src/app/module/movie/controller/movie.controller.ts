@@ -51,15 +51,15 @@ export class MovieController {
     @Req() req: any,
     @Query('limit') limit?: string,
   ) {
-    // NOTE: For proper personalization, we need movie IDs from user's booking history.
-    // However, booking schema only stores showtimeId, not movieId.
-    // To get movieId, we'd need to call cinema-service for each showtime.
-    // For now, we return trending movies (cold-start), which still provides good UX.
-    // TODO: Future enhancement - add movieId to showtime response from booking-service
-    //       or batch-fetch movie IDs from cinema-service
+    // Get user's watched movie IDs from booking history
+    // ClerkAuthGuard sets req.userId, not req.user.id
+    const userId = req.userId;
+    const bookedMovieIds = userId 
+      ? await this.movieService.getUserBookedMovieIds(userId)
+      : [];
     
     return this.movieService.getForYouRecommendations(
-      [], // Empty = cold-start = trending movies
+      bookedMovieIds,
       limit ? parseInt(limit, 10) : 20,
     );
   }

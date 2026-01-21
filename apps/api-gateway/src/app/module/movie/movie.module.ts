@@ -26,6 +26,17 @@ import { AuthModule } from '../../common/auth/auth.module';
           },
         }),
       },
+      {
+        name: SERVICE_NAME.BOOKING,
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get<string>('BOOKING_HOST'),
+            port: configService.get<number>('BOOKING_PORT'),
+          },
+        }),
+      },
     ]),
     AuthModule,
   ],
