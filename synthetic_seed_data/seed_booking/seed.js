@@ -240,6 +240,16 @@ async function main() {
     return;
   }
 
+  // Check if bookings already exist (for merge mode)
+  const existingBookings = await prisma.bookings.count();
+  if (existingBookings > 0 && noClean) {
+    console.log(`\n⏭️ Skipped booking simulation: ${existingBookings} bookings already exist`);
+    
+    const showtimeCount = await cinemaPrisma.showtimes.count();
+    console.log(`\n🎉 Booking Service seed completed! Preserved ${existingBookings} bookings.`);
+    return;
+  }
+
   // 3. SIMULATE TRAFFIC PER SHOWTIME
   let totalBookings = 0;
   let totalRevenue = 0;
