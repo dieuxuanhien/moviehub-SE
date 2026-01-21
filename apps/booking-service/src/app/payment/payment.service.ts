@@ -20,10 +20,13 @@ import {
   UserMessage,
   UserDetailDto,
   SERVICE_NAME,
+  CinemaMessage,
+  ShowtimeSeatResponse,
 } from '@movie-hub/shared-types';
 import * as crypto from 'crypto';
 import * as moment from 'moment';
 import * as querystring from 'qs';
+import * as QRCode from 'qrcode';
 import { BookingEventService } from '../redis/booking-event.service';
 
 @Injectable()
@@ -39,6 +42,7 @@ export class PaymentService {
     private configService: ConfigService,
     private bookingEventService: BookingEventService,
     @Inject(SERVICE_NAME.USER) private userClient: ClientProxy,
+    @Inject(SERVICE_NAME.CINEMA) private cinemaClient: ClientProxy,
     private notificationService: NotificationService,
     private ticketService: TicketService
   ) {
@@ -864,9 +868,9 @@ export class PaymentService {
   }
 
   /**
-   * Send booking confirmation email ASYNCHRONOUSLY with QR codes
+   * Send booking confirmation email ASYNCHRONOUSLY with booking QR code
    * This runs in background and never blocks the payment flow
-   * Fetches user details (email, name, phone) from user service via event-driven TCP call
+   * Fetches user details from user service and cinema details from cinema service
    */
   private async sendBookingConfirmationEmailAsync(
     bookingId: string
@@ -887,7 +891,7 @@ export class PaymentService {
         return;
       }
 
-      // ✅ ASYNC: Fetch user details from USER service via TCP (event-driven)
+      // ✅ Fetch user details from USER service
       let userDetails: UserDetailDto | null = null;
       try {
         userDetails = await firstValueFrom(
@@ -904,7 +908,6 @@ export class PaymentService {
           `[Email] Failed to fetch user details from user service:`,
           userError
         );
-        // Gracefully fall back to booking's stored customer info
         console.log(
           '[Email] Falling back to booking stored customer information'
         );
@@ -915,36 +918,87 @@ export class PaymentService {
       const customerName = userDetails?.fullName || fullBooking.customer_name;
       const customerPhone = userDetails?.phone || fullBooking.customer_phone;
 
-      // Generate QR codes for all tickets IN PARALLEL
-      const ticketsWithQR = await Promise.all(
-        (fullBooking.tickets || []).map(async (ticket) => {
-          try {
-            const qrResult = await this.ticketService.generateQRCode(ticket.id);
-            return {
-              ticketCode: ticket.ticket_code,
-              seatNumber: `${ticket.seat_id}`, // TODO: Parse actual seat row/number
-              ticketType: ticket.ticket_type,
-              price: Number(ticket.price),
-              qrCode: qrResult.data,
-            };
-          } catch (qrError) {
-            console.error(
-              `[Email] Failed to generate QR for ticket ${ticket.id}:`,
-              qrError
-            );
-            // Return ticket without QR code
-            return {
-              ticketCode: ticket.ticket_code,
-              seatNumber: `${ticket.seat_id}`,
-              ticketType: ticket.ticket_type,
-              price: Number(ticket.price),
-              qrCode: '', // Empty if QR generation fails
-            };
+      // ✅ Fetch showtime and cinema details from CINEMA service
+      let showtimeData: ShowtimeSeatResponse | null = null;
+      try {
+        showtimeData = await firstValueFrom(
+          this.cinemaClient.send<ShowtimeSeatResponse>(
+            CinemaMessage.SHOWTIME.GET_SHOWTIME_SEATS,
+            {
+              showtimeId: fullBooking.showtime_id,
+            }
+          )
+        );
+        console.log(
+          `[Email] Fetched showtime details from cinema service for showtime ${fullBooking.showtime_id}`
+        );
+      } catch (cinemaError) {
+        console.error(
+          `[Email] Failed to fetch showtime details from cinema service:`,
+          cinemaError
+        );
+      }
+
+      // ✅ Parse seat information from seat_id (format: "hallId-row-number")
+      const parseSeats = (tickets: typeof fullBooking.tickets) => {
+        return tickets.map((ticket) => {
+          const seatParts = ticket.seat_id.split('-');
+          let row = 'A';
+          let number = 1;
+          
+          if (seatParts.length >= 3) {
+            row = seatParts[1];
+            number = parseInt(seatParts[2], 10) || 1;
           }
-        })
+
+          return {
+            seatId: ticket.seat_id,
+            row,
+            number,
+            seatType: ticket.ticket_type,
+            ticketType: ticket.ticket_type,
+            price: Number(ticket.price),
+          };
+        });
+      };
+
+      // ✅ Generate single BOOKING QR code (same as web frontend)
+      let bookingQRCode = '';
+      try {
+        bookingQRCode = await QRCode.toDataURL(fullBooking.booking_code, {
+          errorCorrectionLevel: 'H',
+          type: 'image/png',
+          width: 300,
+          margin: 1,
+        });
+        console.log(
+          `[Email] Generated booking QR code for ${fullBooking.booking_code}`
+        );
+      } catch (qrError) {
+        console.error('[Email] Failed to generate booking QR code:', qrError);
+      }
+
+      // Prepare tickets with QR code - use booking QR code for display
+      const ticketsWithQR: TicketWithQRCode[] = (fullBooking.tickets || []).map(
+        (ticket) => {
+          const seatParts = ticket.seat_id.split('-');
+          let seatDisplay = ticket.seat_id;
+          
+          if (seatParts.length >= 3) {
+            seatDisplay = `${seatParts[1]}${seatParts[2]}`;
+          }
+
+          return {
+            ticketCode: ticket.ticket_code,
+            seatNumber: seatDisplay,
+            ticketType: ticket.ticket_type,
+            price: Number(ticket.price),
+            qrCode: bookingQRCode, // Use booking QR code for all tickets
+          };
+        }
       );
 
-      // Map to BookingDetailDto format
+      // Map to BookingDetailDto format with REAL cinema details
       const bookingForEmail = {
         id: fullBooking.id,
         bookingCode: fullBooking.booking_code,
@@ -953,20 +1007,14 @@ export class PaymentService {
         customerName: customerName,
         customerEmail: customerEmail,
         customerPhone: customerPhone,
-        movieTitle: 'Movie Title', // TODO: Fetch from cinema-service
-        cinemaName: 'Cinema Name', // TODO: Fetch from cinema-service
-        hallName: 'Hall Name', // TODO: Fetch from cinema-service
-        startTime: new Date(), // TODO: Fetch from cinema-service
+        movieTitle: showtimeData?.showtime?.movieTitle || 'Movie',
+        cinemaName: showtimeData?.cinemaName || 'Cinema',
+        hallName: showtimeData?.hallName || 'Hall',
+        startTime: showtimeData?.showtime?.start_time
+          ? new Date(showtimeData.showtime.start_time)
+          : new Date(),
         seatCount: fullBooking.tickets?.length || 0,
-        seats:
-          fullBooking.tickets?.map((t) => ({
-            seatId: t.seat_id,
-            row: 'A', // TODO: Parse from seat_id
-            number: 1, // TODO: Parse from seat_id
-            seatType: t.ticket_type,
-            ticketType: t.ticket_type,
-            price: Number(t.price),
-          })) || [],
+        seats: parseSeats(fullBooking.tickets || []),
         concessions:
           fullBooking.booking_concessions?.map((bc) => ({
             concessionId: bc.concession_id,
@@ -991,7 +1039,7 @@ export class PaymentService {
         updatedAt: fullBooking.updated_at,
       };
 
-      // Send email with tickets and QR codes
+      // Send email with booking QR code
       await this.notificationService.sendBookingConfirmation({
         booking: bookingForEmail,
         tickets: ticketsWithQR,

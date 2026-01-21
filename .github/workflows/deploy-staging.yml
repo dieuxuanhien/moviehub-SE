@@ -8,7 +8,7 @@ name: Build and Push to Azure
 on:
   push:
     branches:
-      - deploy
+      - main
     paths-ignore:
       - 'docs/**'
       - '*.md'
@@ -148,11 +148,6 @@ jobs:
           tags: |
             ${{ secrets.ACR_LOGIN_SERVER }}/${{ matrix.service.name }}:${{ github.sha }}
             ${{ secrets.ACR_LOGIN_SERVER }}/${{ matrix.service.name }}:latest
-          build-args: |
-            ${{ matrix.service.name == 'web' && format('NEXT_PUBLIC_API_URL={0}', secrets.NEXT_PUBLIC_API_URL) || '' }}
-            ${{ matrix.service.name == 'web' && format('NEXT_PUBLIC_BACKEND_API_URL={0}', secrets.NEXT_PUBLIC_BACKEND_API_URL) || '' }}
-            ${{ matrix.service.name == 'web' && format('NEXT_PUBLIC_WEBSOCKET_URL={0}', secrets.NEXT_PUBLIC_WEBSOCKET_URL) || '' }}
-            ${{ matrix.service.name == 'web' && format('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY={0}', secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) || '' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           target: production

@@ -291,8 +291,8 @@ export class NotificationService {
         data.tickets && data.tickets.length > 0
           ? `
       <div class="section">
-        <div class="section-title">🎟️ Your Tickets with QR Codes</div>
-        <p style="color: #666; margin-bottom: 20px;">Show these QR codes at the cinema entrance for validation.</p>
+        <div class="section-title">🎟️ Your Tickets</div>
+        <p style="color: #666; margin-bottom: 20px;">Present your booking QR code at the cinema entrance for validation. All tickets share the same booking code.</p>
         ${data.tickets
           .map(
             (ticket) => `
@@ -311,8 +311,8 @@ export class NotificationService {
               <div style="text-align: center;">
                 <img src="cid:qrcode-${
                   ticket.ticketCode
-                }" alt="QR Code" style="width: 120px; height: 120px; border: 2px solid #eee; border-radius: 5px;" />
-                <div style="font-size: 11px; color: #999; margin-top: 5px;">Scan at entrance</div>
+                }" alt="Booking QR Code" style="width: 120px; height: 120px; border: 2px solid #eee; border-radius: 5px;" />
+                <div style="font-size: 11px; color: #999; margin-top: 5px;">Booking Code QR</div>
               </div>
             </div>
           </div>

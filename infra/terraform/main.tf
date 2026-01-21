@@ -24,6 +24,10 @@ terraform {
 }
 
 provider "azurerm" {
+  skip_provider_registration = true
+  use_cli                    = true
+  use_msi                    = false
+  use_oidc                   = false
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -195,6 +199,11 @@ resource "azurerm_container_app" "movie_service" {
   }
 
   secret {
+    name  = "gemini-api-key"
+    value = var.gemini_api_key
+  }
+
+  secret {
     name  = "acr-password"
     value = azurerm_container_registry.main.admin_password
   }
@@ -249,6 +258,11 @@ resource "azurerm_container_app" "movie_service" {
       env {
         name        = "REDIS_URL"
         secret_name = "redis-url"
+      }
+      
+      env {
+        name        = "GEMINI_API_KEY"
+        secret_name = "gemini-api-key"
       }
     }
   }

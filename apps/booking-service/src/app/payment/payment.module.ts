@@ -22,6 +22,14 @@ import { SERVICE_NAME } from '@movie-hub/shared-types';
           port: parseInt(process.env.USER_PORT) || 3001,
         },
       },
+      {
+        name: SERVICE_NAME.CINEMA,
+        transport: Transport.TCP,
+        options: {
+          host: process.env.CINEMA_HOST || 'localhost',
+          port: parseInt(process.env.CINEMA_PORT) || 3002,
+        },
+      },
     ]),
   ],
   controllers: [PaymentController],

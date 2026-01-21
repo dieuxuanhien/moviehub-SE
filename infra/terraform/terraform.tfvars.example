@@ -35,6 +35,7 @@ log_analytics_workspace_name = "moviehub-logs"
 # Azure Cache for Redis connection details
 
 redis_connection_string = "your-redis.redis.cache.windows.net:6380,password=your-redis-key,ssl=True,abortConnect=False"
+gemini_api_key = "your-gemini-api-key"
 
 # ===== DATABASE CONNECTION STRINGS (OUTSOURCED) =====
 # Azure Database for PostgreSQL Flexible Server

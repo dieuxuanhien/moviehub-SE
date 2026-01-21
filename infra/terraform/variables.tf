@@ -204,6 +204,12 @@ variable "clerk_publishable_key" {
   sensitive   = true
 }
 
+variable "gemini_api_key" {
+  description = "API key for Google Gemini (used by movie-service embeddings)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
 # ===== EMAIL CONFIGURATION =====
 
 variable "email_config" {
