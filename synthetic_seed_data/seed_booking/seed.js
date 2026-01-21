@@ -155,43 +155,74 @@ async function main() {
     process.exit(1);
   }
 
-  // CLEANUP
-  await prisma.$transaction([
-    prisma.bookingConcessions.deleteMany(),
-    prisma.payments.deleteMany(),
-    prisma.tickets.deleteMany(),
-    prisma.bookings.deleteMany(),
-    prisma.promotions.deleteMany(),
-    prisma.concessions.deleteMany(),
-  ]);
+  // Check for --no-clean flag to preserve existing data
+  const noClean = process.argv.includes('--no-clean');
 
-  // 1. SEED CONCESSIONS & PROMOTIONS
+  if (noClean) {
+    console.log('⚠️  --no-clean mode: Preserving existing booking data');
+  } else {
+    // CLEANUP
+    await prisma.$transaction([
+      prisma.bookingConcessions.deleteMany(),
+      prisma.payments.deleteMany(),
+      prisma.tickets.deleteMany(),
+      prisma.bookings.deleteMany(),
+      prisma.promotions.deleteMany(),
+      prisma.concessions.deleteMany(),
+    ]);
+  }
+
+  // 1. SEED CONCESSIONS & PROMOTIONS (using findFirst + create/update for --no-clean mode)
   console.log('🍿 Seeding Concessions...');
-  const concessions = await Promise.all(
-    data.concessions.map((c) =>
-      prisma.concessions.create({
-        data: {
-          ...c,
-          image_url:
-            c.category === 'FOOD'
-              ? 'https://placehold.co/400x400?text=Popcorn'
-              : 'https://placehold.co/400x400?text=Drink',
-        },
-      })
-    )
-  );
+  const concessions = [];
+  for (const c of data.concessions) {
+    const existing = await prisma.concessions.findFirst({ where: { name: c.name } });
+    const concessionData = {
+      ...c,
+      image_url:
+        c.category === 'FOOD'
+          ? 'https://placehold.co/400x400?text=Popcorn'
+          : 'https://placehold.co/400x400?text=Drink',
+    };
+    
+    if (existing) {
+      const updated = await prisma.concessions.update({
+        where: { id: existing.id },
+        data: concessionData,
+      });
+      concessions.push(updated);
+    } else {
+      const created = await prisma.concessions.create({
+        data: concessionData,
+      });
+      concessions.push(created);
+    }
+  }
 
   console.log('🏷️ Seeding Promotions...');
-  await prisma.promotions.createMany({
-    data: data.promotions.map((p) => ({
+  // Use findFirst + create/update for each promotion to handle existing records
+  for (const p of data.promotions) {
+    const existing = await prisma.promotions.findFirst({ where: { code: p.code } });
+    const promotionData = {
       ...p,
-      value: Number(p.value), // Ensure numeric types
+      value: Number(p.value),
       min_purchase: Number(p.min_purchase),
       max_discount: p.max_discount ? Number(p.max_discount) : null,
       valid_from: new Date(p.valid_from),
       valid_to: new Date(p.valid_to),
-    })),
-  });
+    };
+
+    if (existing) {
+      await prisma.promotions.update({
+        where: { id: existing.id },
+        data: promotionData,
+      });
+    } else {
+      await prisma.promotions.create({
+        data: promotionData,
+      });
+    }
+  }
 
   // 2. FETCH SHOWTIMES
   const showtimes = await cinemaPrisma.showtimes.findMany({
@@ -206,6 +237,16 @@ async function main() {
 
   if (showtimes.length === 0) {
     console.log('⚠️ No showtimes. Run seed_cinema first.');
+    return;
+  }
+
+  // Check if bookings already exist (for merge mode)
+  const existingBookings = await prisma.bookings.count();
+  if (existingBookings > 0 && noClean) {
+    console.log(`\n⏭️ Skipped booking simulation: ${existingBookings} bookings already exist`);
+    
+    const showtimeCount = await cinemaPrisma.showtimes.count();
+    console.log(`\n🎉 Booking Service seed completed! Preserved ${existingBookings} bookings.`);
     return;
   }
 

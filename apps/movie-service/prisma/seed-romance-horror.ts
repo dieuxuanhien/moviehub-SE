@@ -596,7 +596,7 @@ async function main() {
 
   // Insert reviews
   if (allReviews.length > 0) {
-    await prisma.review.createMany({ data: allReviews });
+    await prisma.review.createMany({ data: allReviews, skipDuplicates: true });
   }
 
   console.log(`\n🎉 ROMANCE & HORROR BATCH Complete!`);

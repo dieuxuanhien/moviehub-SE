@@ -102,19 +102,25 @@ async function main() {
   const dataPath = path.join(__dirname, 'data.json');
   const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
 
+  // Check for --no-clean flag to preserve existing data
+  const noClean = process.argv.includes('--no-clean');
+
   console.log('🎬 Starting Movie Service seed...');
   console.log('🛡️  Enforcing Asset Integrity & Temporal Logic\n');
 
-  // Clean existing data in correct order
-  await prisma.$transaction([
-    prisma.review.deleteMany(),
-    prisma.movieGenre.deleteMany(),
-    prisma.movieRelease.deleteMany(),
-    prisma.genre.deleteMany(),
-    prisma.movie.deleteMany(),
-  ]);
-
-  console.log('✅ Cleaned existing data');
+  if (noClean) {
+    console.log('⚠️  --no-clean mode: Preserving existing movie data');
+  } else {
+    // Clean existing data in correct order
+    await prisma.$transaction([
+      prisma.review.deleteMany(),
+      prisma.movieGenre.deleteMany(),
+      prisma.movieRelease.deleteMany(),
+      prisma.genre.deleteMany(),
+      prisma.movie.deleteMany(),
+    ]);
+    console.log('✅ Cleaned existing data');
+  }
 
   // ===========================
   // PHASE 1: Create Genres
@@ -219,39 +225,58 @@ async function main() {
         profileUrl: sanitizeUrl(actor.profileUrl, 'PROFILE'),
       }));
 
-      // 4. Create Movie
-      const movie = await prisma.movie.create({
-        data: {
-          title: m.title,
-          originalTitle: m.original_title ?? m.title,
-          overview: m.overview ?? 'No description available.',
-          posterUrl: posterUrl, // GUARANTEED valid
-          trailerUrl: m.trailerUrl ?? '',
-          backdropUrl: backdropUrl, // GUARANTEED valid
-          runtime: m.runtime ?? 120,
-          releaseDate: releaseDate,
-          ageRating: 'P',
-          originalLanguage: m.original_language ?? 'en',
-          spokenLanguages: Array.isArray(m.spoken_languages)
-            ? m.spoken_languages
-            : [String(m.spoken_languages || 'en')],
-          productionCountry: m.production_countries ?? 'Unknown',
-          languageType: 'SUBTITLE',
-          director: m.director ?? 'Unknown',
-          cast: sanitizedCast,
-          movieReleases: {
-            create: [
-              {
-                startDate: releaseDate,
-                endDate: endDate,
-              },
-            ],
-          },
-          movieGenres: {
-            create: genreConnects,
-          },
-        },
+      // 4. Create or Update Movie (merge mode in --no-clean)
+      const movieData = {
+        title: m.title,
+        originalTitle: m.original_title ?? m.title,
+        overview: m.overview ?? 'No description available.',
+        posterUrl: posterUrl, // GUARANTEED valid
+        trailerUrl: m.trailerUrl ?? '',
+        backdropUrl: backdropUrl, // GUARANTEED valid
+        runtime: m.runtime ?? 120,
+        releaseDate: releaseDate,
+        ageRating: 'P',
+        originalLanguage: m.original_language ?? 'en',
+        spokenLanguages: Array.isArray(m.spoken_languages)
+          ? m.spoken_languages
+          : [String(m.spoken_languages || 'en')],
+        productionCountry: m.production_countries ?? 'Unknown',
+        languageType: 'SUBTITLE',
+        director: m.director ?? 'Unknown',
+        cast: sanitizedCast,
+      };
+
+      // Check if movie already exists by title (for merge mode)
+      const existing = await prisma.movie.findFirst({ 
+        where: { title: m.title } 
       });
+
+      let movie;
+      if (existing) {
+        // Update existing movie
+        movie = await prisma.movie.update({
+          where: { id: existing.id },
+          data: movieData,
+        });
+      } else {
+        // Create new movie with relations
+        movie = await prisma.movie.create({
+          data: {
+            ...movieData,
+            movieReleases: {
+              create: [
+                {
+                  startDate: releaseDate,
+                  endDate: endDate,
+                },
+              ],
+            },
+            movieGenres: {
+              create: genreConnects,
+            },
+          },
+        });
+      }
 
       console.log(
         `   ✅ Seeded: ${movie.title.substring(0, 30)}... [${

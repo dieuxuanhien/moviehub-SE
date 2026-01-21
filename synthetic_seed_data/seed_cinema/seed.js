@@ -78,18 +78,24 @@ async function main() {
     );
   }
 
-  // Clean existing data in correct order (respecting foreign keys)
-  await prisma.$transaction([
-    prisma.seatReservations.deleteMany(),
-    prisma.showtimes.deleteMany(),
-    prisma.ticketPricing.deleteMany(),
-    prisma.seats.deleteMany(),
-    prisma.halls.deleteMany(),
-    prisma.cinemaReviews.deleteMany(),
-    prisma.cinemas.deleteMany(),
-  ]);
-
-  console.log('✅ Cleaned existing data');
+  // Check for --no-clean flag to preserve existing data
+  const noClean = process.argv.includes('--no-clean');
+  
+  if (noClean) {
+    console.log('⚠️  --no-clean mode: Preserving existing data');
+  } else {
+    // Clean existing data in correct order (respecting foreign keys)
+    await prisma.$transaction([
+      prisma.seatReservations.deleteMany(),
+      prisma.showtimes.deleteMany(),
+      prisma.ticketPricing.deleteMany(),
+      prisma.seats.deleteMany(),
+      prisma.halls.deleteMany(),
+      prisma.cinemaReviews.deleteMany(),
+      prisma.cinemas.deleteMany(),
+    ]);
+    console.log('✅ Cleaned existing data');
+  }
 
   // ===========================
   // PHASE 1: Create Cinemas
@@ -103,17 +109,26 @@ async function main() {
     // Sanitize images
     const safeImages = (images || []).map(sanitizeUrl);
 
-    // Use upsert for idempotency
-    const cinema = await prisma.cinemas.upsert({
-      where: {
-        id: '00000000-0000-0000-0000-000000000000', // Forces create
-      },
-      update: { ...cinemaFields, images: safeImages },
-      create: { ...cinemaFields, images: safeImages },
+    // Check if cinema already exists by name (for merge mode)
+    const existing = await prisma.cinemas.findFirst({ 
+      where: { name: cinemaFields.name } 
     });
 
+    let cinema;
+    if (existing) {
+      cinema = await prisma.cinemas.update({
+        where: { id: existing.id },
+        data: { ...cinemaFields, images: safeImages },
+      });
+      console.log(`   ✅ Updated: ${cinema.name}`);
+    } else {
+      cinema = await prisma.cinemas.create({
+        data: { ...cinemaFields, images: safeImages },
+      });
+      console.log(`   ✅ Created: ${cinema.name}`);
+    }
+
     cinemaMap[id] = cinema;
-    console.log(`   ✅ Created: ${cinema.name}`);
   }
 
   // ===========================
@@ -128,16 +143,30 @@ async function main() {
 
     if (!cinema) continue;
 
-    const hall = await prisma.halls.create({
-      data: {
-        ...hallFields,
-        cinema_id: cinema.id,
-      },
+    // Check if hall already exists by name and cinema_id (for merge mode)
+    const existing = await prisma.halls.findFirst({ 
+      where: { 
+        name: hallFields.name,
+        cinema_id: cinema.id 
+      } 
     });
+
+    let hall;
+    if (existing) {
+      hall = existing; // Keep existing hall, don't update
+      console.log(`   ⏭️ Skipped: ${hall.name} (exists)`);
+    } else {
+      hall = await prisma.halls.create({
+        data: {
+          ...hallFields,
+          cinema_id: cinema.id,
+        },
+      });
+    }
 
     allHalls.push(hall);
   }
-  console.log(`✅ Created ${allHalls.length} halls`);
+  console.log(`✅ Created/found ${allHalls.length} halls`);
 
   // ===========================
   // PHASE 3: Generate Seats
@@ -146,6 +175,14 @@ async function main() {
   const seatsByHall = {};
 
   for (const hall of allHalls) {
+    // Check if hall already has seats (for merge mode)
+    const existingSeats = await prisma.seats.count({ where: { hall_id: hall.id } });
+    if (existingSeats > 0) {
+      console.log(`   ⏭️ Skipped: ${hall.name} (${existingSeats} seats exist)`);
+      seatsByHall[hall.id] = []; // Empty array, seats already exist
+      continue;
+    }
+
     const rows = hall.rows;
     // FIX: Use floor() instead of ceil() to NEVER exceed capacity
     // This ensures total_seats = rows * seatsPerRow <= hall.capacity
@@ -264,20 +301,24 @@ async function main() {
   // ===========================
   console.log('\n🎞️ Phase 5: Generating sequential showtimes...');
 
-  let moviesWithReleases = [];
-  try {
-    const movies = await moviePrisma.movie.findMany({
-      take: 50,
-      include: { movieReleases: true },
-    });
-    moviesWithReleases = movies.filter(
-      (m) => m.movieReleases && m.movieReleases.length > 0
-    );
-  } catch (e) {
-    console.warn(`⚠️ Could not fetch movies: ${e.message}`);
-  }
+  // Check if showtimes already exist (for merge mode)
+  const existingShowtimes = await prisma.showtimes.count();
+  if (existingShowtimes > 0 && noClean) {
+    console.log(`   ⏭️ Skipped: ${existingShowtimes} showtimes already exist`);
+  } else {
+    let moviesWithReleases = [];
+    try {
+      const movies = await moviePrisma.movie.findMany({
+        include: { movieReleases: true },
+      });
+      moviesWithReleases = movies.filter(
+        (m) => m.movieReleases && m.movieReleases.length > 0
+      );
+    } catch (e) {
+      console.warn(`⚠️ Could not fetch movies: ${e.message}`);
+    }
 
-  if (moviesWithReleases.length > 0) {
+    if (moviesWithReleases.length > 0) {
     const showtimes = [];
     // Use UTC time consistently - create dates in Vietnam timezone (UTC+7)
     const today = new Date();
@@ -379,7 +420,8 @@ async function main() {
       }
     }
     console.log(`✅ Scheduled ${showtimes.length} showtimes`);
-  }
+    }
+  } // End of else block for existingShowtimes check
 
   // ===========================
   // PHASE 6: Reviews
