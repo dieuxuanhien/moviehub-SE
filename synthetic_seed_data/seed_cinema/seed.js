@@ -78,18 +78,24 @@ async function main() {
     );
   }
 
-  // Clean existing data in correct order (respecting foreign keys)
-  await prisma.$transaction([
-    prisma.seatReservations.deleteMany(),
-    prisma.showtimes.deleteMany(),
-    prisma.ticketPricing.deleteMany(),
-    prisma.seats.deleteMany(),
-    prisma.halls.deleteMany(),
-    prisma.cinemaReviews.deleteMany(),
-    prisma.cinemas.deleteMany(),
-  ]);
-
-  console.log('✅ Cleaned existing data');
+  // Check for --no-clean flag to preserve existing data
+  const noClean = process.argv.includes('--no-clean');
+  
+  if (noClean) {
+    console.log('⚠️  --no-clean mode: Preserving existing data');
+  } else {
+    // Clean existing data in correct order (respecting foreign keys)
+    await prisma.$transaction([
+      prisma.seatReservations.deleteMany(),
+      prisma.showtimes.deleteMany(),
+      prisma.ticketPricing.deleteMany(),
+      prisma.seats.deleteMany(),
+      prisma.halls.deleteMany(),
+      prisma.cinemaReviews.deleteMany(),
+      prisma.cinemas.deleteMany(),
+    ]);
+    console.log('✅ Cleaned existing data');
+  }
 
   // ===========================
   // PHASE 1: Create Cinemas
@@ -267,7 +273,6 @@ async function main() {
   let moviesWithReleases = [];
   try {
     const movies = await moviePrisma.movie.findMany({
-      take: 50,
       include: { movieReleases: true },
     });
     moviesWithReleases = movies.filter(

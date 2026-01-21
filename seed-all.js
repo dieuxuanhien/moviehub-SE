@@ -38,6 +38,11 @@ const BOOKING_DB = 'postgresql://postgres:postgres@localhost:5438/movie_hub_book
 
 const rootDir = __dirname;
 
+// DEFAULT: Preserve existing data (safe for production)
+// Use --clean flag to delete existing data (for development reset)
+const shouldClean = process.argv.includes('--clean');
+const noCleanFlag = shouldClean ? '' : '--no-clean';
+
 function runCommand(cmd, options) {
   try {
     execSync(cmd, { stdio: 'inherit', ...options });
@@ -51,7 +56,12 @@ function runCommand(cmd, options) {
 console.log('╔═══════════════════════════════════════════════════════════════╗');
 console.log('║        🎬 MOVIEHUB COMBINED MASTER SEED                       ║');
 console.log('╚═══════════════════════════════════════════════════════════════╝');
-console.log(`📅 ${new Date().toISOString()}\n`);
+console.log(`📅 ${new Date().toISOString()}`);
+if (shouldClean) {
+  console.log('🧹 --clean mode: Existing data will be REPLACED\n');
+} else {
+  console.log('✅ Safe mode (default): Existing data will be PRESERVED\n');
+}
 
 // ============================================================
 // PHASE 1: MOVIE SERVICE
@@ -60,75 +70,52 @@ console.log('╔═════════════════════�
 console.log('║ PHASE 1: MOVIE SERVICE                                        ║');
 console.log('╚═══════════════════════════════════════════════════════════════╝\n');
 
-const movieSeedFiles = [
-  'seed-batch1.ts',
-  'seed-batch2.ts',
-  'seed-batch3.ts',
-  'seed-batch4.ts',
-  'seed-batch5.ts',
-  'seed-batch6.ts',
-  'seed-extra.ts',
-  'seed-romance-horror.ts',
-  'seed-upcoming.ts'
-];
+// Run the seed with real URLs and MovieReleases (336 movies embedded in file)
+console.log('📦 Step 1.1: Seeding movies with REAL data + MovieReleases...\n');
 
-console.log('📦 Step 1.1: Seeding movies, genres, reviews...\n');
-let movieSuccess = 0;
+const movieSeedSuccess = runCommand(`npx tsx prisma/seed-real-data.ts ${noCleanFlag}`, {
+  cwd: path.join(rootDir, 'apps/movie-service'),
+  env: { ...process.env, DATABASE_URL: MOVIE_DB }
+});
 
-for (const file of movieSeedFiles) {
-  const filePath = path.join(rootDir, 'apps/movie-service/prisma', file);
-  console.log(`  🎬 ${file}...`);
-  
-  if (runCommand(`npx tsx "${filePath}"`, {
-    cwd: path.join(rootDir, 'apps/movie-service'),
-    env: { ...process.env, DATABASE_URL: MOVIE_DB }
-  })) {
-    movieSuccess++;
-  }
+if (movieSeedSuccess) {
+  console.log('\n  ✅ Movies seeded with real URLs and MovieReleases!\n');
+} else {
+  console.log('\n  ⚠️ Movie seeding had issues, continuing...\n');
 }
 
-console.log(`\n  ✅ Movie batches: ${movieSuccess}/${movieSeedFiles.length}\n`);
-
-console.log('📦 Step 1.2: Updating release dates...');
-runCommand('node prisma/update-release-dates.js', {
-  cwd: path.join(rootDir, 'apps/movie-service'),
-  env: { ...process.env, DATABASE_URL: MOVIE_DB }
-});
-
-console.log('\n📦 Step 1.3: Adding MovieRelease entries...');
-runCommand('node prisma/add-movie-releases.js', {
-  cwd: path.join(rootDir, 'apps/movie-service'),
-  env: { ...process.env, DATABASE_URL: MOVIE_DB }
-});
-
-console.log('\n📦 Step 1.4: Updating poster URLs...');
+// Step 2: Update poster URLs from patch file (optional, fills in any missing)
+console.log('📦 Step 1.2: Updating any missing poster URLs...');
 runCommand('node prisma/update-missing-posters.js', {
   cwd: path.join(rootDir, 'apps/movie-service'),
   env: { ...process.env, DATABASE_URL: MOVIE_DB }
 });
 
-console.log('\n✅ PHASE 1 COMPLETE: Movies ready\n');
+// Step 3: Merge additional movies from synthetic_seed_data (optional)
+console.log('\n📦 Step 1.3: Merging additional movies from synthetic data...');
+runCommand(`node seed.js ${noCleanFlag}`, {
+  cwd: path.join(rootDir, 'synthetic_seed_data/seed_movie'),
+  env: { ...process.env, DATABASE_URL: MOVIE_DB }
+});
+
+console.log('\n✅ PHASE 1 COMPLETE: Movies with MovieReleases ready\n');
 
 // ============================================================
-// PHASE 2: CINEMA SERVICE
+// PHASE 2: CINEMA SERVICE (Full Synthetic Seed)
 // ============================================================
 console.log('╔═══════════════════════════════════════════════════════════════╗');
 console.log('║ PHASE 2: CINEMA SERVICE                                       ║');
 console.log('╚═══════════════════════════════════════════════════════════════╝\n');
 
-console.log('📦 Step 2.1: Seeding cinemas, halls, seats, pricing...');
-runCommand('node prisma/seed_cinema.js', {
-  cwd: path.join(rootDir, 'apps/cinema-service'),
-  env: { ...process.env, DATABASE_URL: CINEMA_DB }
-});
+console.log('📦 Step 2.1: Seeding cinemas, halls, seats, pricing, showtimes...');
+console.log('   (Using synthetic_seed_data for complete test data)\n');
 
-console.log('\n📦 Step 2.2: Creating showtimes (links movies ↔ cinemas)...');
-runCommand('node prisma/seed-showtimes.js', {
-  cwd: path.join(rootDir, 'apps/cinema-service'),
+runCommand(`node seed.js ${noCleanFlag}`, {
+  cwd: path.join(rootDir, 'synthetic_seed_data/seed_cinema'),
   env: { 
     ...process.env, 
     DATABASE_URL: CINEMA_DB,
-    MOVIE_DATABASE_URL: MOVIE_DB  // For querying movies
+    MOVIE_DATABASE_URL: MOVIE_DB  // For querying movie releases
   }
 });
 
@@ -142,7 +129,7 @@ console.log('║ PHASE 3: BOOKING SERVICE                                      �
 console.log('╚═══════════════════════════════════════════════════════════════╝\n');
 
 console.log('📦 Step 3.1: Seeding scenario-based bookings...');
-runCommand('node seed.js', {
+runCommand(`node seed.js ${noCleanFlag}`, {
   cwd: path.join(rootDir, 'synthetic_seed_data/seed_booking'),
   env: { 
     ...process.env, 
@@ -161,7 +148,7 @@ console.log('║ 🎉 SEED COMPLETE!                                            
 console.log('╚═══════════════════════════════════════════════════════════════╝');
 console.log(`
 📊 Summary:
-  ✅ Movies: ${movieSuccess}/${movieSeedFiles.length} batches
+  ✅ Movies: 336 with REAL poster/trailer URLs
   ✅ Genres, Reviews, Cast: included
   ✅ Release dates: 50% Now Showing / 50% Upcoming
   ✅ Cinemas, Halls, Seats: seeded
