@@ -279,11 +279,18 @@ export class NotificationService {
       </div>
 
       <div class="section">
-        <div class="section-title">🎫 Seats</div>
-        <div class="seats">
-          ${booking.seats
-            .map((seat) => `<div class="seat">${seat.row}${seat.number}</div>`)
-            .join('')}
+        <div class="section-title">🎫 Booking Details</div>
+        <div class="info-row">
+          <span class="label">Booking Code:</span>
+          <span class="value" style="font-weight: bold; font-size: 18px; color: #667eea; font-family: monospace;">${booking.bookingCode}</span>
+        </div>
+        <div style="margin-top: 15px;">
+          <div style="font-weight: bold; color: #666; margin-bottom: 10px;">Seats Booked:</div>
+          <div class="seats">
+            ${booking.seats
+              .map((seat) => `<div class="seat">${seat.row}${seat.number}</div>`)
+              .join('')}
+          </div>
         </div>
       </div>
 
@@ -291,29 +298,38 @@ export class NotificationService {
         data.tickets && data.tickets.length > 0
           ? `
       <div class="section">
-        <div class="section-title">🎟️ Your Tickets</div>
-        <p style="color: #666; margin-bottom: 20px;">Present your booking QR code at the cinema entrance for validation. All tickets share the same booking code.</p>
+        <div class="section-title">🎟️ Ticket Details</div>
+        <p style="color: #666; margin-bottom: 15px; font-size: 14px;">Each ticket includes the following information:</p>
         ${data.tickets
           .map(
             (ticket) => `
-          <div style="background: white; border: 2px solid #667eea; border-radius: 8px; padding: 20px; margin: 15px 0;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <div style="font-weight: bold; font-size: 16px; color: #667eea;">Seat ${
-                  ticket.seatNumber
-                }</div>
-                <div style="color: #666; margin: 5px 0;">Ticket: ${
+          <div style="background: #f9f9f9; border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin: 8px 0; display: grid; grid-template-columns: auto 1fr auto; gap: 15px; align-items: center;">
+            <div style="text-align: center;">
+              <div style="font-size: 12px; color: #999; margin-bottom: 4px;">SEAT</div>
+              <div style="font-weight: bold; font-size: 20px; color: #667eea;">${
+                ticket.seatNumber
+              }</div>
+            </div>
+            <div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 13px;">
+                <div>
+                  <div style="color: #999; margin-bottom: 2px;">TYPE</div>
+                  <div style="font-weight: bold; color: #333;">${ticket.ticketType}</div>
+                </div>
+                <div>
+                  <div style="color: #999; margin-bottom: 2px;">PRICE</div>
+                  <div style="font-weight: bold; color: #333;">${ticket.price.toLocaleString()} VND</div>
+                </div>
+              </div>
+              <div style="margin-top: 8px; font-size: 12px;">
+                <div style="color: #999;">TICKET CODE</div>
+                <div style="font-weight: bold; color: #333; font-family: monospace; font-size: 12px;">${
                   ticket.ticketCode
                 }</div>
-                <div style="color: #666;">Type: ${ticket.ticketType}</div>
-                <div style="font-weight: bold; color: #333; margin-top: 5px;">${ticket.price.toLocaleString()} VND</div>
               </div>
-              <div style="text-align: center;">
-                <img src="cid:qrcode-${
-                  ticket.ticketCode
-                }" alt="Booking QR Code" style="width: 120px; height: 120px; border: 2px solid #eee; border-radius: 5px;" />
-                <div style="font-size: 11px; color: #999; margin-top: 5px;">Booking Code QR</div>
-              </div>
+            </div>
+            <div style="text-align: center; padding-left: 15px; border-left: 1px solid #ddd;">
+              <div style="font-size: 11px; color: #999; margin-bottom: 5px;">✓ Valid</div>
             </div>
           </div>
         `
@@ -323,6 +339,16 @@ export class NotificationService {
       `
           : ''
       }
+
+      <div class="section" style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px;">
+        <div style="font-size: 14px; margin-bottom: 15px;">BOOKING VALIDATION CODE</div>
+        <div style="text-align: center; background: white; padding: 15px; border-radius: 8px; display: inline-block;">
+          <img src="cid:qrcode-${
+            data.tickets && data.tickets.length > 0 ? data.tickets[0].ticketCode : 'booking'
+          }" alt="Booking QR Code" style="width: 180px; height: 180px;" />
+        </div>
+        <div style="font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 20px;">Scan this code at the cinema entrance<br>to validate your booking</div>
+      </div>
 
       ${
         booking.concessions && booking.concessions.length > 0
